@@ -1,0 +1,1690 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Field Trip 2026 | SMA Gunung Madu</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --sky: #dbf1ff;
+            --sky-strong: #a9dcff;
+            --sea: #68b7ff;
+            --mint: #8ae0c1;
+            --grass: #b7e67d;
+            --sun: #ffd166;
+            --sun-soft: #ffe8a3;
+            --coral: #ff8f7d;
+            --ink: #244154;
+            --ink-soft: #4f6f82;
+            --paper: #fffdf7;
+            --line: rgba(36, 65, 84, 0.18);
+            --panel: rgba(255, 255, 255, 0.78);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        img {
+            max-width: 100%;
+            display: block;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at 14% 10%, rgba(255, 209, 102, 0.45), transparent 34%),
+                radial-gradient(circle at 90% 14%, rgba(104, 183, 255, 0.28), transparent 36%),
+                linear-gradient(180deg, #e9f8ff 0%, #f7ffef 38%, #fff6e8 100%);
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: -2;
+            opacity: 0.3;
+            background-image: radial-gradient(rgba(79, 111, 130, 0.18) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .background-graphics {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .sun-glow {
+            position: absolute;
+            top: 6%;
+            right: 8%;
+            width: clamp(120px, 18vw, 260px);
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 232, 163, 0.9), rgba(255, 209, 102, 0.65) 45%, rgba(255, 209, 102, 0.08) 70%);
+            animation: sun-drift 14s ease-in-out infinite alternate;
+        }
+
+        .sun-glow::after {
+            content: "";
+            position: absolute;
+            inset: -18%;
+            border-radius: 50%;
+            border: 2px dashed rgba(255, 209, 102, 0.35);
+            animation: spin-slow 22s linear infinite;
+        }
+
+        .cloud {
+            position: absolute;
+            height: 42px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.72);
+            filter: blur(0.2px);
+        }
+
+        .cloud::before,
+        .cloud::after {
+            content: "";
+            position: absolute;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.82);
+        }
+
+        .cloud::before {
+            width: 36%;
+            height: 120%;
+            left: 16%;
+            bottom: 35%;
+        }
+
+        .cloud::after {
+            width: 28%;
+            height: 105%;
+            right: 18%;
+            bottom: 28%;
+        }
+
+        .cloud-a {
+            width: clamp(120px, 17vw, 240px);
+            top: 14%;
+            left: -18%;
+            animation: cloud-drift-a 44s linear infinite;
+        }
+
+        .cloud-b {
+            width: clamp(90px, 13vw, 180px);
+            top: 29%;
+            left: -22%;
+            opacity: 0.7;
+            animation: cloud-drift-b 55s linear infinite;
+        }
+
+        .float-blob {
+            position: absolute;
+            border-radius: 44% 56% 57% 43% / 39% 43% 57% 61%;
+            opacity: 0.28;
+            filter: blur(1px);
+            animation: blob-float 12s ease-in-out infinite;
+        }
+
+        .blob-1 {
+            width: clamp(90px, 12vw, 160px);
+            aspect-ratio: 1;
+            background: rgba(104, 183, 255, 0.55);
+            top: 60%;
+            left: 4%;
+            animation-delay: -2s;
+        }
+
+        .blob-2 {
+            width: clamp(110px, 14vw, 180px);
+            aspect-ratio: 1;
+            background: rgba(138, 224, 193, 0.55);
+            top: 72%;
+            right: 10%;
+            animation-delay: -5s;
+        }
+
+        .blob-3 {
+            width: clamp(70px, 9vw, 120px);
+            aspect-ratio: 1;
+            background: rgba(255, 143, 125, 0.5);
+            top: 42%;
+            right: 20%;
+            animation-delay: -7s;
+        }
+
+        @keyframes sun-drift {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(18px, -10px) scale(1.08); }
+        }
+
+        @keyframes spin-slow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes cloud-drift-a {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(135vw); }
+        }
+
+        @keyframes cloud-drift-b {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(145vw); }
+        }
+
+        @keyframes blob-float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-14px) rotate(8deg); }
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Baloo 2', cursive;
+            line-height: 1.05;
+            letter-spacing: 0.01em;
+        }
+
+        .container {
+            width: min(1160px, 92%);
+            margin-inline: auto;
+        }
+
+        .topbar-wrap {
+            position: sticky;
+            top: calc(env(safe-area-inset-top, 0px) + 10px);
+            z-index: 100;
+            padding-top: 14px;
+        }
+
+        .topbar {
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.82);
+            backdrop-filter: blur(10px);
+            padding: 12px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 800;
+            color: #1f516c;
+        }
+
+        .brand-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #ffd166, #ff8f7d);
+            display: grid;
+            place-items: center;
+            color: #fff;
+            box-shadow: 0 8px 16px rgba(255, 143, 125, 0.4);
+        }
+
+        .brand small {
+            display: block;
+            color: var(--ink-soft);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            font-size: 0.72rem;
+            margin-top: -2px;
+        }
+
+        .route-pill {
+            border: 1px dashed rgba(36, 65, 84, 0.35);
+            border-radius: 999px;
+            padding: 8px 14px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 700;
+            background: rgba(255, 255, 255, 0.6);
+        }
+
+        .btn-sun,
+        .btn-soft {
+            border: none;
+            border-radius: 14px;
+            padding: 12px 18px;
+            font: inherit;
+            font-size: 0.84rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            font-weight: 800;
+            cursor: pointer;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .btn-sun {
+            color: #724b16;
+            background: linear-gradient(135deg, var(--sun), #ffe8a3);
+            box-shadow: 0 10px 24px rgba(255, 209, 102, 0.5);
+        }
+
+        .btn-sun:hover {
+            transform: translateY(-3px) rotate(-0.5deg);
+            box-shadow: 0 16px 26px rgba(255, 209, 102, 0.55);
+        }
+
+        .btn-soft {
+            background: #fff;
+            color: #3d6175;
+            border: 1px solid var(--line);
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-soft:hover {
+            transform: translateY(-2px);
+        }
+
+        .hero {
+            padding: 28px 0 24px;
+        }
+
+        .hero-shell {
+            border: 1px solid var(--line);
+            border-radius: 28px;
+            background:
+                radial-gradient(circle at 82% 22%, rgba(138, 224, 193, 0.5), transparent 30%),
+                radial-gradient(circle at 18% 8%, rgba(255, 209, 102, 0.5), transparent 35%),
+                var(--panel);
+            padding: clamp(22px, 4vw, 44px);
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-shell::after {
+            content: "";
+            position: absolute;
+            inset: auto -10% -45% auto;
+            width: 340px;
+            height: 340px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(104, 183, 255, 0.4), transparent 65%);
+            pointer-events: none;
+        }
+
+        .hero-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border-radius: 999px;
+            border: 1px solid rgba(36, 65, 84, 0.22);
+            background: rgba(255, 255, 255, 0.75);
+            padding: 8px 12px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 700;
+            color: #245774;
+        }
+
+        .hero-title {
+            margin-top: 14px;
+            font-size: clamp(2.3rem, 5vw, 5.1rem);
+            text-transform: uppercase;
+            color: #1b4d68;
+            text-shadow: 0 8px 0 rgba(255, 255, 255, 0.6);
+        }
+
+        .hero-copy {
+            margin-top: 14px;
+            font-size: 1.04rem;
+            color: var(--ink-soft);
+            max-width: 58ch;
+        }
+
+        .hero-actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .hero-side {
+            display: grid;
+            gap: 10px;
+            align-content: start;
+        }
+
+        .bubble {
+            border-radius: 18px;
+            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.82);
+            padding: 14px;
+        }
+
+        .bubble h3 {
+            font-size: 1.28rem;
+            color: #2f5e77;
+            margin-bottom: 8px;
+        }
+
+        .countdown-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 6px;
+        }
+
+        .time-box {
+            border-radius: 12px;
+            background: #fff;
+            border: 1px dashed rgba(36, 65, 84, 0.25);
+            text-align: center;
+            padding: 9px 6px;
+        }
+
+        .time-box strong {
+            display: block;
+            font-family: 'Baloo 2', cursive;
+            font-size: 1.35rem;
+            color: #2f5e77;
+            line-height: 1;
+        }
+
+        .time-box span {
+            font-size: 0.7rem;
+            color: var(--ink-soft);
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+        }
+
+        .progress-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: end;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .progress-head strong {
+            font-family: 'Baloo 2', cursive;
+            font-size: 2rem;
+            line-height: 1;
+            color: #3f7a53;
+        }
+
+        .progress-wrap {
+            width: 100%;
+            height: 14px;
+            border-radius: 999px;
+            background: #fff;
+            border: 1px solid rgba(36, 65, 84, 0.2);
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #8ae0c1, #b7e67d);
+            transition: width 0.5s ease;
+        }
+
+        .status-badge {
+            margin-top: 8px;
+            display: inline-flex;
+            border-radius: 999px;
+            padding: 6px 10px;
+            font-size: 0.73rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 800;
+            border: 1px solid rgba(36, 65, 84, 0.24);
+            background: rgba(255, 255, 255, 0.82);
+        }
+
+        .fee-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            border: 1px dashed rgba(36, 65, 84, 0.25);
+            border-radius: 12px;
+            overflow: hidden;
+            background: #fff;
+            margin-top: 8px;
+        }
+
+        .fee-table td {
+            padding: 9px 10px;
+            font-size: 0.92rem;
+            color: #3f6276;
+            border-bottom: 1px solid rgba(36, 65, 84, 0.12);
+        }
+
+        .fee-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .fee-table td:last-child {
+            text-align: right;
+            font-weight: 700;
+            color: #2f5e77;
+        }
+
+        .fee-total {
+            margin-top: 10px;
+            border-radius: 12px;
+            border: 1px solid rgba(36, 65, 84, 0.22);
+            background: linear-gradient(135deg, #fff2c8, #e5f8ef);
+            padding: 11px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .fee-total span {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #4f6f82;
+            font-weight: 800;
+        }
+
+        .fee-total strong {
+            font-family: 'Baloo 2', cursive;
+            font-size: 1.55rem;
+            line-height: 1;
+            color: #2f5e77;
+        }
+
+        .wa-contact {
+            margin-top: 10px;
+            border-radius: 12px;
+            border: 1px solid rgba(36, 65, 84, 0.2);
+            background: #fff;
+            padding: 10px 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: #2f5e77;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .wa-contact:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 18px rgba(60, 100, 120, 0.16);
+        }
+
+        .wa-contact i {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            display: grid;
+            place-items: center;
+            background: #e9f9f0;
+            color: #1ea45a;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .wa-contact small {
+            display: block;
+            font-size: 0.74rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--ink-soft);
+            font-weight: 700;
+        }
+
+        .wa-contact strong {
+            font-size: 0.98rem;
+            color: #2f5e77;
+        }
+
+        .benefits-head {
+            margin-top: 14px;
+            font-family: 'Baloo 2', cursive;
+            font-size: 1.1rem;
+            color: #2f5e77;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .benefits-grid {
+            display: grid;
+            gap: 8px;
+        }
+
+        .benefit-item {
+            border-radius: 10px;
+            border: 1px dashed rgba(36, 65, 84, 0.22);
+            background: #fffef9;
+            padding: 9px 10px;
+            display: flex;
+            gap: 8px;
+            align-items: start;
+            font-size: 0.88rem;
+            color: #3e6275;
+        }
+
+        .benefit-item i {
+            color: #8ae0c1;
+            margin-top: 2px;
+            flex-shrink: 0;
+            font-size: 1rem;
+        }
+
+        .modal-terms {
+            border-radius: 12px;
+            border: 1px solid rgba(36, 65, 84, 0.2);
+            background: #f9fbff;
+            padding: 12px;
+            margin-bottom: 16px;
+            font-size: 0.88rem;
+            color: #3e6275;
+            line-height: 1.5;
+        }
+
+        .modal-terms h4 {
+            margin-bottom: 8px;
+            color: #2f5e77;
+            font-size: 0.95rem;
+        }
+
+        .modal-terms ul {
+            margin-left: 16px;
+            margin-top: 6px;
+        }
+
+        .modal-terms li {
+            margin-bottom: 5px;
+        }
+
+        .modal-terms strong {
+            color: #2f5e77;
+        }
+
+        .form-group.hidden {
+            display: none;
+        }
+
+        .adventure {
+            padding: 46px 0 44px;
+        }
+
+        .section-head {
+            text-align: center;
+            max-width: 760px;
+            margin: 0 auto 22px;
+        }
+
+        .section-head h2 {
+            font-size: clamp(2rem, 5vw, 4.2rem);
+            color: #2a5f7c;
+            text-transform: uppercase;
+        }
+
+        .section-head p {
+            margin-top: 8px;
+            color: var(--ink-soft);
+        }
+
+        .trail {
+            display: grid;
+            gap: 18px;
+        }
+
+        .scene {
+            min-height: min(94vh, 760px);
+            border-radius: 28px;
+            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.72);
+            display: grid;
+            grid-template-columns: 1.05fr 0.95fr;
+            gap: 14px;
+            padding: 16px;
+            position: relative;
+            overflow: hidden;
+            align-items: center;
+        }
+
+        .scene:nth-child(2) {
+            grid-template-columns: 0.95fr 1.05fr;
+        }
+
+        .scene-image {
+            height: 100%;
+            min-height: 320px;
+            aspect-ratio: 16 / 10;
+            border-radius: 22px;
+            overflow: hidden;
+            position: relative;
+            isolation: isolate;
+            border: 1px solid rgba(36, 65, 84, 0.2);
+            align-self: center;
+        }
+
+        .scene-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scale(1.03);
+            transition: transform 0.8s ease;
+        }
+
+        .scene:hover .scene-image img {
+            transform: scale(1.1);
+        }
+
+        .scene-image::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(13, 39, 56, 0.38), rgba(13, 39, 56, 0.1));
+        }
+
+        .day-tag {
+            position: absolute;
+            top: 14px;
+            left: 14px;
+            z-index: 2;
+            padding: 8px 12px;
+            border-radius: 999px;
+            font-size: 0.76rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 800;
+            background: #fff;
+            color: #35627c;
+            border: 1px solid rgba(36, 65, 84, 0.2);
+        }
+
+        .scene-content {
+            display: grid;
+            gap: 10px;
+            align-content: center;
+            padding-inline: 4px;
+        }
+
+        .scene-content h3 {
+            font-size: clamp(1.9rem, 4vw, 3.3rem);
+            color: #2d607c;
+            text-transform: uppercase;
+        }
+
+        .scene-content p {
+            color: var(--ink-soft);
+            font-size: 1.02rem;
+            max-width: 48ch;
+        }
+
+        .micro-notes {
+            display: grid;
+            gap: 8px;
+            margin-top: 2px;
+        }
+
+        .micro-note {
+            border-radius: 12px;
+            border: 1px dashed rgba(36, 65, 84, 0.28);
+            background: #fff;
+            padding: 10px;
+            display: flex;
+            gap: 8px;
+            align-items: start;
+            font-size: 0.92rem;
+            color: #3e6275;
+            text-decoration: none;
+            transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+        }
+
+        .micro-note:hover {
+            background-color: #f5fafe;
+            border-color: rgba(36, 65, 84, 0.4);
+            transform: translateX(3px);
+        }
+
+        .micro-note i {
+            color: #58a47b;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .scene-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 4px;
+        }
+
+        .footer-cta {
+            padding: 18px 0 10px;
+        }
+
+        .cta-box {
+            border-radius: 24px;
+            border: 1px solid var(--line);
+            background:
+                radial-gradient(circle at 18% 20%, rgba(255, 209, 102, 0.38), transparent 40%),
+                radial-gradient(circle at 86% 30%, rgba(138, 224, 193, 0.35), transparent 36%),
+                rgba(255, 255, 255, 0.82);
+            padding: clamp(24px, 4vw, 42px);
+            text-align: center;
+        }
+
+        .cta-box h2 {
+            font-size: clamp(2rem, 5vw, 4rem);
+            text-transform: uppercase;
+            color: #2d607c;
+        }
+
+        .cta-box p {
+            margin: 6px auto 18px;
+            color: var(--ink-soft);
+            max-width: 56ch;
+        }
+
+        footer {
+            text-align: center;
+            color: var(--ink-soft);
+            padding: 26px 0 36px;
+            font-size: 0.94rem;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 500;
+            display: grid;
+            place-items: center;
+            padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px calc(env(safe-area-inset-bottom, 0px) + 12px);
+            opacity: 0;
+            visibility: hidden;
+            transition: 0.35s ease;
+            background: rgba(69, 95, 110, 0.45);
+            backdrop-filter: blur(8px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-box {
+            width: min(680px, 100%);
+            max-height: min(90vh, 90dvh);
+            border-radius: 22px;
+            border: 1px solid rgba(36, 65, 84, 0.24);
+            background: #fffef9;
+            box-shadow: 0 24px 45px rgba(58, 88, 110, 0.22);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transform: translateY(12px) scale(0.98);
+            transition: transform 0.35s ease;
+        }
+
+        .modal-overlay.active .modal-box {
+            transform: translateY(0) scale(1);
+        }
+
+        .modal-accent {
+            height: 4px;
+            background: linear-gradient(135deg, #68b7ff, #8ae0c1);
+        }
+
+        .modal-header {
+            padding: 16px;
+            border-bottom: 1px solid rgba(36, 65, 84, 0.15);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-header h2 {
+            font-size: 1.7rem;
+            color: #2f617b;
+            text-transform: uppercase;
+        }
+
+        .close-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 1px solid rgba(36, 65, 84, 0.25);
+            background: #fff;
+            color: #3c6478;
+            cursor: pointer;
+            transition: 0.25s ease;
+        }
+
+        .close-btn:hover {
+            transform: rotate(90deg);
+            background: #fef3ee;
+        }
+
+        .modal-body {
+            padding: 16px;
+            overflow-y: auto;
+        }
+
+        .destination-item {
+            border-radius: 12px;
+            border: 1px solid rgba(36, 65, 84, 0.18);
+            background: #fff;
+            padding: 10px;
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .dest-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: grid;
+            place-items: center;
+            background: #eef8ff;
+            flex-shrink: 0;
+        }
+
+        .dest-info h4 {
+            margin-bottom: 3px;
+            color: #37657d;
+        }
+
+        .dest-info p {
+            color: var(--ink-soft);
+            font-size: 0.9rem;
+        }
+
+        .form-group {
+            margin-bottom: 13px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            font-size: 0.79rem;
+            font-weight: 800;
+            color: #3d667b;
+        }
+
+        .form-control {
+            width: 100%;
+            border-radius: 11px;
+            border: 1px solid rgba(36, 65, 84, 0.22);
+            background: #fff;
+            color: #27485c;
+            padding: 11px 12px;
+            font: inherit;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #68b7ff;
+            box-shadow: 0 0 0 3px rgba(104, 183, 255, 0.23);
+        }
+
+        .btn-sun:disabled {
+            opacity: 0.72;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 6px 14px rgba(255, 209, 102, 0.35);
+        }
+
+        select.form-control {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234f6f82' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.9rem center;
+            background-size: 1em;
+        }
+
+        textarea.form-control {
+            min-height: 96px;
+            resize: vertical;
+        }
+
+        .toast {
+            position: fixed;
+            right: 16px;
+            bottom: -100px;
+            z-index: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-radius: 12px;
+            border: 1px solid rgba(36, 65, 84, 0.22);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 10px 12px;
+            box-shadow: 0 14px 25px rgba(41, 76, 97, 0.2);
+            transition: bottom 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        @supports (height: 1svh) {
+            .scene {
+                min-height: min(94svh, 760px);
+            }
+        }
+
+        .toast.show {
+            bottom: 18px;
+        }
+
+        .toast i {
+            color: #4ea677;
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(18px);
+            transition: opacity 0.58s ease, transform 0.58s ease;
+        }
+
+        .reveal.in {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (max-width: 980px) {
+            .hero-shell,
+            .scene,
+            .scene:nth-child(2) {
+                grid-template-columns: 1fr;
+            }
+
+            .scene {
+                min-height: auto;
+            }
+
+            .scene-image {
+                min-height: 260px;
+            }
+        }
+
+        @media (max-width: 760px) {
+            .container {
+                width: min(1160px, 94%);
+            }
+
+            .topbar {
+                flex-wrap: wrap;
+            }
+
+            .route-pill {
+                width: 100%;
+                text-align: center;
+            }
+
+            .topbar .btn-sun {
+                width: 100%;
+            }
+
+            .hero {
+                padding-top: 18px;
+            }
+
+            .hero-shell {
+                padding: 18px;
+                border-radius: 22px;
+            }
+
+            .hero-title {
+                font-size: clamp(1.95rem, 10vw, 3.2rem);
+                text-shadow: 0 5px 0 rgba(255, 255, 255, 0.6);
+            }
+
+            .fee-total {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .scene {
+                padding: 12px;
+                border-radius: 20px;
+            }
+
+            .scene-content h3 {
+                font-size: clamp(1.6rem, 7.5vw, 2.2rem);
+            }
+
+            .scene-content p,
+            .micro-note {
+                font-size: 0.9rem;
+            }
+
+            .scene-actions {
+                display: grid;
+                grid-template-columns: 1fr;
+            }
+
+            .scene-actions .btn-sun,
+            .scene-actions .btn-soft {
+                width: 100%;
+                text-align: center;
+            }
+
+            .countdown-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .cloud,
+            .sun-glow {
+                opacity: 0.75;
+            }
+
+            .toast {
+                right: 12px;
+                left: 12px;
+                width: auto;
+            }
+
+            .toast.show {
+                bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+            }
+        }
+
+        @media (orientation: landscape) and (max-height: 650px) {
+            .scene {
+                min-height: auto;
+                max-height: 80vh;
+                padding: 12px;
+                grid-template-columns: 1fr;
+            }
+
+            .scene:nth-child(2) {
+                grid-template-columns: 1fr;
+            }
+
+            .scene-image {
+                min-height: 200px;
+                max-height: 300px;
+            }
+
+            .scene-content {
+                padding-inline: 2px;
+            }
+
+            .scene-content h3 {
+                font-size: clamp(1.4rem, 3vw, 2rem);
+                margin-bottom: 4px;
+            }
+
+            .scene-content p {
+                font-size: 0.88rem;
+                margin-bottom: 6px;
+            }
+
+            .micro-notes {
+                gap: 6px;
+                margin-top: 0;
+            }
+
+            .micro-note {
+                padding: 8px;
+                font-size: 0.84rem;
+            }
+
+            .scene-actions {
+                margin-top: 6px;
+                gap: 6px;
+            }
+
+            .scene-actions .btn-sun,
+            .scene-actions .btn-soft {
+                padding: 10px 14px;
+                font-size: 0.75rem;
+            }
+
+            .day-tag {
+                font-size: 0.68rem;
+                padding: 6px 10px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation: none !important;
+                transition: none !important;
+                scroll-behavior: auto !important;
+            }
+
+            .background-graphics {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-graphics" aria-hidden="true">
+        <div class="sun-glow"></div>
+        <div class="cloud cloud-a"></div>
+        <div class="cloud cloud-b"></div>
+        <div class="float-blob blob-1"></div>
+        <div class="float-blob blob-2"></div>
+        <div class="float-blob blob-3"></div>
+    </div>
+
+    <header class="topbar-wrap">
+        <div class="container">
+            <div class="topbar reveal">
+                <div class="brand">
+                    <span class="brand-icon"><i class="fa-solid fa-bus"></i></span>
+                    <div>
+                        Field Trip 2026
+                        <small>SMA Gunung Madu</small>
+                    </div>
+                </div>
+                <span class="route-pill">Lampung ➔ Jawa 2026</span>
+                <button class="btn-sun" onclick="openFormModal()">Konfirmasi & Pertanyaan</button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero container">
+            <div class="hero-shell reveal">
+                <article>
+                    <span class="hero-kicker"><i class="fa-solid fa-map-location-dot"></i> Lampung ➔ Semarang ➔ Jogja ➔ Bandung // 2026</span>
+                    <h1 class="hero-title">Tiga Kota. Seribu Cerita. Satu Perjalanan.</h1>
+                    <p class="hero-copy">Bukan sekadar rute dari titik A ke titik B. Ini adalah sinkronisasi antara sejarah, budaya, dan inovasi.</p>
+                    <div class="hero-actions">
+                        <!-- <button class="btn-sun" onclick="openFormModal()">Buka Konsol Komunikasi</button> -->
+                        <a class="btn-soft" href="#explore">Mulai Jelajah</a>
+                    </div>
+                </article>
+
+                <aside class="hero-side">
+                    <div class="bubble">
+                        <h3>Countdown Keberangkatan</h3>
+                        <div class="countdown-grid" id="countdown">
+                            <div class="time-box"><strong id="cdDays">00</strong><span>Hari</span></div>
+                            <div class="time-box"><strong id="cdHours">00</strong><span>Jam</span></div>
+                            <div class="time-box"><strong id="cdMinutes">00</strong><span>Menit</span></div>
+                            <div class="time-box"><strong id="cdSeconds">00</strong><span>Detik</span></div>
+                        </div>
+                    </div>
+
+                    <div class="bubble">
+                        <h3>Informasi Biaya</h3>
+                        <p style="font-size: 0.88rem; color: var(--ink-soft);">Ringkasan biaya partisipasi field trip untuk setiap murid.</p>
+                        <!-- <table class="fee-table" aria-label="Rincian biaya field trip">
+                            <tbody>
+                                <tr>
+                                    <td>Transportasi Overland</td>
+                                    <td>Rp 850.000</td>
+                                </tr>
+                                <tr>
+                                    <td>Akomodasi & Konsumsi</td>
+                                    <td>Rp 900.000</td>
+                                </tr>
+                                <tr>
+                                    <td>Tiket Destinasi & Kegiatan</td>
+                                    <td>Rp 600.000</td>
+                                </tr>
+                            </tbody>
+                        </table> -->
+                        <div class="fee-total">
+                            <span>Total Biaya</span>
+                            <strong>Rp 2.425.000</strong>
+                        </div>
+                        <a class="wa-contact" href="https://wa.me/6281229254152?text=Halo%20Pak%20Fikar%2C%20saya%20ingin%20bertanya%20tentang%20Field%20Trip%202026." target="_blank" rel="noopener noreferrer" aria-label="Hubungi contact person via WhatsApp">
+                            <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
+                            <span>
+                                <small>Contact Person: Fikar Aditya Baskoro</small>
+                                <strong>0812-8466-9494</strong>
+                            </span>
+                        </a>
+
+                         <a class="wa-contact" href="https://wa.me/6281229254152?text=Halo%20Ms%20Eka%2C%20saya%20ingin%20bertanya%20tentang%20Field%20Trip%202026." target="_blank" rel="noopener noreferrer" aria-label="Hubungi contact person via WhatsApp">
+                            <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
+                            <span>
+                                <small>Contact Person:Eka Setya Putri</small>
+                                <strong>0822-6996-4646</strong>
+                            </span>
+                        </a>
+
+                        <div class="benefits-head">✨ Benefit Paket Biaya</div>
+                        <div class="benefits-grid">
+                            <div class="benefit-item"><i class="fa-solid fa-shirt"></i>Jaket Field Trip eksklusif SMA Gunung Madu</div>
+                            <div class="benefit-item"><i class="fa-solid fa-ticket"></i>Tiket wisata di semua destinasi (gratis)</div>
+                            <div class="benefit-item"><i class="fa-solid fa-utensils"></i>Makan 14x selama perjalanan (breakfast, lunch, dinner)</div>
+                            <div class="benefit-item"><i class="fa-solid fa-bus"></i>Transportasi overland AC + Bantal leher & snacks di perjalanan</div>
+                            <!-- <div class="benefit-item"><i class="fa-solid fa-bed"></i>Akomodasi 4 malam di hotel berbintang</div> -->
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </section>
+
+        <section id="explore" class="adventure container">
+            <div class="section-head reveal">
+                <h2>DESTINASI WISATA</h2>
+                <p>Scroll ke bawah seperti petualangan. Anda Dapat klik setiap tujuan untuk melihat detailnya.</p>
+            </div>
+
+            <div class="trail">
+                <article class="scene reveal">
+                    <div class="scene-image">
+                        <span class="day-tag">Hari 02</span>
+                        <img src="h_semarang.png" alt="Landmark Semarang">
+                    </div>
+                    <div class="scene-content">
+                        <h3>Semarang</h3>
+                        <p>Fondasi arsitektur kolonial berpadu dengan dinamika akademik pesisir.</p>
+                        <div class="micro-notes">
+                            <a class="micro-note" href="https://www.google.com/maps/search/Universitas+Diponegoro+Semarang" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-graduation-cap"></i>Universitas Diponegoro: Campus tour komprehensif fasilitas akademik.</a>
+                            <a class="micro-note" href="https://www.google.com/maps/search/Lawang+Sewu+Semarang" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-dungeon"></i>Lawang Sewu: Eksplorasi mahakarya arsitektur sejarah.</a>
+                            <a class="micro-note" href="https://www.google.com/maps/search/Cimory+Dairyland+Semarang" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-cow"></i>Cimory Dairyland: Relaksasi di peternakan modern estetik.</a>
+                        </div>
+                        <!-- <div class="scene-actions">
+                            <button class="btn-sun" onclick="openDestModal('semarang')">Detail Misi</button>
+                            <button class="btn-soft" onclick="openFormModal()">Tanya Panitia</button>
+                        </div> -->
+                    </div>
+                </article>
+
+                <article class="scene reveal">
+                    <div class="scene-content">
+                        <h3>Yogyakarta</h3>
+                        <p>Pusat gravitasi seni, harmoni tradisi, dan pacuan adrenalin tanpa batas.</p>
+                        <div class="micro-notes">
+                            <a class="micro-note" href="https://www.google.com/maps/search/ISI+Yogyakarta" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-palette"></i>ISI Yogyakarta: Kawah candradimuka seniman Indonesia.</a>
+                            <a class="micro-note" href="https://www.google.com/maps/search/Rafting+Sungai+Elo+Yogyakarta" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-water"></i>Rafting Sungai Elo: Pemacu adrenalin dan pelatih teamwork.</a>
+                            <a class="micro-note" href="https://www.google.com/maps/search/Candi+Prambanan" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-monument"></i>Candi Prambanan: Saksi keagungan warisan budaya.</a>
+                            <a class="micro-note" href="https://www.google.com/maps/search/Keraton+Yogyakarta" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-chess-rook"></i>Keraton & Malioboro: Pusat budaya dan eksplorasi kota.</a>
+                        </div>
+                        <!-- <div class="scene-actions">
+                            <button class="btn-sun" onclick="openDestModal('jogja')">Detail Misi</button>
+                            <button class="btn-soft" onclick="openFormModal()">Tanya Panitia</button>
+                        </div> -->
+                    </div>
+                    <div class="scene-image">
+                        <span class="day-tag">Hari 03-04</span>
+                        <img src="h_jogja.png" alt="Landmark Yogyakarta">
+                    </div>
+                </article>
+
+                <article class="scene reveal">
+                    <div class="scene-image">
+                        <span class="day-tag">Hari 05</span>
+                        <img src="h_bandung.png" alt="Landmark Bandung">
+                    </div>
+                    <div class="scene-content">
+                        <h3>Bandung</h3>
+                        <p>Elevasi kreativitas di dataran tinggi. Titik temu alam vulkanik dan desain modern.</p>
+                        <div class="micro-notes">
+                            <a class="micro-note" href="https://www.google.com/maps/search/UPI+Bandung" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-flask"></i>UPI Bandung: Pelopor kampus pendidikan di Indonesia.</a>
+                            <a class="micro-note" href="https://www.google.com/maps/search/The+Great+Asia+Afrika+Bandung" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-ticket"></i>The Great Asia Afrika: Wahana petualangan dan safari interaktif seru.</a>
+                            <a class="micro-note" href="https://www.google.com/maps/search/Masjid+Al-Jabbar+Bandung" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-mosque"></i>Masjid Al-Jabbar: Mahakarya arsitektur terapung modern.</a>
+                        </div>
+                        <!-- <div class="scene-actions">
+                            <button class="btn-sun" onclick="openDestModal('bandung')">Detail Misi</button>
+                            <button class="btn-soft" onclick="openFormModal()">Tanya Panitia</button>
+                        </div> -->
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <section class="footer-cta container reveal">
+            <div class="cta-box">
+                <h2>SAMPAI BERJUMPA DI PERJALANAN SERU KITA YA !!!</h2>
+                <!-- <p>Apakah Anda siap bergabung atau ada yang ingin ditanyakan ke panitia?</p>
+                <button class="btn-sun" onclick="openFormModal()">BUKA KONSOL KOMUNIKASI</button> -->
+            </div>
+        </section>
+    </main>
+
+    <footer class="container reveal">
+        <p>&copy; 2026 Java Overland | Dikembangkan untuk SMA Gunung Madu</p>
+        <p style="margin-top: 4px;">M. Aziz Al Assad, S.T., Gr. - IT Team</p>
+    </footer>
+
+    <div class="modal-overlay" id="destModal" aria-hidden="true">
+        <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="destModalTitle">
+            <div class="modal-accent" id="destModalAccent"></div>
+            <div class="modal-header">
+                <h2 id="destModalTitle">Judul</h2>
+                <button class="close-btn" type="button" aria-label="Tutup detail destinasi" onclick="closeDestModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body" id="destModalContent"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="formModal" aria-hidden="true">
+        <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="formModalTitle">
+            <div class="modal-accent" style="background: linear-gradient(135deg, #ffd166, #8ae0c1);"></div>
+            <div class="modal-header">
+                <h2 id="formModalTitle">FORM KONFIRMASI</h2>
+                <button class="close-btn" type="button" aria-label="Tutup formulir" onclick="closeFormModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <p style="color: var(--ink-soft); margin-bottom: 14px;">Kirimkan konfirmasi partisipasi dan pertanyaan Anda langsung ke sistem panitia.</p>
+                
+                <div class="modal-terms">
+                    <h4>📋 Ketentuan & Jadwal Pembayaran</h4>
+                    <p style="margin-bottom: 8px;"><strong>Bagi yang BERSEDIA MENGIKUTI:</strong></p>
+                    <ul>
+                        <li>Minimal <strong>25%</strong> di akhir bulan Mei</li>
+                        <li><strong>50%</strong> di akhir bulan Juli</li>
+                        <li><strong>75%</strong> di akhir bulan Agustus</li>
+                        <li>Harus <strong>LUNAS 100%</strong> sebelum 15 September 2026</li>
+                    </ul>
+                    <p style="margin-top: 10px; margin-bottom: 8px;"><strong>Semua murid harus menyertakan:</strong></p>
+                    <ul>
+                        <li>Nomor HP pribadi Anda</li>
+                        <li>Nomor HP orang tua/wali untuk konfirmasi</li>
+                        <li>Jika tidak bisa ikut, jelaskan alasannya</li>
+                    </ul>
+                </div>
+
+                <form id="missionForm">
+                    <div class="form-group">
+                        <label for="studentName">NAMA SISWA</label>
+                        <input type="text" id="studentName" class="form-control" placeholder="Masukkan nama lengkap Anda" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="studentClass">KELAS</label>
+                        <select id="studentClass" class="form-control" required>
+                            <option value="" disabled selected>Pilih kelas Anda</option>
+                            <option value="XA">XA</option>
+                            <option value="XB">XB</option>
+                            <option value="XC">XC</option>
+                            <option value="XD">XD</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="decision">STATUS</label>
+                        <select id="decision" class="form-control" required onchange="toggleReasonField()">
+                            <option value="" disabled selected>Pilih status Anda</option>
+                            <option value="go">BERSEDIA MENGIKUTI!</option>
+                            <option value="nogo">TIDAK BISA IKUT</option>
+                            <!-- <option value="think">⏳ MASIH TANYA ORTU</option> -->
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="studentPhone">NOMOR HP PRIBADI</label>
+                        <input type="tel" id="studentPhone" class="form-control" placeholder="Contoh: 0812-3456-7890" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="parentPhone">NOMOR HP ORANG TUA/WALI</label>
+                        <input type="tel" id="parentPhone" class="form-control" placeholder="Contoh: 0812-3456-7890" required>
+                    </div>
+
+                    <div class="form-group hidden" id="reasonGroup">
+                        <label for="studentReason">ALASAN TIDAK BISA IKUT *</label>
+                        <textarea id="studentReason" class="form-control" placeholder="Jelaskan alasan Anda tidak bisa mengikuti field trip..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="studentQuestion">PERTANYAAN UNTUK PANITIA</label>
+                        <textarea id="studentQuestion" class="form-control" placeholder="Tuliskan pertanyaan Anda mengenai tour ini (opsional)..."></textarea>
+                    </div>
+
+                    <button type="submit" id="submitBtn" class="btn-sun" style="width: 100%;">SUBMIT CONFIRMATION</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="successToast" role="status" aria-live="polite">
+        <i class="fa-solid fa-circle-check"></i>
+        <div>
+            <h4 style="margin: 0; font-size: 0.95rem; color: #2e617a;">Transmisi Berhasil</h4>
+            <p style="margin-top: 1px; color: var(--ink-soft); font-size: 0.86rem;">Data dan pertanyaan telah tersimpan.</p>
+        </div>
+    </div>
+
+    <script>
+        const tourData = {
+            semarang: {
+                title: 'Misi: Semarang',
+                color: 'linear-gradient(135deg, #ffd166, #ff8f7d)',
+                accent: '#ff8f7d',
+                items: [
+                    { icon: 'fa-solid fa-graduation-cap', name: 'Universitas Diponegoro', desc: 'Campus tour komprehensif fasilitas akademik.' },
+                    { icon: 'fa-solid fa-dungeon', name: 'Lawang Sewu', desc: 'Eksplorasi mahakarya arsitektur sejarah.' },
+                    { icon: 'fa-solid fa-cow', name: 'Cimory Dairyland', desc: 'Relaksasi di peternakan modern estetik.' }
+                ]
+            },
+            jogja: {
+                title: 'Misi: Yogyakarta',
+                color: 'linear-gradient(135deg, #68b7ff, #8ae0c1)',
+                accent: '#68b7ff',
+                items: [
+                    { icon: 'fa-solid fa-palette', name: 'ISI Yogyakarta', desc: 'Kawah candradimuka seniman Indonesia.' },
+                    { icon: 'fa-solid fa-water', name: 'Rafting Sungai Elo', desc: 'Pemacu adrenalin dan pelatih teamwork.' },
+                    { icon: 'fa-solid fa-monument', name: 'Candi Prambanan', desc: 'Saksi keagungan warisan budaya.' },
+                    { icon: 'fa-solid fa-chess-rook', name: 'Keraton & Malioboro', desc: 'Pusat budaya dan eksplorasi kota.' }
+                ]
+            },
+            bandung: {
+                title: 'Misi: Bandung',
+                color: 'linear-gradient(135deg, #8ae0c1, #b7e67d)',
+                accent: '#5bb98f',
+                items: [
+                    { icon: 'fa-solid fa-flask', name: 'UPI Bandung', desc: 'Pelopor kampus pendidikan di Indonesia.' },
+                    { icon: 'fa-solid fa-ticket', name: 'The Great Asia Afrika', desc: 'Wahana petualangan dan safari interaktif dengan berbagai atraksi menarik.' },
+                    { icon: 'fa-solid fa-mosque', name: 'Masjid Al-Jabbar', desc: 'Mahakarya arsitektur terapung modern.' }
+                ]
+            }
+        };
+
+        const DEPARTURE_DATE = new Date('2026-10-05T00:00:00+07:00').getTime();
+        const APPS_SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwZS_0QQNZx5K_HugYapZI5skWyoF3tLynnkOenoQck8Fqk59_q6haOHhaUB9Kpv0Uu/exec';
+
+        const destModal = document.getElementById('destModal');
+        const formModal = document.getElementById('formModal');
+
+        function lockScroll(locked) {
+            document.body.style.overflow = locked ? 'hidden' : 'auto';
+        }
+
+        function updateCountdown() {
+            const now = Date.now();
+            const diff = DEPARTURE_DATE - now;
+
+            const daysEl = document.getElementById('cdDays');
+            const hoursEl = document.getElementById('cdHours');
+            const minutesEl = document.getElementById('cdMinutes');
+            const secondsEl = document.getElementById('cdSeconds');
+
+            if (diff <= 0) {
+                daysEl.textContent = '00';
+                hoursEl.textContent = '00';
+                minutesEl.textContent = '00';
+                secondsEl.textContent = '00';
+                return;
+            }
+
+            const totalSeconds = Math.floor(diff / 1000);
+            const days = Math.floor(totalSeconds / 86400);
+            const hours = Math.floor((totalSeconds % 86400) / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+
+            daysEl.textContent = String(days).padStart(2, '0');
+            hoursEl.textContent = String(hours).padStart(2, '0');
+            minutesEl.textContent = String(minutes).padStart(2, '0');
+            secondsEl.textContent = String(seconds).padStart(2, '0');
+        }
+
+        function openDestModal(city) {
+            const data = tourData[city];
+            if (!data) return;
+
+            document.getElementById('destModalTitle').innerText = data.title;
+            document.getElementById('destModalAccent').style.background = data.color;
+            document.getElementById('destModalContent').innerHTML = data.items.map(item => `
+                <div class="destination-item" style="border-left: 3px solid ${data.accent};">
+                    <div class="dest-icon" style="color: ${data.accent};"><i class="${item.icon}"></i></div>
+                    <div class="dest-info">
+                        <h4>${item.name}</h4>
+                        <p>${item.desc}</p>
+                    </div>
+                </div>
+            `).join('');
+
+            destModal.classList.add('active');
+            destModal.setAttribute('aria-hidden', 'false');
+            lockScroll(true);
+        }
+
+        function closeDestModal() {
+            destModal.classList.remove('active');
+            destModal.setAttribute('aria-hidden', 'true');
+            lockScroll(false);
+        }
+
+        function openFormModal() {
+            formModal.classList.add('active');
+            formModal.setAttribute('aria-hidden', 'false');
+            lockScroll(true);
+        }
+
+        function closeFormModal() {
+            formModal.classList.remove('active');
+            formModal.setAttribute('aria-hidden', 'true');
+            lockScroll(false);
+        }
+
+        function toggleReasonField() {
+            const decision = document.getElementById('decision').value;
+            const reasonGroup = document.getElementById('reasonGroup');
+            const studentReason = document.getElementById('studentReason');
+            
+            if (decision === 'nogo') {
+                reasonGroup.classList.remove('hidden');
+                studentReason.required = true;
+            } else {
+                reasonGroup.classList.add('hidden');
+                studentReason.required = false;
+                studentReason.value = '';
+            }
+        }
+
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target !== this) return;
+                this.classList.remove('active');
+                this.setAttribute('aria-hidden', 'true');
+                lockScroll(false);
+            });
+        });
+
+        document.addEventListener('keydown', e => {
+            if (e.key !== 'Escape') return;
+            if (destModal.classList.contains('active')) closeDestModal();
+            if (formModal.classList.contains('active')) closeFormModal();
+        });
+
+        const revealObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (!entry.isIntersecting) return;
+                entry.target.classList.add('in');
+                observer.unobserve(entry.target);
+            });
+        }, { threshold: 0.18 });
+
+        document.querySelectorAll('.reveal').forEach((el, index) => {
+            el.style.transitionDelay = `${Math.min(index * 65, 300)}ms`;
+            revealObserver.observe(el);
+        });
+
+        document.getElementById('missionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            if (APPS_SCRIPT_WEB_APP_URL === 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE') {
+                alert('URL Google Apps Script belum diisi. Silakan tempel URL Web App terlebih dahulu.');
+                return;
+            }
+
+            const submitBtn = document.getElementById('submitBtn');
+            const decisionEl = document.getElementById('decision');
+            const decisionMap = {
+                go: 'SIAP BERANGKAT',
+                nogo: 'TIDAK BISA IKUT'
+            };
+
+            const payload = {
+                timestamp: new Date().toISOString(),
+                studentName: document.getElementById('studentName').value.trim(),
+                studentClass: document.getElementById('studentClass').value,
+                decision: decisionMap[decisionEl.value] || decisionEl.value,
+                studentPhone: document.getElementById('studentPhone').value.trim(),
+                parentPhone: document.getElementById('parentPhone').value.trim(),
+                studentReason: document.getElementById('studentReason').value.trim(),
+                studentQuestion: document.getElementById('studentQuestion').value.trim(),
+                source: 'Field Trip Web Form'
+            };
+
+            const originalBtnText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'MENGIRIM...';
+
+            try {
+                const response = await fetch(APPS_SCRIPT_WEB_APP_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Gagal mengirim data ke server.');
+                }
+
+                closeFormModal();
+
+                const toast = document.getElementById('successToast');
+                toast.classList.add('show');
+                this.reset();
+                document.getElementById('reasonGroup').classList.add('hidden');
+
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3800);
+            } catch (error) {
+                alert('Pengiriman gagal. Periksa URL Apps Script, izin deploy, lalu coba lagi.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalBtnText;
+            }
+        });
+
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+    </script>
+</body>
+</html>
