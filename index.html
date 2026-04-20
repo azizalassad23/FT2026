@@ -1167,6 +1167,77 @@
             }
         }
 
+        .rekening-box {
+            margin-top: 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(36, 65, 84, 0.22);
+            background: linear-gradient(135deg, #f0fbf7, #e8f5ff);
+            padding: 12px;
+        }
+
+        .rekening-box-head {
+            font-family: 'Baloo 2', cursive;
+            font-size: 1rem;
+            color: #2f5e77;
+            font-weight: 700;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .rekening-detail {
+            display: grid;
+            gap: 6px;
+        }
+
+        .rekening-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 10px;
+            background: #fff;
+            border-radius: 8px;
+            border: 1px dashed rgba(36, 65, 84, 0.2);
+            font-size: 0.88rem;
+            color: #3f6276;
+        }
+
+        .rekening-row span:last-child {
+            font-weight: 700;
+            color: #2f5e77;
+            text-align: right;
+        }
+
+        .btn-confirm-payment {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            margin-top: 12px;
+            border: none;
+            border-radius: 14px;
+            padding: 13px 18px;
+            font: inherit;
+            font-size: 0.88rem;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            font-weight: 800;
+            cursor: pointer;
+            text-decoration: none;
+            background: linear-gradient(135deg, #25d366, #1ea45a);
+            color: #fff;
+            box-shadow: 0 10px 24px rgba(37, 211, 102, 0.4);
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .btn-confirm-payment:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 16px 26px rgba(37, 211, 102, 0.45);
+        }
+
         @media (prefers-reduced-motion: reduce) {
             * {
                 animation: none !important;
@@ -1216,6 +1287,18 @@
                     <div class="hero-actions">
                         <!-- <button class="btn-sun" onclick="openFormModal()">Buka Konsol Komunikasi</button> -->
                         <a class="btn-soft" href="#explore">Mulai Jelajah</a>
+                    </div>
+
+                    <div class="rekening-box" style="margin-top: 20px;">
+                        <div class="rekening-box-head"><i class="fa-solid fa-building-columns"></i> Rekening Pembayaran</div>
+                        <div class="rekening-detail">
+                            <div class="rekening-row"><span>Bank</span><span>Bank Mandiri</span></div>
+                            <div class="rekening-row"><span>No. Rekening</span><span>1140033375752</span></div>
+                            <div class="rekening-row"><span>Atas Nama</span><span>Eka Setya Putri</span></div>
+                        </div>
+                        <a class="btn-confirm-payment" href="https://wa.me/6282269964646?text=Halo%20Ms%20Eka%2C%20saya%20ingin%20konfirmasi%20pembayaran%20Field%20Trip%202026.%0ANama%3A%20%5BIsi%20nama%20lengkap%5D%0AKelas%3A%20%5BIsi%20kelas%5D%0AJumlah%20Dibayar%3A%20Rp%20%5BIsi%20nominal%5D%0ABukti%20Transfer%3A%20%5Blampirkan%20gambar%5D" target="_blank" rel="noopener noreferrer" aria-label="Konfirmasi pembayaran via WhatsApp Eka Setya Putri">
+                            <i class="fa-brands fa-whatsapp"></i> Konfirmasi Pembayaran
+                        </a>
                     </div>
                 </article>
 
@@ -1277,6 +1360,7 @@
                             <div class="benefit-item"><i class="fa-solid fa-bus"></i>Transportasi overland AC + Bantal leher & snacks di perjalanan</div>
                             <!-- <div class="benefit-item"><i class="fa-solid fa-bed"></i>Akomodasi 4 malam di hotel berbintang</div> -->
                         </div>
+
                     </div>
                 </aside>
             </div>
