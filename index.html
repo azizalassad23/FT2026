@@ -203,6 +203,62 @@
             letter-spacing: 0.01em;
         }
 
+        /* Styling Khusus Modal Jaket & Tombol Ukuran */
+        .size-selector {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 6px;
+        }
+
+        .size-radio {
+            display: none;
+        }
+
+        .size-btn {
+            flex: 1;
+            min-width: 50px;
+            text-align: center;
+            padding: 14px 10px;
+            background: #fff;
+            border: 2px solid rgba(36, 65, 84, 0.15);
+            border-radius: 14px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #4f6f82;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            font-family: 'Baloo 2', cursive;
+        }
+
+        .size-radio:checked + .size-btn {
+            background: linear-gradient(135deg, #8ae0c1, #b7e67d);
+            border-color: #58a47b;
+            color: #1a4731;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(138, 224, 193, 0.4);
+        }
+
+        .size-btn:hover {
+            background: #f9fbff;
+            border-color: rgba(104, 183, 255, 0.5);
+        }
+
+        .alert-box {
+            margin-top: 12px;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 0.88rem;
+            display: none;
+            line-height: 1.4;
+        }
+
+        .alert-error {
+            background: #fff0f0;
+            border: 1px solid #ffcaca;
+            color: #c92a2a;
+        }
+
         .container {
             width: min(1160px, 92%);
             margin-inline: auto;
@@ -625,8 +681,8 @@
             color: #2f5e77;
         }
 
-        .form-group.hidden {
-            display: none;
+        .hidden {
+            display: none !important;
         }
 
         .adventure {
@@ -1287,6 +1343,7 @@
                     <div class="hero-actions">
                         <!-- <button class="btn-sun" onclick="openFormModal()">Buka Konsol Komunikasi</button> -->
                         <a class="btn-soft" href="#explore">Mulai Jelajah</a>
+                        <button class="btn-sun" onclick="openJacketModal()" style="background: linear-gradient(135deg, #8ae0c1, #5bb98f); color: #1a4731; box-shadow: 0 10px 24px rgba(138, 224, 193, 0.4);"><i class="fa-solid fa-shirt"></i> KLAIM UKURAN JAKET</button>
                     </div>
 
                     <div class="rekening-box" style="margin-top: 20px;">
@@ -1463,6 +1520,75 @@
             </div>
             <div class="modal-body" id="destModalContent"></div>
         </div>
+        </div>
+        <div class="modal-overlay" id="jacketModal" aria-hidden="true">
+        <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="jacketModalTitle">
+            <div class="modal-accent" style="background: linear-gradient(135deg, #8ae0c1, #68b7ff);"></div>
+            <div class="modal-header">
+                <h2 id="jacketModalTitle">KLAIM JAKET</h2>
+                <button class="close-btn" type="button" aria-label="Tutup form jaket" onclick="closeJacketModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                
+                <div id="stepCheckNIS">
+                    <p style="color: var(--ink-soft); margin-bottom: 14px; font-size: 0.9rem;">Masukkan NIS dan PIN (4 digit terakhir nomor HP) untuk validasi data.</p>
+                    
+                    <div class="form-group">
+                        <label for="inputNIS">NOMOR INDUK SISWA (NIS)</label>
+                        <input type="number" id="inputNIS" class="form-control" placeholder="Contoh: 12345" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="inputPIN">PIN (4 DIGIT TERAKHIR NO HP)</label>
+                        <input type="text" id="inputPIN" class="form-control" inputmode="numeric" maxlength="4" placeholder="Contoh: 7890" required>
+                    </div>
+
+                    <button type="button" id="btnCheckNIS" class="btn-sun" style="width: 100%; background: linear-gradient(135deg, #68b7ff, #a9dcff); color: #1b4d68;" onclick="checkNIS()">VERIFIKASI DATA</button>
+                    <div id="paymentAlert" class="alert-box alert-error"></div>
+                </div>
+
+                <div id="stepChooseSize" class="hidden">
+                    <div style="background: #f0fbf7; border: 1px dashed rgba(88, 164, 123, 0.3); border-radius: 12px; padding: 12px; margin-bottom: 16px;">
+                        <h4 style="color: #1ea45a; margin-bottom: 4px; font-size: 0.95rem;"><i class="fa-solid fa-circle-check"></i> Syarat Terpenuhi</h4>
+                        <p style="font-size: 0.88rem; color: #2a5f7c;" id="studentGreeting">Halo! Silakan pilih ukuran jaket Anda.</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label>PILIH UKURAN JAKET</label>
+                        <div class="size-selector">
+                            <input type="radio" name="jacketSize" id="sizeS" value="S" class="size-radio">
+                            <label for="sizeS" class="size-btn">S</label>
+
+                            <input type="radio" name="jacketSize" id="sizeM" value="M" class="size-radio">
+                            <label for="sizeM" class="size-btn">M</label>
+
+                            <input type="radio" name="jacketSize" id="sizeL" value="L" class="size-radio" checked>
+                            <label for="sizeL" class="size-btn">L</label>
+
+                            <input type="radio" name="jacketSize" id="sizeXL" value="XL" class="size-radio">
+                            <label for="sizeXL" class="size-btn">XL</label>
+
+                            <input type="radio" name="jacketSize" id="sizeXXL" value="XXL" class="size-radio">
+                            <label for="sizeXXL" class="size-btn">XXL</label>
+                        </div>
+                    </div>
+
+                    <button type="button" id="btnSubmitSize" class="btn-sun" style="width: 100%;" onclick="submitJacketSize()">SIMPAN UKURAN</button>
+                </div>
+
+                <div id="stepSuccess" class="hidden" style="text-align: center; padding: 16px 10px;">
+                    <div style="font-size: 3.5rem; color: #25d366; margin-bottom: 12px; animation: blob-float 3s ease-in-out infinite;">
+                        <i class="fa-brands fa-whatsapp"></i>
+                    </div>
+                    <h3 style="color: #2a5f7c; margin-bottom: 8px; font-size: 1.4rem;">Ukuran Tersimpan!</h3>
+                    <p style="color: var(--ink-soft); font-size: 0.95rem; margin-bottom: 22px;">Data ukuran jaket berhasil diamankan. Langkah terakhir: silakan bergabung ke Grup WhatsApp resmi peserta Field Trip 2026 untuk update info keberangkatan.</p>
+                    
+                    <a href="https://chat.whatsapp.com/JkVAtKc9VgLJiu1WyLfGBv" target="_blank" rel="noopener noreferrer" class="btn-confirm-payment">
+                        GABUNG GRUP PESERTA
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="modal-overlay" id="formModal" aria-hidden="true">
@@ -1591,7 +1717,7 @@
         };
 
         const DEPARTURE_DATE = new Date('2026-10-05T00:00:00+07:00').getTime();
-        const APPS_SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwZS_0QQNZx5K_HugYapZI5skWyoF3tLynnkOenoQck8Fqk59_q6haOHhaUB9Kpv0Uu/exec';
+        const APPS_SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyzLOpDckE2_ENWBQbec6m8irYHjs7YjSAe08fNnYFL--g8kboWCHCWTRKmnlo85zZS/exec';
 
         const destModal = document.getElementById('destModal');
         const formModal = document.getElementById('formModal');
@@ -1667,6 +1793,185 @@
             formModal.setAttribute('aria-hidden', 'true');
             lockScroll(false);
         }
+        
+        // ==========================================
+        // SISTEM KLAIM UKURAN JAKET
+        // ==========================================
+        
+        let verifiedStudentNIS = ''; // Menyimpan NIS setelah lolos validasi
+
+        const jacketModal = document.getElementById('jacketModal');
+        const stepCheckNIS = document.getElementById('stepCheckNIS');
+        const stepChooseSize = document.getElementById('stepChooseSize');
+        const stepSuccess = document.getElementById('stepSuccess');
+        const paymentAlert = document.getElementById('paymentAlert');
+        const inputNIS = document.getElementById('inputNIS');
+        const inputPIN = document.getElementById('inputPIN');
+        const btnCheckNIS = document.getElementById('btnCheckNIS');
+        const btnSubmitSize = document.getElementById('btnSubmitSize');
+        const studentGreeting = document.getElementById('studentGreeting');
+
+        function openJacketModal() {
+            resetJacketModal(); 
+            if (jacketModal) {
+                jacketModal.classList.add('active');
+                jacketModal.setAttribute('aria-hidden', 'false');
+                lockScroll(true);
+            }
+        }
+
+        function resetJacketModal() {
+            // Menggunakan if() agar script tidak crash jika elemen belum terbaca
+            if (stepCheckNIS) stepCheckNIS.classList.remove('hidden');
+            if (stepChooseSize) stepChooseSize.classList.add('hidden');
+            if (stepSuccess) stepSuccess.classList.add('hidden'); 
+            if (paymentAlert) paymentAlert.style.display = 'none';
+            if (inputNIS) inputNIS.value = '';
+            if (inputPIN) inputPIN.value = '';
+            verifiedStudentNIS = '';
+        }
+
+        function closeJacketModal() {
+            jacketModal.classList.remove('active');
+            jacketModal.setAttribute('aria-hidden', 'true');
+            lockScroll(false);
+        }
+
+        function resetJacketModal() {
+            stepCheckNIS.classList.remove('hidden');
+            stepChooseSize.classList.add('hidden');
+            paymentAlert.style.display = 'none';
+            inputNIS.value = '';
+            inputPIN.value = '';
+            verifiedStudentNIS = '';
+        }
+
+        async function checkNIS() {
+            const nisValue = inputNIS.value.trim();
+            const pinValue = inputPIN.value.trim();
+
+            // Validasi Input Kosong
+            if (!nisValue || !pinValue) {
+                showJacketAlert('Harap masukkan NIS dan PIN dengan lengkap.');
+                return;
+            }
+
+            // Validasi Format PIN (harus 4 digit)
+            if (pinValue.length !== 4) {
+                showJacketAlert('PIN harus berupa 4 digit terakhir nomor HP Anda.');
+                return;
+            }
+
+            if (APPS_SCRIPT_WEB_APP_URL === 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE') {
+                showJacketAlert('Sistem belum terhubung ke server. Hubungi IT Support.');
+                return;
+            }
+
+            // UI State: Loading
+            const originalText = btnCheckNIS.innerHTML;
+            btnCheckNIS.disabled = true;
+            btnCheckNIS.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> MEMERIKSA DATA...';
+            paymentAlert.style.display = 'none';
+
+            try {
+                // Request ke Google Apps Script
+                const response = await fetch(APPS_SCRIPT_WEB_APP_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({
+                        action: 'check_payment',
+                        nis: nisValue,
+                        pin: pinValue
+                    })
+                });
+
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
+
+                if (data.status === 'success' && data.eligible === true) {
+                    // Berhasil & Memenuhi Syarat 70%
+                    verifiedStudentNIS = nisValue;
+                    studentGreeting.innerHTML = `Halo, <strong>${data.nama}</strong>! Silakan pilih ukuran jaket Anda.`;
+                    
+                    // Transisi UI dari Pengecekan -> Pemilihan Ukuran
+                    stepCheckNIS.classList.add('hidden');
+                    stepChooseSize.classList.remove('hidden');
+                } else {
+                    // Gagal (Entah karena data salah atau belum bayar 70%)
+                    showJacketAlert(data.message);
+                }
+            } catch (error) {
+                showJacketAlert('Gagal terhubung ke server. Periksa koneksi internet Anda.');
+            } finally {
+                // Kembalikan tombol ke keadaan semula
+                btnCheckNIS.disabled = false;
+                btnCheckNIS.innerHTML = originalText;
+            }
+        }
+
+        function showJacketAlert(message) {
+            paymentAlert.textContent = message;
+            paymentAlert.style.display = 'block';
+        }
+
+        async function submitJacketSize() {
+            if (!verifiedStudentNIS) return;
+
+            const selectedSize = document.querySelector('input[name="jacketSize"]:checked').value;
+            
+            // UI State: Loading
+            const originalText = btnSubmitSize.innerHTML;
+            btnSubmitSize.disabled = true;
+            btnSubmitSize.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> MENYIMPAN...';
+
+            try {
+                const response = await fetch(APPS_SCRIPT_WEB_APP_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({
+                        action: 'save_jacket',
+                        nis: verifiedStudentNIS,
+                        ukuran: selectedSize
+                    })
+                });
+
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    // JANGAN tutup modal, tapi pindah ke Tahap 3
+                    stepChooseSize.classList.add('hidden');
+                    stepSuccess.classList.remove('hidden');
+                    
+                    // Kita tetap bisa memunculkan toast kecil di pojok sebagai aksen
+                    const toast = document.getElementById('successToast');
+                    const toastTitle = toast.querySelector('h4');
+                    const toastDesc = toast.querySelector('p');
+                    
+                    const oldTitle = toastTitle.textContent;
+                    const oldDesc = toastDesc.textContent;
+                    
+                    toastTitle.textContent = 'Transmisi Sukses';
+                    toastDesc.textContent = `Ukuran ${selectedSize} dikunci.`;
+                    toast.classList.add('show');
+                    
+                    setTimeout(() => {
+                        toast.classList.remove('show');
+                        setTimeout(() => {
+                            toastTitle.textContent = oldTitle;
+                            toastDesc.textContent = oldDesc;
+                        }, 500);
+                    }, 3800);
+                } else {
+                    alert('Gagal menyimpan ukuran: ' + data.message);
+                }
+            } catch (error) {
+                alert('Terjadi kesalahan jaringan saat menyimpan data ukuran.');
+            } finally {
+                btnSubmitSize.disabled = false;
+                btnSubmitSize.innerHTML = originalText;
+            }
+        }
 
         function toggleReasonField() {
             const decision = document.getElementById('decision').value;
@@ -1696,6 +2001,7 @@
             if (e.key !== 'Escape') return;
             if (destModal.classList.contains('active')) closeDestModal();
             if (formModal.classList.contains('active')) closeFormModal();
+            if (jacketModal.classList.contains('active')) closeJacketModal(); // Tambahkan baris ini
         });
 
         const revealObserver = new IntersectionObserver((entries, observer) => {
