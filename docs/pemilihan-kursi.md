@@ -215,6 +215,29 @@ Selama `pemilihan_aktif` bernilai `FALSE`, kedua aksi membalas:
 Halaman web menampilkan isi `message` apa adanya di layar verifikasi, jadi
 kalimat itu bebas Anda ubah dari Sheet tanpa menyentuh kode.
 
+## Kode Apps Script
+
+Implementasi lengkapnya ada di [`apps-script/Code.gs`](../apps-script/Code.gs).
+Tempel seluruh isinya menggantikan `Code.gs` yang lama di editor Apps Script,
+lalu jalankan menu **Field Trip → Siapkan tab yang belum ada** untuk membuat
+tab dan kolom yang belum tersedia beserta nilai bawaannya.
+
+Berkas itu menangani kelima aksi sekaligus — termasuk `check_payment`,
+`save_jacket`, dan form konfirmasi lama — jadi tidak perlu digabung dengan
+kode sebelumnya.
+
+Logikanya bisa diuji tanpa membuka Google Sheet:
+
+```bash
+cd apps-script && node uji-lokal.js
+```
+
+Berkas `uji-lokal.js` menjalankan `Code.gs` di Node dengan tiruan
+`SpreadsheetApp`, `LockService`, dan jam yang bisa dimajukan, lalu memeriksa 37
+pernyataan: verifikasi PIN, syarat pembayaran, perpindahan giliran, pengejaran
+jendela yang menumpuk, rebutan kursi, zona gender, batas kuota, dan penempatan
+manual. Jalankan ulang setiap kali `Code.gs` diubah.
+
 ## Yang wajib ada di sisi Apps Script
 
 ### 1. Kunci penulisan — ini tidak boleh dilewat
