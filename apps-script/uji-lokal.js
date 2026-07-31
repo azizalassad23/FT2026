@@ -45,20 +45,24 @@ class Sheet {
   setFrozenRows() {}
 }
 
-const HEADER_SISWA = ['NIS', 'Nama', 'PIN', 'Kelas', 'Gender', 'TotalBayar', 'Lunas', 'TglLunas',
-  'NoAntrean', 'Bus', 'Kursi', 'WaktuPilih', 'Terlewat', 'UkuranJaket', 'WaktuJaket'];
+// Meniru struktur sheet asli: tab "DataSiswa", judul kolom apa adanya,
+// tanpa kolom PIN (diambil dari No HP) dan tanpa kolom Lunas
+// (dihitung dari Total Bayar).
+const HEADER_SISWA = ['NIS', 'Nama Siswa', 'Kelas', 'Total Bayar', 'Ukuran Jaket', 'No HP',
+  'Gender', 'TglLunas', 'NoAntrean', 'Bus', 'Kursi', 'WaktuPilih', 'Terlewat', 'WaktuJaket'];
 
 function buatSpreadsheet(jumlahSiswa) {
   const siswa = [HEADER_SISWA.slice()];
   for (let i = 1; i <= jumlahSiswa; i++) {
     const lunas = i <= 60;
     siswa.push([
-      10000 + i, 'Siswa ' + i, String(1000 + i), 'XA',
-      i % 2 === 0 ? 'P' : 'L',
+      10000 + i, 'Siswa ' + i, 'XA',
       lunas ? 2450000 : 1000000,
-      lunas ? 'TRUE' : 'FALSE',
+      '',
+      '08123456' + String(1000 + i),          // PIN = empat digit terakhir
+      i % 2 === 0 ? 'P' : 'L',
       lunas ? new Date('2026-08-01T00:00:00Z').getTime() + i * 3600000 : '',
-      '', '', '', '', '', '', ''
+      '', '', '', '', '', ''
     ]);
   }
   const konfig = [['Bus', 'Kursi', 'Tipe', 'Label'],
@@ -74,7 +78,7 @@ function buatSpreadsheet(jumlahSiswa) {
     ['antrean_sekarang', 0], ['antrean_mulai', ''], ['fase', 'antrean'],
     ['pesan_belum_dibuka', 'Belum dibuka.']];
   return {
-    Siswa: new Sheet('Siswa', siswa),
+    DataSiswa: new Sheet('DataSiswa', siswa),
     KonfigKursi: new Sheet('KonfigKursi', konfig),
     Pengaturan: new Sheet('Pengaturan', set)
   };
@@ -88,6 +92,10 @@ function jalankan(sheets) {
       static now() { return JAM; }
     },
     SpreadsheetApp: {
+      openById: () => ({
+        getSheetByName: n => sheets[n] || null,
+        insertSheet: n => (sheets[n] = new Sheet(n, []))
+      }),
       getActiveSpreadsheet: () => ({
         getSheetByName: n => sheets[n] || null,
         insertSheet: n => (sheets[n] = new Sheet(n, []))
@@ -113,7 +121,7 @@ function jalankan(sheets) {
 const sheets = buatSpreadsheet(80);
 const post = jalankan(sheets);
 const nis = i => String(10000 + i);
-const pin = i => String(1000 + i);
+const pin = i => String(1000 + i); // 4 digit terakhir No HP
 const ok = (label, syarat) => console.log((syarat ? '  OK  ' : ' GAGAL') + ' | ' + label);
 
 console.log('=== 1. Verifikasi & jaket ===');
@@ -219,7 +227,7 @@ ok('siswa belum lunas ditolak lebih dulu', r.kode === 'BELUM_LUNAS');
 console.log('       terpakai akhir =', akhir.antrean.terpakai, '| fase =', akhir.antrean.fase);
 
 console.log('\n=== 9. Penempatan manual panitia ===');
-const tS = sheets.Siswa;
+const tS = sheets.DataSiswa;
 const kBus = HEADER_SISWA.indexOf('Bus') + 1, kKursi = HEADER_SISWA.indexOf('Kursi') + 1;
 tS.set(63, kBus, 3); tS.set(63, kKursi, 44);   // baris 63 = siswa 62
 const manual = post({ action: 'get_seat_state', nis: nis(62), pin: pin(62) });

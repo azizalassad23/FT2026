@@ -24,10 +24,47 @@
  * URL lama masih menjalankan kode lama.
  */
 
-const TAB_SISWA = 'Siswa';
+/**
+ * ID spreadsheet. Dikosongkan berarti memakai spreadsheet tempat skrip ini
+ * terpasang — cukup untuk skrip yang dibuka lewat Extensions > Apps Script.
+ *
+ * Bila skrip Anda berdiri sendiri (standalone), isi ID-nya LANGSUNG DI EDITOR
+ * APPS SCRIPT, jangan di berkas ini: repo ini publik, dan ID spreadsheet yang
+ * setelan berbaginya "siapa saja yang memiliki link" bisa dibuka orang luar
+ * hanya dengan ID tersebut.
+ */
+const SPREADSHEET_ID = '';
+
+const TAB_SISWA = 'DataSiswa';
 const TAB_KONFIG_KURSI = 'KonfigKursi';
 const TAB_PENGATURAN = 'Pengaturan';
 const TAB_ANGKET = 'Angket';
+
+/**
+ * Nama kolom dikenali lewat daftar padanan di bawah, jadi judul kolom di
+ * spreadsheet tidak perlu diubah. Yang di depan dicoba lebih dulu.
+ *
+ * Bila ada judul kolom yang tidak terdeteksi, tambahkan saja tulisannya
+ * ke daftar yang sesuai — tidak perlu mengubah bagian lain.
+ */
+const PADANAN_KOLOM = {
+  NIS:         ['NIS', 'Nis', 'NISN', 'No Induk', 'Nomor Induk'],
+  Nama:        ['Nama', 'Nama Siswa', 'NamaSiswa', 'Nama Lengkap'],
+  NoHP:        ['NoHP', 'No HP', 'No. HP', 'Nomor HP', 'HP', 'No Telepon', 'Telepon', 'WA', 'No WA'],
+  PIN:         ['PIN', 'Pin'],
+  Kelas:       ['Kelas'],
+  Gender:      ['Gender', 'JK', 'Jenis Kelamin', 'L/P', 'LP'],
+  TotalBayar:  ['TotalBayar', 'Total Bayar', 'Total Pembayaran', 'Jumlah Bayar', 'Total', 'Pembayaran'],
+  Lunas:       ['Lunas', 'Status Lunas'],
+  TglLunas:    ['TglLunas', 'Tgl Lunas', 'Tanggal Lunas', 'Waktu Lunas'],
+  NoAntrean:   ['NoAntrean', 'No Antrean', 'Nomor Antrean'],
+  Bus:         ['Bus', 'No Bus', 'Nomor Bus'],
+  Kursi:       ['Kursi', 'No Kursi', 'Nomor Kursi'],
+  WaktuPilih:  ['WaktuPilih', 'Waktu Pilih'],
+  Terlewat:    ['Terlewat'],
+  UkuranJaket: ['UkuranJaket', 'Ukuran Jaket', 'Ukuran', 'Jaket'],
+  WaktuJaket:  ['WaktuJaket', 'Waktu Jaket']
+};
 
 const JUMLAH_BUS = 3;
 const KURSI_PER_BUS = 50;
@@ -68,6 +105,9 @@ function doPost(e) {
       case 'save_jacket':    return kirim(saveJacket(req));
       case 'get_seat_state': return kirim(getSeatState(req));
       case 'claim_seat':     return kirim(claimSeat(req));
+      // Form konfirmasi lama: halaman web mengirim tanpa field action,
+      // tetapi 'submit_mission' ikut diterima demi kompatibilitas.
+      case 'submit_mission':
       default:               return kirim(simpanAngket(req));
     }
   } catch (err) {
@@ -93,15 +133,23 @@ function kirim(obj) {
  *  UTILITAS SPREADSHEET
  * ========================================================================== */
 
+function bukaSpreadsheet() {
+  if (SPREADSHEET_ID) return SpreadsheetApp.openById(SPREADSHEET_ID);
+  const aktif = SpreadsheetApp.getActiveSpreadsheet();
+  if (!aktif) throw new Error('SPREADSHEET_ID masih kosong dan skrip ini tidak terpasang pada spreadsheet mana pun.');
+  return aktif;
+}
+
 function bukaSheet(nama) {
-  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(nama);
+  const sh = bukaSpreadsheet().getSheetByName(nama);
   if (!sh) throw new Error('Tab "' + nama + '" tidak ditemukan. Jalankan menu Field Trip > Siapkan tab yang belum ada.');
   return sh;
 }
 
 /**
  * Membaca satu tab menjadi objek yang dipetakan berdasarkan nama kolom,
- * bukan nomor kolom, supaya urutan kolom di spreadsheet bebas diubah.
+ * bukan nomor kolom, supaya urutan kolom di spreadsheet bebas diubah dan
+ * judul kolom yang sudah ada tidak perlu ditulis ulang.
  */
 function bacaTabel(nama) {
   const sheet = bukaSheet(nama);
@@ -110,7 +158,19 @@ function bacaTabel(nama) {
 
   const header = nilai.shift().map(h => String(h).trim());
   const kolom = {};
+
+  // Judul apa adanya.
   header.forEach((h, i) => { if (h) kolom[h] = i; });
+
+  // Lalu nama baku lewat daftar padanan, tanpa menimpa yang sudah cocok persis.
+  const rapi = s => String(s).trim().toLowerCase().replace(/[\s._-]+/g, '');
+  Object.keys(PADANAN_KOLOM).forEach(baku => {
+    if (baku in kolom) return;
+    for (const alias of PADANAN_KOLOM[baku]) {
+      const idx = header.findIndex(h => h && rapi(h) === rapi(alias));
+      if (idx !== -1) { kolom[baku] = idx; return; }
+    }
+  });
 
   return { sheet, header, kolom, baris: nilai };
 }
@@ -211,15 +271,37 @@ function samaNis(a, b) {
  * Mengembalikan null bila NIS tidak ada ATAU PIN salah — sengaja tidak
  * dibedakan supaya tidak bisa dipakai menebak NIS mana yang terdaftar.
  */
+/**
+ * PIN siswa. Bila ada kolom PIN khusus, itu yang dipakai. Bila tidak, PIN
+ * diambil dari empat digit terakhir nomor HP — sama seperti skrip lama.
+ */
+function pinSiswa(t, baris) {
+  const cPIN = kolomOpsional(t, 'PIN');
+  if (cPIN !== -1 && !kosong(baris[cPIN])) return normalPin(baris[cPIN]);
+  const cHP = kolomOpsional(t, 'NoHP');
+  if (cHP !== -1) return normalPin(baris[cHP]);
+  throw new Error('Tidak ada kolom PIN maupun kolom nomor HP di tab ' + TAB_SISWA + '.');
+}
+
+/**
+ * Status lunas. Memakai kolom Lunas bila ada isinya; bila tidak, dihitung
+ * dari TotalBayar terhadap total_biaya.
+ */
+function siswaLunas(t, baris) {
+  const cL = kolomOpsional(t, 'Lunas');
+  if (cL !== -1 && !kosong(baris[cL])) return benar(baris[cL]);
+  const total = angka(pengaturan('total_biaya'));
+  return total > 0 && angka(baris[kolomWajib(t, 'TotalBayar')]) >= total;
+}
+
 function cariSiswa(t, nis, pin) {
   const cNIS = kolomWajib(t, 'NIS');
-  const cPIN = kolomWajib(t, 'PIN');
   const pinMasuk = normalPin(pin);
   if (!pinMasuk) return null;
 
   for (let i = 0; i < t.baris.length; i++) {
     if (!samaNis(t.baris[i][cNIS], nis)) continue;
-    if (normalPin(t.baris[i][cPIN]) !== pinMasuk) return null;
+    if (pinSiswa(t, t.baris[i]) !== pinMasuk) return null;
     return { indeks: i, barisSheet: i + 2, data: t.baris[i] };
   }
   return null;
@@ -327,7 +409,6 @@ function saveJacket(req) {
  * berjalan tidak kacau ketika ada siswa baru melunasi.
  */
 function terbitkanNomorAntrean(t) {
-  const cLunas = kolomWajib(t, 'Lunas');
   const cTgl = kolomWajib(t, 'TglLunas');
   const cAntre = kolomWajib(t, 'NoAntrean');
 
@@ -338,7 +419,18 @@ function terbitkanNomorAntrean(t) {
     const n = angka(b[cAntre]);
     if (n > maksimal) maksimal = n;
     if (n > 0) return;
-    if (!benar(b[cLunas])) return;
+    if (!siswaLunas(t, b)) return;
+
+    // TglLunas kosong dicap sekarang supaya urutannya tetap ada. Urutan yang
+    // dihasilkan adalah urutan saat skrip pertama melihatnya lunas, bukan
+    // urutan pembayaran sebenarnya — isi kolom ini lebih dulu untuk siswa
+    // yang sudah lunas sebelum fitur dinyalakan.
+    if (kosong(b[cTgl])) {
+      const cap = new Date();
+      b[cTgl] = cap;
+      t.sheet.getRange(i + 2, cTgl + 1).setValue(cap);
+    }
+
     const tgl = b[cTgl] instanceof Date ? b[cTgl].getTime() : new Date(b[cTgl]).getTime();
     belum.push({ indeks: i, waktu: isNaN(tgl) ? Number.MAX_SAFE_INTEGER : tgl });
   });
@@ -552,14 +644,13 @@ function bangunDenah(tSiswa) {
  * apa pun. Dipakai supaya aksi baca tidak selalu merebut kunci.
  */
 function perluMajukan(t) {
-  const cLunas = kolomWajib(t, 'Lunas');
   const cAntre = kolomWajib(t, 'NoAntrean');
   const cWaktuPilih = kolomWajib(t, 'WaktuPilih');
   const cTerlewat = kolomWajib(t, 'Terlewat');
 
   // Ada siswa lunas yang belum punya nomor antrean.
   for (let i = 0; i < t.baris.length; i++) {
-    if (benar(t.baris[i][cLunas]) && angka(t.baris[i][cAntre]) <= 0) return true;
+    if (siswaLunas(t, t.baris[i]) && angka(t.baris[i][cAntre]) <= 0) return true;
   }
 
   if (String(pengaturan('fase')) === 'selesai') return false;
@@ -648,7 +739,7 @@ function getSeatState(req) {
       siswa: {
         nama: String(baris[kolomWajib(t, 'Nama')]),
         gender: String(baris[kolomWajib(t, 'Gender')]).trim().toUpperCase(),
-        lunas: benar(baris[kolomWajib(t, 'Lunas')]),
+        lunas: siswaLunas(t, baris),
         noAntrean: noAntrean || null,
         dapatPrivilege: dapatPrivilege || sudahPilih,
         busTerpilih: sudahPilih ? angka(baris[kolomWajib(t, 'Bus')]) : null,
@@ -698,7 +789,7 @@ function claimSeat(req) {
 
     const baris = siswa.data;
 
-    if (!benar(baris[kolomWajib(t, 'Lunas')])) {
+    if (!siswaLunas(t, baris)) {
       return { status: 'error', kode: 'BELUM_LUNAS', message: 'Hak memilih kursi hanya untuk siswa yang sudah lunas.' };
     }
 
@@ -768,8 +859,8 @@ function claimSeat(req) {
  * ========================================================================== */
 
 function simpanAngket(req) {
-  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(TAB_ANGKET)
-    || SpreadsheetApp.getActiveSpreadsheet().insertSheet(TAB_ANGKET);
+  const ss = bukaSpreadsheet();
+  const sh = ss.getSheetByName(TAB_ANGKET) || ss.insertSheet(TAB_ANGKET);
 
   if (sh.getLastRow() === 0) {
     sh.appendRow(['Timestamp', 'Nama', 'Kelas', 'Status', 'HP Siswa', 'HP Ortu', 'Alasan', 'Pertanyaan', 'Sumber']);
@@ -821,6 +912,7 @@ function pemicuMajukanAntrean() {
 function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu('Field Trip')
+    .addItem('Periksa kesiapan spreadsheet', 'periksaKesiapan')
     .addItem('Siapkan tab yang belum ada', 'siapkanTab')
     .addItem('Hitung ulang nomor antrean', 'menuHitungAntrean')
     .addSeparator()
@@ -832,7 +924,7 @@ function onOpen() {
 }
 
 function siapkanTab() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = bukaSpreadsheet();
   const catatan = [];
 
   const pastikan = (nama, header) => {
@@ -844,9 +936,10 @@ function siapkanTab() {
       catatan.push('Tab "' + nama + '" dibuat.');
       return sh;
     }
-    const adaSekarang = sh.getRange(1, 1, 1, Math.max(1, sh.getLastColumn())).getValues()[0]
-      .map(h => String(h).trim());
-    const kurang = header.filter(h => adaSekarang.indexOf(h) === -1);
+    // Kolom hanya ditambahkan bila belum ada padanannya. Judul kolom yang
+    // sudah dipakai tidak pernah diubah atau ditimpa.
+    const t = bacaTabel(nama);
+    const kurang = header.filter(h => !(h in t.kolom));
     if (kurang.length) {
       sh.getRange(1, sh.getLastColumn() + 1, 1, kurang.length).setValues([kurang]);
       catatan.push('Tab "' + nama + '": kolom ' + kurang.join(', ') + ' ditambahkan.');
@@ -854,9 +947,11 @@ function siapkanTab() {
     return sh;
   };
 
+  // PIN sengaja tidak dibuat: bila tidak ada, PIN diambil dari empat digit
+  // terakhir kolom nomor HP, sama seperti skrip lama.
   pastikan(TAB_SISWA, [
-    'NIS', 'Nama', 'PIN', 'Kelas', 'Gender', 'TotalBayar', 'Lunas', 'TglLunas',
-    'NoAntrean', 'Bus', 'Kursi', 'WaktuPilih', 'Terlewat', 'UkuranJaket', 'WaktuJaket'
+    'Gender', 'TglLunas', 'NoAntrean', 'Bus', 'Kursi', 'WaktuPilih',
+    'Terlewat', 'UkuranJaket', 'WaktuJaket'
   ]);
   pastikan(TAB_KONFIG_KURSI, ['Bus', 'Kursi', 'Tipe', 'Label']);
   const shSet = pastikan(TAB_PENGATURAN, ['Kunci', 'Nilai']);
@@ -875,6 +970,80 @@ function siapkanTab() {
   SpreadsheetApp.getUi().alert(
     catatan.length ? catatan.join('\n') : 'Semua tab dan kolom sudah lengkap.'
   );
+}
+
+/**
+ * Melaporkan apa saja yang masih kurang sebelum fitur dinyalakan.
+ * Hanya membaca, tidak mengubah apa pun.
+ */
+function periksaKesiapan() {
+  _cachePengaturan = null;
+  const baris = [];
+
+  let t;
+  try {
+    t = bacaTabel(TAB_SISWA);
+  } catch (err) {
+    SpreadsheetApp.getUi().alert('Tab siswa belum bisa dibaca:\n\n' + err.message);
+    return;
+  }
+
+  baris.push('Tab siswa: "' + TAB_SISWA + '" (' + t.baris.length + ' baris data)');
+  baris.push('');
+  baris.push('KOLOM TERDETEKSI');
+  const wajib = ['NIS', 'Nama', 'TotalBayar'];
+  const perluKursi = ['Gender', 'TglLunas', 'NoAntrean', 'Bus', 'Kursi', 'WaktuPilih', 'Terlewat'];
+  const hurufKolom = i => {
+    let s = '', n = i + 1;
+    while (n > 0) { const sisa = (n - 1) % 26; s = String.fromCharCode(65 + sisa) + s; n = Math.floor((n - 1) / 26); }
+    return s;
+  };
+
+  const laporkan = nama => {
+    const idx = kolomOpsional(t, nama);
+    baris.push('  ' + (idx === -1 ? '[BELUM ADA] ' : '[kolom ' + hurufKolom(idx) + '] ') + nama
+      + (idx === -1 ? '' : ' -> judul: "' + t.header[idx] + '"'));
+    return idx;
+  };
+
+  wajib.forEach(laporkan);
+  const adaPin = kolomOpsional(t, 'PIN') !== -1;
+  const adaHp = kolomOpsional(t, 'NoHP') !== -1;
+  laporkan(adaPin ? 'PIN' : 'NoHP');
+  baris.push('  Sumber PIN: ' + (adaPin ? 'kolom PIN' : (adaHp ? '4 digit terakhir nomor HP' : 'TIDAK ADA — fitur tidak akan jalan')));
+  baris.push('  Sumber status lunas: ' + (kolomOpsional(t, 'Lunas') !== -1
+    ? 'kolom Lunas' : 'dihitung dari TotalBayar >= ' + angka(pengaturan('total_biaya'))));
+  baris.push('');
+  baris.push('KOLOM UNTUK FITUR KURSI');
+  const kurang = perluKursi.filter(n => laporkan(n) === -1);
+
+  baris.push('');
+  if (kurang.length) {
+    baris.push('Jalankan "Siapkan tab yang belum ada" untuk menambahkan: ' + kurang.join(', '));
+  }
+
+  // TglLunas kosong berarti urutan antrean jatuh ke urutan baris, bukan
+  // urutan pembayaran — ini yang paling sering terlewat.
+  const cTgl = kolomOpsional(t, 'TglLunas');
+  if (cTgl !== -1) {
+    let lunasTanpaTgl = 0;
+    t.baris.forEach(b => {
+      let l = false;
+      try { l = siswaLunas(t, b); } catch (err) { l = false; }
+      if (l && kosong(b[cTgl])) lunasTanpaTgl += 1;
+    });
+    if (lunasTanpaTgl) {
+      baris.push('PERHATIAN: ' + lunasTanpaTgl + ' siswa sudah lunas tetapi TglLunas-nya kosong.');
+      baris.push('Isi kolom itu dulu. Bila dibiarkan, urutan antrean mengikuti urutan');
+      baris.push('baris di sheet, bukan urutan pelunasan.');
+    }
+  }
+
+  ['KonfigKursi', 'Pengaturan'].forEach(nama => {
+    if (!bukaSpreadsheet().getSheetByName(nama)) baris.push('Tab "' + nama + '" belum ada.');
+  });
+
+  SpreadsheetApp.getUi().alert(baris.join('\n'));
 }
 
 function menuHitungAntrean() {
