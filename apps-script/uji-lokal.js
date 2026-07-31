@@ -147,6 +147,37 @@ ok('kursi guru terbaca', r.bus[0].kursi['1'].tipe === 'GURU' && r.bus[0].kursi['
 r = post({ action: 'get_seat_state', nis: nis(2), pin: pin(2) });
 ok('nomor 2 belum gilirannya', r.siswa.noAntrean === 2 && r.antrean.giliranSaya === false);
 
+console.log('\n=== 2b. Giliran ketat: hanya satu nomor yang terbuka ===');
+{
+  const terbuka = [];
+  for (let i = 1; i <= 8; i++) {
+    const s = post({ action: 'get_seat_state', nis: nis(i), pin: pin(i) });
+    if (s.antrean.giliranSaya) terbuka.push(i);
+  }
+  ok('tepat satu nomor boleh memilih', terbuka.length === 1 && terbuka[0] === 1, terbuka.join(','));
+  const ditolak = [2, 3, 4, 5].every(i =>
+    post({ action: 'claim_seat', nis: nis(i), pin: pin(i), bus: 3, kursi: 10 + i }).kode === 'BUKAN_GILIRAN');
+  ok('nomor 2-5 ditolak selama nomor 1 masih aktif', ditolak);
+  ok('tidak ada kursi bocor terkunci',
+    post({ action: 'get_seat_state', nis: nis(1), pin: pin(1) }).antrean.terpakai === 0);
+}
+
+console.log('\n=== 2c. TglLunas hanya dari bendahara ===');
+{
+  // Siswa 65 lunas tetapi TglLunas dikosongkan -> tidak boleh masuk antrean.
+  const kTotal = HEADER_SISWA.indexOf('Total Bayar') + 1;
+  const kTgl = HEADER_SISWA.indexOf('TglLunas') + 1;
+  sheets.DataSiswa.set(66, kTotal, 2450000);
+  sheets.DataSiswa.set(66, kTgl, '');
+  const s = post({ action: 'get_seat_state', nis: nis(65), pin: pin(65) });
+  ok('lunas tanpa TglLunas tidak dapat nomor antrean', s.siswa.lunas === true && s.siswa.noAntrean === null);
+  ok('skrip tidak mengarang TglLunas', String(sheets.DataSiswa.cell(66, kTgl)).trim() === '');
+  // Setelah bendahara mengisi, barulah dapat nomor.
+  sheets.DataSiswa.set(66, kTgl, new Date('2026-08-20T00:00:00Z').getTime());
+  const s2 = post({ action: 'get_seat_state', nis: nis(65), pin: pin(65) });
+  ok('setelah diisi bendahara langsung dapat nomor', s2.siswa.noAntrean > 0);
+}
+
 console.log('\n=== 3. Mengunci kursi ===');
 r = post({ action: 'claim_seat', nis: nis(2), pin: pin(2), bus: 1, kursi: 9 });
 ok('bukan giliran ditolak', r.kode === 'BUKAN_GILIRAN');

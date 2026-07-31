@@ -421,18 +421,16 @@ function terbitkanNomorAntrean(t) {
     if (n > 0) return;
     if (!siswaLunas(t, b)) return;
 
-    // TglLunas kosong dicap sekarang supaya urutannya tetap ada. Urutan yang
-    // dihasilkan adalah urutan saat skrip pertama melihatnya lunas, bukan
-    // urutan pembayaran sebenarnya — isi kolom ini lebih dulu untuk siswa
-    // yang sudah lunas sebelum fitur dinyalakan.
-    if (kosong(b[cTgl])) {
-      const cap = new Date();
-      b[cTgl] = cap;
-      t.sheet.getRange(i + 2, cTgl + 1).setValue(cap);
-    }
+    // TglLunas HANYA diisi bendahara. Skrip tidak pernah mengarangnya sendiri:
+    // tanggal yang dikarang akan membuat urutan antrean mengikuti urutan baris
+    // di spreadsheet, bukan urutan pelunasan yang sebenarnya. Siswa yang
+    // tanggalnya belum diisi tidak masuk antrean sampai bendahara mengisinya.
+    if (kosong(b[cTgl])) return;
 
     const tgl = b[cTgl] instanceof Date ? b[cTgl].getTime() : new Date(b[cTgl]).getTime();
-    belum.push({ indeks: i, waktu: isNaN(tgl) ? Number.MAX_SAFE_INTEGER : tgl });
+    if (isNaN(tgl)) return; // tanggal tidak terbaca, lewati daripada salah urut
+
+    belum.push({ indeks: i, waktu: tgl });
   });
 
   if (!belum.length) return false;
@@ -648,8 +646,13 @@ function perluMajukan(t) {
   const cWaktuPilih = kolomWajib(t, 'WaktuPilih');
   const cTerlewat = kolomWajib(t, 'Terlewat');
 
-  // Ada siswa lunas yang belum punya nomor antrean.
+  // Ada siswa lunas ber-TglLunas yang belum punya nomor antrean.
+  // Syarat TglLunas penting: tanpa itu, siswa lunas yang tanggalnya belum
+  // diisi bendahara akan membuat pemeriksaan ini selalu bernilai benar,
+  // sehingga setiap polling ikut merebut kunci tanpa ada yang bisa dikerjakan.
+  const cTgl = kolomWajib(t, 'TglLunas');
   for (let i = 0; i < t.baris.length; i++) {
+    if (kosong(t.baris[i][cTgl])) continue;
     if (siswaLunas(t, t.baris[i]) && angka(t.baris[i][cAntre]) <= 0) return true;
   }
 
@@ -914,7 +917,8 @@ function onOpen() {
     .createMenu('Field Trip')
     .addItem('Periksa kesiapan spreadsheet', 'periksaKesiapan')
     .addItem('Siapkan tab yang belum ada', 'siapkanTab')
-    .addItem('Hitung ulang nomor antrean', 'menuHitungAntrean')
+    .addItem('Terbitkan nomor antrean baru', 'menuHitungAntrean')
+    .addItem('Susun ulang SEMUA nomor antrean', 'menuSusunUlangAntrean')
     .addSeparator()
     .addItem('Pasang pemicu antrean (tiap 5 menit)', 'pasangPemicu')
     .addItem('Lepas pemicu antrean', 'lepasPemicu')
@@ -1022,21 +1026,42 @@ function periksaKesiapan() {
     baris.push('Jalankan "Siapkan tab yang belum ada" untuk menambahkan: ' + kurang.join(', '));
   }
 
-  // TglLunas kosong berarti urutan antrean jatuh ke urutan baris, bukan
-  // urutan pembayaran — ini yang paling sering terlewat.
+  // TglLunas diisi bendahara dan tidak pernah dikarang skrip. Siswa lunas yang
+  // tanggalnya kosong tidak masuk antrean sama sekali.
   const cTgl = kolomOpsional(t, 'TglLunas');
   if (cTgl !== -1) {
     let lunasTanpaTgl = 0;
-    t.baris.forEach(b => {
+    let siapAntre = 0;
+    const tglTakTerbaca = [];
+    t.baris.forEach((b, i) => {
       let l = false;
       try { l = siswaLunas(t, b); } catch (err) { l = false; }
-      if (l && kosong(b[cTgl])) lunasTanpaTgl += 1;
+      if (!l) return;
+      if (kosong(b[cTgl])) { lunasTanpaTgl += 1; return; }
+      const tgl = b[cTgl] instanceof Date ? b[cTgl].getTime() : new Date(b[cTgl]).getTime();
+      if (isNaN(tgl)) { tglTakTerbaca.push('baris ' + (i + 2)); return; }
+      siapAntre += 1;
     });
+
+    baris.push('ANTREAN');
+    baris.push('  Siswa siap masuk antrean: ' + siapAntre);
     if (lunasTanpaTgl) {
-      baris.push('PERHATIAN: ' + lunasTanpaTgl + ' siswa sudah lunas tetapi TglLunas-nya kosong.');
-      baris.push('Isi kolom itu dulu. Bila dibiarkan, urutan antrean mengikuti urutan');
-      baris.push('baris di sheet, bukan urutan pelunasan.');
+      baris.push('  BELUM BISA IKUT: ' + lunasTanpaTgl + ' siswa sudah lunas tetapi TglLunas kosong.');
+      baris.push('  Mereka tidak akan mendapat nomor antrean sampai bendahara mengisi');
+      baris.push('  tanggalnya. Skrip sengaja tidak mengarang tanggal sendiri.');
     }
+    if (tglTakTerbaca.length) {
+      baris.push('  TANGGAL TIDAK TERBACA di ' + tglTakTerbaca.slice(0, 8).join(', ')
+        + (tglTakTerbaca.length > 8 ? ', dan ' + (tglTakTerbaca.length - 8) + ' lainnya' : ''));
+      baris.push('  Pastikan selnya berformat tanggal, bukan teks bebas.');
+    }
+  }
+
+  const lebar = angka(pengaturan('lebar_jendela'));
+  if (lebar !== 1) {
+    baris.push('');
+    baris.push('PERHATIAN: lebar_jendela = ' + lebar + ', artinya ' + lebar + ' nomor antrean');
+    baris.push('bisa memilih bersamaan. Untuk giliran ketat satu per satu, isi 1.');
   }
 
   ['KonfigKursi', 'Pengaturan'].forEach(nama => {
@@ -1051,8 +1076,53 @@ function menuHitungAntrean() {
   const t = bacaTabel(TAB_SISWA);
   const ada = terbitkanNomorAntrean(t);
   SpreadsheetApp.getUi().alert(ada
-    ? 'Nomor antrean baru sudah diterbitkan untuk siswa yang lunas.'
-    : 'Tidak ada siswa lunas yang belum punya nomor antrean.');
+    ? 'Nomor antrean baru sudah diterbitkan, melanjutkan dari nomor terakhir.'
+    : 'Tidak ada siswa lunas ber-TglLunas yang belum punya nomor antrean.');
+}
+
+/**
+ * Menghapus semua nomor antrean lalu menerbitkannya ulang murni menurut
+ * TglLunas. Dipakai sekali sebelum pemilihan dibuka, setelah bendahara
+ * selesai mengisi seluruh tanggal pelunasan.
+ *
+ * Diperlukan karena penerbitan biasa bersifat menambah: siswa yang tanggalnya
+ * baru diisi belakangan akan mendapat nomor di ekor antrean meski ia melunasi
+ * lebih dulu. Menyusun ulang memperbaiki urutan itu.
+ */
+function menuSusunUlangAntrean() {
+  const ui = SpreadsheetApp.getUi();
+  _cachePengaturan = null;
+
+  const t = bacaTabel(TAB_SISWA);
+  const cAntre = kolomWajib(t, 'NoAntrean');
+  const cKursi = kolomWajib(t, 'Kursi');
+
+  const sudahAdaYangMemilih = t.baris.some(b => !kosong(b[cKursi]));
+  const peringatan = sudahAdaYangMemilih
+    ? '\n\nPERHATIAN: sudah ada siswa yang memilih kursi. Menyusun ulang di ' +
+      'tengah pemilihan akan mengubah nomor antrean orang lain dan mengacaukan ' +
+      'giliran yang sedang berjalan. Sebaiknya JANGAN dilanjutkan.'
+    : '';
+
+  const jawab = ui.alert(
+    'Susun ulang semua nomor antrean?',
+    'Seluruh NoAntrean dihapus lalu diterbitkan ulang murni menurut TglLunas. ' +
+    'Jalankan ini sekali saja, setelah bendahara selesai mengisi semua tanggal ' +
+    'dan sebelum pemilihan dibuka.' + peringatan,
+    ui.ButtonSet.YES_NO
+  );
+  if (jawab !== ui.Button.YES) return;
+
+  if (t.baris.length) t.sheet.getRange(2, cAntre + 1, t.baris.length, 1).clearContent();
+  t.baris.forEach(b => { b[cAntre] = ''; });
+
+  terbitkanNomorAntrean(t);
+  setPengaturan('antrean_sekarang', 0);
+  setPengaturan('antrean_mulai', '');
+  setPengaturan('fase', 'antrean');
+
+  const jumlah = t.baris.filter(b => angka(b[cAntre]) > 0).length;
+  ui.alert(jumlah + ' siswa mendapat nomor antrean, urut menurut TglLunas.');
 }
 
 function pasangPemicu() {

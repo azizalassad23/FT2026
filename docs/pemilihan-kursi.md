@@ -15,6 +15,8 @@ kontrak di bawah ini, jadi nama aksi dan nama field harus sama persis.
 | Batas waktu giliran | 15 menit per nomor (bisa diubah di Sheet) |
 | Yang terlewat | Dilewati; jatahnya diteruskan ke nomor berikutnya |
 | Nama di denah | Ditampilkan pada kursi yang sudah terisi |
+| `TglLunas` | Diisi bendahara; skrip tidak pernah mengarangnya |
+| Giliran | Ketat satu per satu — nomor 2 terkunci selama nomor 1 masih aktif |
 
 Kuota 50 dihitung dari **jumlah kursi yang berhasil diambil**, bukan dari nomor
 antrean. Jadi bila nomor 7 terlewat karena tidak membuka halaman, antrean tetap

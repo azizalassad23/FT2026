@@ -86,25 +86,42 @@ siswa mana pun bisa mengambil kursi mana pun.
 
 ---
 
-## Langkah 5 — Isi kolom `TglLunas`  ⚠ paling penting
+## Langkah 5 — Bendahara mengisi `TglLunas`  ⚠ paling penting
 
-Isi tanggal-waktu pelunasan untuk **setiap siswa yang sudah lunas sekarang**.
+Kolom ini **sepenuhnya tanggung jawab bendahara**. Skrip tidak pernah
+mengisinya sendiri, dan tidak pernah menebak. Ia hanya mengurutkan antrean
+berdasarkan tanggal yang bendahara masukkan.
 
-Kolom ini dasar urutan antrean. Bila dibiarkan kosong, skrip akan mencapnya
-sendiri saat pertama kali mendeteksi siswa itu lunas — dan karena semuanya
-terdeteksi pada saat yang sama, semuanya mendapat cap waktu yang sama pula.
-Akibatnya **urutan antrean jatuh ke urutan baris di spreadsheet, bukan urutan
-pelunasan.** Itu persis membatalkan aturan "yang lunas duluan memilih duluan".
+Aturannya sederhana:
 
-Untuk siswa yang melunasi **setelah** fitur menyala, kolom ini terisi otomatis
-dan urutannya benar. Yang perlu diisi manual hanya yang sudah lunas duluan.
+- **Ada `TglLunas` → masuk antrean**, urut menurut tanggal itu.
+- **`TglLunas` kosong → tidak masuk antrean sama sekali**, walaupun sudah lunas.
+
+Siswa yang tanggalnya belum diisi bukan ditolak — ia hanya belum ikut. Begitu
+bendahara mengisi tanggalnya, ia langsung mendapat nomor pada permintaan
+berikutnya.
 
 Format bebas asal dikenali Google Sheets sebagai tanggal, misalnya
-`2026-08-14 10:30` atau `14/08/2026 10:30`. Yang penting urutannya benar
-antar siswa.
+`2026-08-14 10:30` atau `14/08/2026 10:30`. Pastikan selnya benar-benar
+berformat tanggal, bukan teks bebas — pemeriksa kesiapan akan menyebutkan
+nomor barisnya bila ada yang tidak terbaca.
 
-Jalankan lagi **Periksa kesiapan spreadsheet** — ia akan memberi tahu berapa
-siswa yang masih lunas tanpa `TglLunas`.
+### Satu hal yang perlu diperhatikan bendahara
+
+Penerbitan nomor bersifat **menambah**: nomor yang sudah keluar tidak pernah
+berubah. Jadi kalau bendahara baru mengisi tanggal seorang siswa **belakangan**,
+padahal siswa itu melunasi lebih awal, ia tetap mendapat nomor di ekor antrean.
+
+Karena itu urutannya: **bendahara selesaikan dulu semua pengisian tanggal**,
+baru jalankan sekali menu **Field Trip → Susun ulang SEMUA nomor antrean**.
+Menu itu menghapus seluruh nomor lalu menerbitkannya ulang murni menurut
+`TglLunas`, sehingga urutannya pasti benar.
+
+Jangan jalankan menu itu setelah pemilihan dibuka — nomor orang lain ikut
+berubah di tengah jalan. Skrip akan memperingatkan bila sudah ada yang memilih.
+
+Jalankan lagi **Periksa kesiapan spreadsheet** untuk melihat berapa siswa yang
+sudah siap masuk antrean dan berapa yang tanggalnya masih kosong.
 
 ---
 
@@ -164,7 +181,7 @@ harus duduk berdekatan.
 | `pemilihan_aktif` | `FALSE` | **biarkan FALSE dulu** |
 | `kuota_pilih_mandiri` | `50` | jumlah kursi pilih-sendiri |
 | `durasi_giliran_menit` | `15` | jendela waktu tiap nomor antrean |
-| `lebar_jendela` | `1` | berapa nomor boleh memilih bersamaan |
+| `lebar_jendela` | `1` | **biarkan 1** — giliran ketat satu per satu |
 | `pesan_belum_dibuka` | kalimat pengumuman | tampil selama fitur belum dibuka |
 
 `link_grup_wa` penting: begitu diisi, link grup dikirim dari server dan tidak
@@ -222,10 +239,22 @@ Lalu uji antreannya:
 2. Ubah `pemilihan_aktif` menjadi `TRUE`.
 3. Umumkan ke siswa.
 
-Selama berjalan, pantau kolom `NoAntrean` dan `Terlewat`. Bila antrean terasa
-terlalu lambat, naikkan `lebar_jendela` menjadi `3` atau `5` — beberapa nomor
-akan bisa memilih bersamaan tanpa mengubah urutan prioritas. Perubahan
-langsung berlaku, tidak perlu deploy ulang.
+Selama berjalan, pantau kolom `NoAntrean` dan `Terlewat`.
+
+Dengan `lebar_jendela = 1`, giliran benar-benar ketat: selama nomor 1 masih
+punya sisa waktu, nomor 2 sampai terakhir tidak bisa memilih sama sekali —
+tombol kursinya mati dan permintaan langsung dari luar halaman pun ditolak
+server dengan kode `BUKAN_GILIRAN`. Nomor 2 baru terbuka setelah nomor 1
+memilih atau waktunya habis.
+
+Ini juga berarti antreannya berjalan lambat: dengan jendela 15 menit, kasus
+terburuk 50 nomor memakan 12,5 jam. Bila di lapangan terasa terlalu lambat,
+ada dua tuas yang berlaku seketika tanpa perlu deploy ulang:
+
+- **`durasi_giliran_menit`** diturunkan, misalnya menjadi `7`.
+- **`lebar_jendela`** dinaikkan menjadi `3` atau `5`. Prioritas urutan tetap
+  terjaga, tetapi beberapa nomor bisa memilih bersamaan — jadi ini **melanggar
+  aturan giliran ketat satu per satu**. Pakai hanya sebagai jalan darurat.
 
 ---
 
@@ -234,7 +263,8 @@ langsung berlaku, tidak perlu deploy ulang.
 | Hal | Di mana | Akibat bila dilewat |
 |---|---|---|
 | Kolom `Gender` | tab `DataSiswa` | zona putra/putri tidak berfungsi |
-| Kolom `TglLunas` | tab `DataSiswa` | urutan antrean jadi urutan baris, bukan urutan pelunasan |
+| Kolom `TglLunas` | tab `DataSiswa` | siswa tidak masuk antrean sama sekali |
+| Susun ulang nomor antrean | menu Field Trip | urutan salah bila ada tanggal yang diisi belakangan |
 | Kursi guru & zona | tab `KonfigKursi` | siswa bisa mengambil kursi guru |
 | `link_grup_wa` | tab `Pengaturan` | link grup tetap memakai cadangan di HTML |
 | Deploy versi baru | editor Apps Script | semua perubahan tidak berpengaruh |
