@@ -1566,7 +1566,11 @@
             border: var(--stroke);
             background: var(--paper);
             box-shadow: 10px 12px 0 rgba(31, 61, 82, 0.28);
+            /* `hidden` masih bisa digulung secara programatik saat sebuah elemen
+               di dalamnya menerima fokus, dan karena tanpa scrollbar isinya tidak
+               bisa dikembalikan. `clip` mematikan penggulungan itu sepenuhnya. */
             overflow: hidden;
+            overflow: clip;
             display: flex;
             flex-direction: column;
             transform: translateY(16px) rotate(-0.6deg);
@@ -1618,6 +1622,11 @@
             padding: 16px;
             overflow-y: auto;
             overscroll-behavior: contain;
+        }
+
+        /* Wadah tahapan hanya difokus lewat kode, jadi tidak perlu cincin fokus. */
+        [tabindex="-1"]:focus {
+            outline: none;
         }
 
         .destination-item {
@@ -2333,7 +2342,7 @@
                     <div id="paymentAlert" class="alert-box alert-error" role="alert" aria-live="assertive"></div>
                 </div>
 
-                <div id="stepChooseSize" class="hidden">
+                <div id="stepChooseSize" class="hidden" tabindex="-1">
                     <div class="verify-ok">
                         <h4><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Syarat Terpenuhi</h4>
                         <p id="studentGreeting">Halo! Silakan pilih ukuran jaket Anda.</p>
@@ -2406,7 +2415,7 @@
                     <div id="sizeAlert" class="alert-box alert-error" role="alert" aria-live="assertive"></div>
                 </div>
 
-                <div id="stepSuccess" class="hidden success-panel">
+                <div id="stepSuccess" class="hidden success-panel" tabindex="-1">
                     <div class="success-mark" aria-hidden="true">
                         <i class="fa-brands fa-whatsapp"></i>
                     </div>
@@ -2590,15 +2599,29 @@
         const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
         let lastFocused = null;
 
+        // Kembalikan posisi gulir modal ke awal. Kotak modal ikut disetel karena
+        // fokus pada elemen di dalamnya bisa menggesernya diam-diam.
+        function resetModalScroll(modal) {
+            if (!modal) return;
+            const box = modal.querySelector('.modal-box');
+            const body = modal.querySelector('.modal-body');
+            if (box) box.scrollTop = 0;
+            if (body) body.scrollTop = 0;
+        }
+
         function openModal(modal, opener) {
             if (!modal) return;
             lastFocused = opener || document.activeElement;
             modal.classList.add('active');
             modal.setAttribute('aria-hidden', 'false');
             lockScroll(true);
-            // Utamakan kolom isian pertama, bukan tombol tutup.
+            // Utamakan kolom isian pertama, bukan tombol tutup. `preventScroll`
+            // menahan browser menggulung leluhur demi memunculkan elemen tersebut.
             const first = modal.querySelector('[data-autofocus]') || modal.querySelector(FOCUSABLE);
-            if (first) setTimeout(() => first.focus(), 60);
+            setTimeout(() => {
+                if (first) first.focus({ preventScroll: true });
+                resetModalScroll(modal);
+            }, 60);
         }
 
         function closeModal(modal) {
@@ -2900,8 +2923,10 @@
 
                     stepCheckNIS.classList.add('hidden');
                     stepChooseSize.classList.remove('hidden');
-                    const firstSize = document.querySelector('.size-radio:checked');
-                    if (firstSize) firstSize.focus();
+                    // Fokus ke wadah tahap, bukan ke radio tersembunyi yang letaknya
+                    // jauh di bawah gambar desain — itu yang dulu menggeser isi modal.
+                    resetModalScroll(jacketModal);
+                    stepChooseSize.focus({ preventScroll: true });
                 } else {
                     failedAttempts += 1;
                     if (failedAttempts >= MAX_ATTEMPTS) {
@@ -2986,6 +3011,8 @@
 
                     stepChooseSize.classList.add('hidden');
                     stepSuccess.classList.remove('hidden');
+                    resetModalScroll(jacketModal);
+                    stepSuccess.focus({ preventScroll: true });
                     showToast('Transmisi Sukses', `Ukuran ${selectedSize} dikunci.`);
                 } else {
                     showAlert(sizeAlert, 'Gagal menyimpan ukuran: ' + (data.message || 'Silakan coba lagi.'));
