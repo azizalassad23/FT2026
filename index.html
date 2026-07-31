@@ -516,6 +516,358 @@
             color: var(--sea);
         }
 
+        /* ---------- PEMILIHAN KURSI BUS ---------- */
+        #seatModal .modal-box {
+            width: min(860px, 100%);
+        }
+
+        /* Panel antrean */
+        .queue-panel {
+            border: 2px dashed rgba(31, 61, 82, 0.25);
+            border-radius: var(--r-md);
+            background: var(--sea-soft);
+            padding: 16px;
+            text-align: center;
+        }
+
+        .queue-panel h3 {
+            font-size: 1.25rem;
+            color: var(--ink);
+            margin-bottom: 4px;
+        }
+
+        .queue-panel > p {
+            color: var(--ink-soft);
+            font-size: 0.9rem;
+        }
+
+        .queue-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+            margin: 14px 0 12px;
+        }
+
+        .queue-box {
+            background: var(--card);
+            border: 2px solid rgba(31, 61, 82, 0.2);
+            border-radius: var(--r-sm);
+            padding: 10px 6px;
+        }
+
+        .queue-box strong {
+            display: block;
+            font-family: 'Baloo 2', cursive;
+            font-size: 1.6rem;
+            line-height: 1;
+            color: var(--ink);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .queue-box span {
+            font-size: 0.63rem;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            font-weight: 800;
+            color: var(--ink-soft);
+        }
+
+        .queue-box.is-me {
+            background: var(--sun-soft);
+            border-color: var(--ink-line);
+        }
+
+        .queue-refresh {
+            font-size: 0.78rem;
+            color: var(--ink-soft);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Penghitung mundur jendela giliran */
+        .turn-bar {
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+            background: var(--mint-soft);
+            border: 2px solid rgba(31, 61, 82, 0.22);
+            border-radius: var(--r-sm);
+            padding: 10px 13px;
+            margin-bottom: 14px;
+        }
+
+        .turn-bar strong {
+            font-family: 'Baloo 2', cursive;
+            font-size: 1.2rem;
+            color: #14563c;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .turn-bar.is-urgent {
+            background: var(--coral-soft);
+            border-color: rgba(178, 60, 40, 0.5);
+        }
+
+        .turn-bar.is-urgent strong {
+            color: #a5321f;
+        }
+
+        /* Tab pemilih bus */
+        .bus-tabs {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .bus-tab {
+            border: 2px solid rgba(31, 61, 82, 0.2);
+            background: var(--card);
+            border-radius: var(--r-sm);
+            padding: 9px 8px;
+            font: inherit;
+            font-family: 'Baloo 2', cursive;
+            font-weight: 700;
+            font-size: 0.98rem;
+            color: var(--ink-soft);
+            cursor: pointer;
+            transition: transform 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease;
+        }
+
+        .bus-tab small {
+            display: block;
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .bus-tab.is-active {
+            background: var(--sun-soft);
+            border-color: var(--ink-line);
+            color: var(--ink);
+            transform: translate(-2px, -3px);
+            box-shadow: var(--lift-sm);
+        }
+
+        /* Denah bus */
+        .bus-map-scroll {
+            overflow-x: auto;
+            border: 2px solid rgba(31, 61, 82, 0.2);
+            border-radius: var(--r-md);
+            background: #fffdf6;
+        }
+
+        .bus-map {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 7px;
+            min-width: 520px;
+            padding: 14px;
+        }
+
+        .bus-front {
+            grid-column: 1 / -1;
+            grid-row: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding-bottom: 10px;
+            margin-bottom: 4px;
+            border-bottom: 3px dashed rgba(31, 61, 82, 0.22);
+        }
+
+        .front-tag {
+            font-size: 0.64rem;
+            text-transform: uppercase;
+            letter-spacing: 0.09em;
+            font-weight: 800;
+            color: var(--ink-soft);
+            background: var(--card);
+            border: 2px solid rgba(31, 61, 82, 0.2);
+            border-radius: 999px;
+            padding: 5px 11px;
+            white-space: nowrap;
+        }
+
+        .seat {
+            position: relative;
+            border: 2px solid rgba(31, 61, 82, 0.22);
+            border-radius: 10px 10px 6px 6px;
+            background: var(--card);
+            font: inherit;
+            padding: 7px 4px 6px;
+            min-height: 52px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            cursor: pointer;
+            overflow: hidden;
+            transition: transform 0.14s ease, box-shadow 0.14s ease, background-color 0.14s ease;
+        }
+
+        .seat-no {
+            font-family: 'Baloo 2', cursive;
+            font-weight: 700;
+            font-size: 0.92rem;
+            line-height: 1;
+            color: var(--ink);
+        }
+
+        .seat-name {
+            font-size: 0.58rem;
+            font-weight: 700;
+            line-height: 1.1;
+            text-align: center;
+            color: var(--ink-soft);
+            width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .seat.is-free:hover {
+            background: var(--sun-soft);
+            border-color: var(--ink-line);
+            transform: translate(-1px, -2px);
+            box-shadow: var(--lift-sm);
+        }
+
+        .seat.is-zona-l { background: #e8f3fd; }
+        .seat.is-zona-p { background: #ffeef0; }
+
+        .seat.is-taken {
+            background: var(--mint-soft);
+            border-style: solid;
+            border-color: rgba(31, 61, 82, 0.28);
+            cursor: default;
+        }
+
+        .seat.is-guru {
+            background: var(--sun-soft);
+            border-color: rgba(178, 60, 40, 0.4);
+            cursor: not-allowed;
+        }
+
+        .seat.is-blocked {
+            background: repeating-linear-gradient(45deg,
+                #eef1f3 0 6px, #e2e7ea 6px 12px);
+            color: var(--ink-soft);
+            cursor: not-allowed;
+        }
+
+        .seat.is-disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .seat.is-mine {
+            background: var(--mint);
+            border-color: var(--ink-line);
+            box-shadow: var(--lift-sm);
+        }
+
+        .seat.is-mine .seat-no,
+        .seat.is-mine .seat-name {
+            color: #10402c;
+        }
+
+        .seat.is-selected {
+            background: var(--sun);
+            border-color: var(--ink-line);
+            transform: translate(-2px, -3px);
+            box-shadow: var(--lift-sm);
+        }
+
+        .seat-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 14px;
+            margin-top: 11px;
+            font-size: 0.76rem;
+            color: var(--ink-soft);
+        }
+
+        .seat-legend span {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-chip {
+            width: 15px;
+            height: 15px;
+            border-radius: 5px;
+            border: 2px solid rgba(31, 61, 82, 0.25);
+            flex-shrink: 0;
+        }
+
+        /* Bilah konfirmasi pilihan */
+        .seat-confirm {
+            position: sticky;
+            bottom: 0;
+            margin-top: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+            background: var(--card);
+            border: var(--stroke);
+            border-radius: var(--r-md);
+            box-shadow: var(--lift-sm);
+            padding: 11px 13px;
+        }
+
+        .seat-confirm strong {
+            font-family: 'Baloo 2', cursive;
+            font-size: 1.1rem;
+            color: var(--ink);
+        }
+
+        .seat-confirm .btn-mint {
+            flex-shrink: 0;
+        }
+
+        /* Ringkasan kursi yang sudah didapat */
+        .seat-result {
+            text-align: center;
+            border: 2px dashed rgba(31, 61, 82, 0.25);
+            border-radius: var(--r-md);
+            background: var(--mint-soft);
+            padding: 20px 16px;
+            margin-bottom: 16px;
+        }
+
+        .seat-result .ticket-seat {
+            font-family: 'Baloo 2', cursive;
+            font-size: 2.6rem;
+            line-height: 1;
+            color: #14563c;
+            margin: 6px 0 2px;
+        }
+
+        .seat-result small {
+            display: block;
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            font-weight: 800;
+            color: var(--ink-soft);
+        }
+
         .alert-box {
             margin-top: 12px;
             padding: 11px 14px;
@@ -1961,6 +2313,35 @@
                 grid-template-columns: repeat(3, minmax(0, 1fr));
             }
 
+            .queue-box strong {
+                font-size: 1.3rem;
+            }
+
+            .queue-box span {
+                font-size: 0.56rem;
+                letter-spacing: 0.04em;
+            }
+
+            .bus-tab {
+                font-size: 0.88rem;
+                padding: 8px 5px;
+            }
+
+            .bus-tab small {
+                font-size: 0.6rem;
+            }
+
+            .seat-legend {
+                font-size: 0.72rem;
+                gap: 5px 10px;
+            }
+
+            .seat-confirm {
+                flex-direction: column;
+                align-items: stretch;
+                text-align: center;
+            }
+
             .size-chart-head small {
                 font-size: 0.66rem;
             }
@@ -2097,6 +2478,7 @@
                         <!-- <button class="btn-sun" onclick="openFormModal()">Buka Konsol Komunikasi</button> -->
                         <a class="btn-soft" href="#explore">Mulai Jelajah</a>
                         <button type="button" class="btn-mint" onclick="openJacketModal(this)"><i class="fa-solid fa-shirt" aria-hidden="true"></i> Klaim Ukuran Jaket</button>
+                        <button type="button" class="btn-sun" onclick="openSeatModal(this)"><i class="fa-solid fa-couch" aria-hidden="true"></i> Pilih Kursi Bus</button>
                     </div>
 
                     <div class="depart-stamp" aria-hidden="true">
@@ -2430,6 +2812,104 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="seatModal" aria-hidden="true">
+        <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="seatModalTitle">
+            <div class="modal-accent"></div>
+            <div class="modal-header">
+                <h2 id="seatModalTitle">Pilih Kursi Bus</h2>
+                <button class="close-btn" type="button" aria-label="Tutup pemilihan kursi" onclick="closeSeatModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+
+                <div id="stepSeatVerify">
+                    <p style="color: var(--ink-soft); margin-bottom: 14px; font-size: 0.92rem;">Hak memilih kursi diberikan kepada <strong>50 siswa yang lunas paling awal</strong>, sesuai urutan pelunasan. Masukkan NIS dan PIN untuk melihat nomor antrean Anda.</p>
+
+                    <div class="form-group">
+                        <label for="seatNIS">Nomor Induk Siswa (NIS)</label>
+                        <input type="text" id="seatNIS" class="form-control" inputmode="numeric" autocomplete="off"
+                               maxlength="12" placeholder="Contoh: 12345" data-autofocus required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="seatPIN">PIN (4 digit terakhir no HP)
+                            <span class="field-hint">Empat angka terakhir dari nomor HP yang Anda daftarkan ke panitia.</span>
+                        </label>
+                        <input type="text" id="seatPIN" class="form-control" inputmode="numeric" autocomplete="off"
+                               maxlength="4" placeholder="Contoh: 7890" required>
+                    </div>
+
+                    <button type="button" id="btnSeatCheck" class="btn-sun" style="width: 100%;" onclick="checkSeatAccess()"><i class="fa-solid fa-id-card" aria-hidden="true"></i> Lihat Antrean Saya</button>
+                    <div id="seatVerifyAlert" class="alert-box alert-error" role="alert" aria-live="assertive"></div>
+                </div>
+
+                <div id="stepSeatWait" class="hidden" tabindex="-1">
+                    <div class="queue-panel">
+                        <h3 id="seatWaitTitle">Menunggu Giliran</h3>
+                        <p id="seatWaitDesc">Kursi dipilih bergantian menurut urutan pelunasan.</p>
+                        <div class="queue-grid">
+                            <div class="queue-box is-me"><strong id="qMine">–</strong><span>Antrean Anda</span></div>
+                            <div class="queue-box"><strong id="qNow">–</strong><span>Sedang Jalan</span></div>
+                            <div class="queue-box"><strong id="qLeft">–</strong><span>Sisa Kursi</span></div>
+                        </div>
+                        <p class="queue-refresh"><i class="fa-solid fa-rotate fa-spin" aria-hidden="true"></i> Halaman ini memperbarui sendiri, biarkan terbuka.</p>
+                    </div>
+                    <p class="size-hint" style="margin-top: 12px;"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Tiap nomor antrean punya waktu <strong id="qWindow">15</strong> menit. Bila terlewat, giliran berpindah ke nomor berikutnya dan penempatan Anda diatur panitia.</p>
+                </div>
+
+                <div id="stepSeatPick" class="hidden" tabindex="-1">
+                    <div class="turn-bar" id="turnBar">
+                        <span><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> Giliran Anda — sisa waktu</span>
+                        <strong id="turnTimer">--:--</strong>
+                    </div>
+
+                    <div class="bus-tabs" id="busTabs" role="tablist" aria-label="Pilih bus"></div>
+
+                    <div class="bus-map-scroll" tabindex="0" role="region" aria-label="Denah kursi bus, geser ke samping bila terpotong">
+                        <div class="bus-map" id="busMap"></div>
+                    </div>
+
+                    <div class="seat-legend" aria-hidden="true">
+                        <span><i class="legend-chip" style="background:#fff"></i> Kosong</span>
+                        <span><i class="legend-chip" style="background:#e8f3fd"></i> Zona putra</span>
+                        <span><i class="legend-chip" style="background:#ffeef0"></i> Zona putri</span>
+                        <span><i class="legend-chip" style="background:var(--mint-soft)"></i> Terisi</span>
+                        <span><i class="legend-chip" style="background:var(--sun-soft)"></i> Guru</span>
+                        <span><i class="legend-chip" style="background:#e2e7ea"></i> Diatur panitia</span>
+                    </div>
+
+                    <div id="seatPickAlert" class="alert-box alert-error" role="alert" aria-live="assertive"></div>
+
+                    <div class="seat-confirm hidden" id="seatConfirmBar">
+                        <div>
+                            <small style="display:block;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.09em;font-weight:800;color:var(--ink-soft);">Pilihan Anda</small>
+                            <strong id="seatConfirmLabel">–</strong>
+                        </div>
+                        <button type="button" class="btn-mint" id="btnSeatClaim" onclick="claimSeat()"><i class="fa-solid fa-check" aria-hidden="true"></i> Kunci Kursi Ini</button>
+                    </div>
+                </div>
+
+                <div id="stepSeatDone" class="hidden" tabindex="-1">
+                    <div class="seat-result">
+                        <small>Kursi Anda</small>
+                        <div class="ticket-seat" id="doneSeatLabel">–</div>
+                        <small id="doneSeatName"></small>
+                    </div>
+                    <p class="size-hint"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Kursi sudah terkunci dan tidak bisa diubah sendiri. Bila ada keperluan mendesak, hubungi panitia.</p>
+                    <button type="button" class="btn-soft" style="width:100%;margin-top:14px;" onclick="showSeatMapReadonly()"><i class="fa-solid fa-map" aria-hidden="true"></i> Lihat Denah Semua Bus</button>
+                </div>
+
+                <div id="stepSeatNone" class="hidden" tabindex="-1">
+                    <div class="queue-panel" style="background: var(--sun-soft);">
+                        <h3 id="noneTitle">Penempatan Diatur Panitia</h3>
+                        <p id="noneDesc">Kuota 50 kursi pilih-sendiri sudah terpenuhi. Kursi Anda akan ditentukan panitia dan diumumkan sebelum keberangkatan.</p>
+                    </div>
+                    <button type="button" class="btn-soft" style="width:100%;margin-top:14px;" onclick="showSeatMapReadonly()"><i class="fa-solid fa-map" aria-hidden="true"></i> Lihat Denah Semua Bus</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="formModal" aria-hidden="true">
         <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="formModalTitle">
             <div class="modal-accent"></div>
@@ -2626,6 +3106,9 @@
 
         function closeModal(modal) {
             if (!modal) return;
+            // Modal kursi punya polling dan penghitung mundur yang harus dihentikan,
+            // termasuk saat ditutup lewat Escape atau klik latar.
+            if (modal.id === 'seatModal' && typeof stopSeatTimers === 'function') stopSeatTimers();
             modal.classList.remove('active');
             modal.setAttribute('aria-hidden', 'true');
             if (!document.querySelector('.modal-overlay.active')) lockScroll(false);
@@ -3023,6 +3506,471 @@
                 btnSubmitSize.disabled = false;
                 btnSubmitSize.innerHTML = originalText;
             }
+        }
+
+        // ==========================================
+        // PEMILIHAN KURSI BUS
+        // ==========================================
+
+        // Tata letak SEAT 50: sebelas baris 2-2 (kursi 1-44), lalu baris
+        // belakang enam kursi menyatu tanpa lorong (45-50). Kolom 3 dan 4
+        // dibiarkan kosong pada baris 1-11 sebagai lorong.
+        const SEAT_LAYOUT = (() => {
+            const cells = [];
+            for (let r = 0; r < 11; r++) {
+                const base = r * 4 + 1;
+                cells.push({ n: base, col: 1, row: r + 2 });
+                cells.push({ n: base + 1, col: 2, row: r + 2 });
+                cells.push({ n: base + 2, col: 5, row: r + 2 });
+                cells.push({ n: base + 3, col: 6, row: r + 2 });
+            }
+            for (let i = 0; i < 6; i++) cells.push({ n: 45 + i, col: i + 1, row: 13 });
+            return cells;
+        })();
+
+        const POLL_MS = 20000;
+
+        const seatModal = document.getElementById('seatModal');
+        const seatSteps = {
+            verify: document.getElementById('stepSeatVerify'),
+            wait: document.getElementById('stepSeatWait'),
+            pick: document.getElementById('stepSeatPick'),
+            done: document.getElementById('stepSeatDone'),
+            none: document.getElementById('stepSeatNone')
+        };
+        const seatNIS = document.getElementById('seatNIS');
+        const seatPIN = document.getElementById('seatPIN');
+        const btnSeatCheck = document.getElementById('btnSeatCheck');
+        const seatVerifyAlert = document.getElementById('seatVerifyAlert');
+        const seatPickAlert = document.getElementById('seatPickAlert');
+        const seatConfirmBar = document.getElementById('seatConfirmBar');
+        const busTabs = document.getElementById('busTabs');
+        const busMap = document.getElementById('busMap');
+        const turnBar = document.getElementById('turnBar');
+        const turnTimer = document.getElementById('turnTimer');
+
+        const seatState = {
+            nis: '',
+            pin: '',
+            data: null,
+            busAktif: 1,
+            dipilih: null,      // { bus, kursi }
+            pollTimer: null,
+            tickTimer: null,
+            sisaDetik: 0,
+            readonly: false
+        };
+
+        [seatNIS, seatPIN].forEach(el => {
+            if (!el) return;
+            el.addEventListener('input', () => {
+                const clean = el.value.replace(/\D/g, '');
+                if (clean !== el.value) el.value = clean;
+            });
+            el.addEventListener('keydown', e => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    checkSeatAccess();
+                }
+            });
+        });
+
+        function openSeatModal(opener) {
+            resetSeatModal();
+            openModal(seatModal, opener);
+        }
+
+        function closeSeatModal() {
+            stopSeatTimers();
+            closeModal(seatModal);
+        }
+
+        function stopSeatTimers() {
+            clearInterval(seatState.pollTimer);
+            clearInterval(seatState.tickTimer);
+            seatState.pollTimer = null;
+            seatState.tickTimer = null;
+        }
+
+        function resetSeatModal() {
+            stopSeatTimers();
+            Object.entries(seatSteps).forEach(([key, el]) => {
+                if (el) el.classList.toggle('hidden', key !== 'verify');
+            });
+            hideAlert(seatVerifyAlert);
+            hideAlert(seatPickAlert);
+            seatConfirmBar.classList.add('hidden');
+            turnBar.classList.remove('hidden');
+            if (seatNIS) seatNIS.value = '';
+            if (seatPIN) seatPIN.value = '';
+            seatState.nis = '';
+            seatState.pin = '';
+            seatState.data = null;
+            seatState.dipilih = null;
+            seatState.busAktif = 1;
+            seatState.readonly = false;
+        }
+
+        function showSeatStep(name) {
+            Object.entries(seatSteps).forEach(([key, el]) => {
+                if (el) el.classList.toggle('hidden', key !== name);
+            });
+            resetModalScroll(seatModal);
+            const el = seatSteps[name];
+            if (el) el.focus({ preventScroll: true });
+        }
+
+        async function seatRequest(action, extra) {
+            const response = await fetch(APPS_SCRIPT_WEB_APP_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(Object.assign({
+                    action: action,
+                    nis: seatState.nis,
+                    pin: seatState.pin
+                }, extra || {}))
+            });
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+        }
+
+        async function checkSeatAccess() {
+            const nis = seatNIS.value.trim();
+            const pin = seatPIN.value.trim();
+
+            if (!nis || !pin) {
+                showAlert(seatVerifyAlert, 'Harap masukkan NIS dan PIN dengan lengkap.');
+                return;
+            }
+            if (pin.length !== 4) {
+                showAlert(seatVerifyAlert, 'PIN harus berupa 4 digit terakhir nomor HP Anda.');
+                return;
+            }
+
+            const originalText = btnSeatCheck.innerHTML;
+            btnSeatCheck.disabled = true;
+            btnSeatCheck.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memeriksa data...';
+            hideAlert(seatVerifyAlert);
+
+            seatState.nis = nis;
+            seatState.pin = pin;
+
+            try {
+                const data = await seatRequest('get_seat_state');
+                if (data.status !== 'success') {
+                    seatState.nis = '';
+                    seatState.pin = '';
+                    showAlert(seatVerifyAlert, data.message || 'Data tidak ditemukan.');
+                    return;
+                }
+                applySeatState(data);
+                startSeatPolling();
+            } catch (error) {
+                seatState.nis = '';
+                seatState.pin = '';
+                showAlert(seatVerifyAlert, 'Gagal terhubung ke server. Periksa koneksi internet Anda.');
+            } finally {
+                btnSeatCheck.disabled = false;
+                btnSeatCheck.innerHTML = originalText;
+            }
+        }
+
+        function startSeatPolling() {
+            clearInterval(seatState.pollTimer);
+            seatState.pollTimer = setInterval(async () => {
+                if (!seatState.nis) return;
+                try {
+                    const data = await seatRequest('get_seat_state');
+                    if (data.status === 'success') applySeatState(data);
+                } catch (error) {
+                    // Diamkan; percobaan berikutnya 20 detik lagi.
+                }
+            }, POLL_MS);
+        }
+
+        // Menentukan layar mana yang harus tampil berdasarkan keadaan dari server.
+        function applySeatState(data) {
+            seatState.data = data;
+            const siswa = data.siswa || {};
+            const antrean = data.antrean || {};
+
+            if (seatState.readonly) {
+                renderBusTabs();
+                renderBusMap();
+                return;
+            }
+
+            // Sudah punya kursi — baik memilih sendiri maupun ditempatkan panitia.
+            if (siswa.kursiTerpilih) {
+                stopSeatTimers();
+                document.getElementById('doneSeatLabel').textContent =
+                    `Bus ${siswa.busTerpilih} · Kursi ${siswa.kursiTerpilih}`;
+                document.getElementById('doneSeatName').textContent = siswa.nama || '';
+                showSeatStep('done');
+                return;
+            }
+
+            if (!siswa.lunas) {
+                showSeatStep('none');
+                document.getElementById('noneTitle').textContent = 'Belum Lunas';
+                document.getElementById('noneDesc').textContent =
+                    'Hak memilih kursi hanya untuk siswa yang sudah melunasi pembayaran. Selesaikan pelunasan lebih dulu, lalu buka halaman ini kembali.';
+                return;
+            }
+
+            if (siswa.dapatPrivilege === false || antrean.fase === 'selesai') {
+                stopSeatTimers();
+                showSeatStep('none');
+                document.getElementById('noneTitle').textContent = 'Penempatan Diatur Panitia';
+                document.getElementById('noneDesc').textContent =
+                    'Kuota 50 kursi pilih-sendiri sudah terpenuhi. Kursi Anda akan ditentukan panitia dan diumumkan sebelum keberangkatan.';
+                return;
+            }
+
+            if (antrean.giliranSaya) {
+                turnBar.classList.remove('hidden');
+                renderBusTabs();
+                renderBusMap();
+                startTurnCountdown(antrean.detikTersisa || 0);
+                showSeatStep('pick');
+                return;
+            }
+
+            document.getElementById('qMine').textContent = siswa.noAntrean != null ? siswa.noAntrean : '–';
+            document.getElementById('qNow').textContent = antrean.sekarang != null ? antrean.sekarang : '–';
+            const sisa = (antrean.kuota != null && antrean.terpakai != null)
+                ? Math.max(0, antrean.kuota - antrean.terpakai) : null;
+            document.getElementById('qLeft').textContent = sisa != null ? sisa : '–';
+            showSeatStep('wait');
+        }
+
+        function startTurnCountdown(detik) {
+            clearInterval(seatState.tickTimer);
+            seatState.sisaDetik = detik;
+            const render = () => {
+                const s = Math.max(0, seatState.sisaDetik);
+                const m = Math.floor(s / 60);
+                turnTimer.textContent = `${String(m).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+                turnBar.classList.toggle('is-urgent', s <= 120);
+                if (seatState.sisaDetik <= 0) clearInterval(seatState.tickTimer);
+                seatState.sisaDetik -= 1;
+            };
+            render();
+            seatState.tickTimer = setInterval(render, 1000);
+        }
+
+        function renderBusTabs() {
+            const buses = (seatState.data && seatState.data.bus) || [];
+            busTabs.innerHTML = buses.map(b => {
+                const kursi = b.kursi || {};
+                const terpakai = Object.values(kursi).filter(k => k.oleh).length;
+                const aktif = b.id === seatState.busAktif;
+                return `<button type="button" class="bus-tab${aktif ? ' is-active' : ''}" role="tab"
+                          aria-selected="${aktif}" onclick="pilihBus(${b.id})">
+                          ${b.nama || 'Bus ' + b.id}<small>${50 - terpakai} kursi kosong</small>
+                        </button>`;
+            }).join('');
+        }
+
+        function pilihBus(id) {
+            seatState.busAktif = id;
+            seatState.dipilih = null;
+            seatConfirmBar.classList.add('hidden');
+            hideAlert(seatPickAlert);
+            renderBusTabs();
+            renderBusMap();
+        }
+
+        // Menentukan tampilan dan status satu kursi.
+        function seatInfo(kursiData, nomor, siswa) {
+            const info = kursiData[String(nomor)] || {};
+            const tipe = info.tipe || 'BEBAS';
+            const terisi = !!info.oleh;
+            const kelas = [];
+            let label = '';
+            let bisa = true;
+            let alasan = '';
+
+            if (tipe === 'L') kelas.push('is-zona-l');
+            if (tipe === 'P') kelas.push('is-zona-p');
+
+            const milikSaya = siswa.busTerpilih === seatState.busAktif && siswa.kursiTerpilih === nomor;
+
+            if (tipe === 'GURU') {
+                kelas.push('is-guru');
+                bisa = false;
+                label = info.label || 'Guru';
+                alasan = 'Kursi guru';
+            } else if (tipe === 'PANITIA' || tipe === 'BLOK') {
+                kelas.push('is-blocked');
+                bisa = false;
+                alasan = tipe === 'BLOK' ? 'Tidak dipakai' : 'Diatur panitia';
+            } else if (milikSaya) {
+                kelas.push('is-mine');
+                bisa = false;
+                label = 'Anda';
+                alasan = 'Kursi Anda';
+            } else if (terisi) {
+                kelas.push('is-taken');
+                bisa = false;
+                label = info.oleh;
+                alasan = 'Sudah terisi';
+            } else if ((tipe === 'L' || tipe === 'P') && siswa.gender && siswa.gender !== tipe) {
+                kelas.push('is-disabled');
+                bisa = false;
+                alasan = tipe === 'L' ? 'Khusus putra' : 'Khusus putri';
+            }
+
+            if (seatState.readonly && bisa) {
+                bisa = false;
+                alasan = 'Kosong';
+            }
+            if (bisa) kelas.push('is-free');
+            return { kelas, label, bisa, alasan };
+        }
+
+        function renderBusMap() {
+            const data = seatState.data || {};
+            const buses = data.bus || [];
+            const bus = buses.find(b => b.id === seatState.busAktif) || buses[0];
+            if (!bus) {
+                busMap.innerHTML = '';
+                return;
+            }
+            const kursiData = bus.kursi || {};
+            const siswa = data.siswa || {};
+
+            const front = `<div class="bus-front">
+                    <span class="front-tag"><i class="fa-solid fa-door-open" aria-hidden="true"></i> Pintu</span>
+                    <span class="front-tag">Tour Leader</span>
+                    <span class="front-tag"><i class="fa-solid fa-user" aria-hidden="true"></i> Driver</span>
+                </div>`;
+
+            const seats = SEAT_LAYOUT.map(cell => {
+                const s = seatInfo(kursiData, cell.n, siswa);
+                const dipilih = seatState.dipilih
+                    && seatState.dipilih.bus === bus.id
+                    && seatState.dipilih.kursi === cell.n;
+                const cls = ['seat'].concat(s.kelas, dipilih ? ['is-selected'] : []).join(' ');
+                const nama = s.label ? `<span class="seat-name">${escapeHtml(s.label)}</span>` : '';
+                const aria = `Kursi ${cell.n}${s.alasan ? ', ' + s.alasan : ', kosong'}`;
+                return `<button type="button" class="${cls}"
+                          style="grid-column:${cell.col};grid-row:${cell.row}"
+                          data-kursi="${cell.n}" aria-label="${aria}"
+                          ${s.bisa ? '' : 'disabled'}
+                          onclick="pilihKursi(${cell.n})">
+                          <span class="seat-no">${cell.n}</span>${nama}
+                        </button>`;
+            }).join('');
+
+            busMap.innerHTML = front + seats;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function pilihKursi(nomor) {
+            seatState.dipilih = { bus: seatState.busAktif, kursi: nomor };
+            hideAlert(seatPickAlert);
+            document.getElementById('seatConfirmLabel').textContent =
+                `Bus ${seatState.busAktif} · Kursi ${nomor}`;
+            seatConfirmBar.classList.remove('hidden');
+            renderBusMap();
+        }
+
+        async function claimSeat() {
+            if (!seatState.dipilih) return;
+            const btn = document.getElementById('btnSeatClaim');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengunci...';
+            hideAlert(seatPickAlert);
+
+            try {
+                const data = await seatRequest('claim_seat', {
+                    bus: seatState.dipilih.bus,
+                    kursi: seatState.dipilih.kursi
+                });
+
+                if (data.status === 'success') {
+                    stopSeatTimers();
+                    seatConfirmBar.classList.add('hidden');
+                    document.getElementById('doneSeatLabel').textContent =
+                        `Bus ${data.bus} · Kursi ${data.kursi}`;
+                    document.getElementById('doneSeatName').textContent =
+                        (seatState.data && seatState.data.siswa && seatState.data.siswa.nama) || '';
+                    showSeatStep('done');
+                    showToast('Kursi Terkunci', `Bus ${data.bus}, kursi ${data.kursi}.`);
+                    return;
+                }
+
+                await tanganiGagalKursi(data);
+            } catch (error) {
+                showAlert(seatPickAlert, 'Terjadi kesalahan jaringan. Kursi belum terkunci, silakan coba lagi.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
+        // Setiap kode error punya tindak lanjut sendiri; sekadar menampilkan
+        // pesan tidak cukup karena denah bisa sudah basi.
+        async function tanganiGagalKursi(data) {
+            const kode = data.kode || '';
+            const pesan = data.message || 'Kursi gagal dikunci.';
+
+            if (kode === 'SUDAH_MEMILIH' || kode === 'KUOTA_HABIS' || kode === 'BUKAN_GILIRAN' || kode === 'BELUM_LUNAS') {
+                seatState.dipilih = null;
+                seatConfirmBar.classList.add('hidden');
+                try {
+                    const segar = await seatRequest('get_seat_state');
+                    if (segar.status === 'success') {
+                        applySeatState(segar);
+                        return;
+                    }
+                } catch (error) {
+                    // jatuh ke pesan di bawah
+                }
+                showAlert(seatPickAlert, pesan);
+                return;
+            }
+
+            if (kode === 'KURSI_TERISI' || kode === 'KURSI_GURU' || kode === 'GENDER_TIDAK_COCOK') {
+                seatState.dipilih = null;
+                seatConfirmBar.classList.add('hidden');
+                try {
+                    const segar = await seatRequest('get_seat_state');
+                    if (segar.status === 'success') {
+                        seatState.data = segar;
+                        renderBusTabs();
+                        renderBusMap();
+                    }
+                } catch (error) {
+                    // biarkan denah lama
+                }
+                showAlert(seatPickAlert, pesan);
+                return;
+            }
+
+            showAlert(seatPickAlert, pesan);
+        }
+
+        // Denah baca-saja: dipakai dari layar "sudah punya kursi" dan
+        // layar "penempatan diatur panitia".
+        function showSeatMapReadonly() {
+            if (!seatState.data) return;
+            seatState.readonly = true;
+            seatState.dipilih = null;
+            seatConfirmBar.classList.add('hidden');
+            turnBar.classList.add('hidden');
+            const siswa = seatState.data.siswa || {};
+            if (siswa.busTerpilih) seatState.busAktif = siswa.busTerpilih;
+            renderBusTabs();
+            renderBusMap();
+            showSeatStep('pick');
         }
 
         function toggleReasonField() {
