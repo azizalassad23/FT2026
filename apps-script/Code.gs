@@ -952,6 +952,7 @@ function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu('Field Trip')
     .addItem('Periksa kesiapan spreadsheet', 'periksaKesiapan')
+    .addItem('Periksa status satu siswa', 'periksaSiswa')
     .addItem('Siapkan tab yang belum ada', 'siapkanTab')
     .addItem('Terbitkan nomor antrean baru', 'menuHitungAntrean')
     .addItem('Susun ulang SEMUA nomor antrean', 'menuSusunUlangAntrean')
@@ -1127,6 +1128,93 @@ function periksaKesiapan() {
   }
 
   SpreadsheetApp.getUi().alert(baris.join('\n'));
+}
+
+/**
+ * Menjawab pertanyaan "kenapa siswa ini tidak bisa memilih?" untuk satu NIS.
+ * Hanya membaca. Menampilkan keadaan siswa, keadaan antrean, dan kesimpulan
+ * layar mana yang akan dilihatnya beserta alasannya.
+ */
+function periksaSiswa() {
+  const ui = SpreadsheetApp.getUi();
+  const tanya = ui.prompt('Periksa status siswa', 'Masukkan NIS:', ui.ButtonSet.OK_CANCEL);
+  if (tanya.getSelectedButton() !== ui.Button.OK) return;
+  const nis = tanya.getResponseText().trim();
+  if (!nis) return;
+
+  _cachePengaturan = null;
+  const t = bacaTabel(TAB_SISWA);
+  const cNIS = kolomWajib(t, 'NIS');
+
+  let idx = -1;
+  for (let i = 0; i < t.baris.length; i++) {
+    if (samaNis(t.baris[i][cNIS], nis)) { idx = i; break; }
+  }
+  if (idx === -1) { ui.alert('NIS ' + nis + ' tidak ditemukan di tab ' + TAB_SISWA + '.'); return; }
+
+  const b = t.baris[idx];
+  const q = keadaanAntrean(t);
+  const lebar = Math.max(1, angka(pengaturan('lebar_jendela')));
+  const noAntrean = angka(b[kolomWajib(t, 'NoAntrean')]);
+  const terlewat = benar(b[kolomWajib(t, 'Terlewat')]);
+  const sudahPilih = !kosong(b[kolomWajib(t, 'Kursi')]);
+  const lunas = siswaLunas(t, b);
+  const tglLunas = b[kolomWajib(t, 'TglLunas')];
+
+  const L = [];
+  L.push('SISWA  (baris ' + (idx + 2) + ')');
+  L.push('  Nama       : ' + b[kolomWajib(t, 'Nama')]);
+  L.push('  PIN dipakai: ' + pinSiswa(t, b));
+  L.push('  Lunas      : ' + (lunas ? 'YA' : 'BELUM') + '  (bayar ' + angka(b[kolomWajib(t, 'TotalBayar')]) + ')');
+  L.push('  TglLunas   : ' + (kosong(tglLunas) ? '(KOSONG)' : tglLunas));
+  L.push('  NoAntrean  : ' + (noAntrean || '(BELUM ADA)'));
+  L.push('  Terlewat   : ' + (terlewat ? 'YA' : 'tidak'));
+  L.push('  Kursi      : ' + (sudahPilih
+    ? 'Bus ' + angka(b[kolomWajib(t, 'Bus')]) + ' kursi ' + angka(b[kolomWajib(t, 'Kursi')])
+    : '(belum memilih)'));
+  L.push('');
+  L.push('ANTREAN');
+  L.push('  pemilihan_aktif : ' + String(pengaturan('pemilihan_aktif')).toUpperCase());
+  L.push('  fase            : ' + q.fase);
+  L.push('  antrean_sekarang: ' + q.sekarang);
+  L.push('  antrean_mulai   : ' + (q.mulai ? q.mulai : '(kosong)'));
+  L.push('  kuota terpakai  : ' + q.terpakai + ' dari ' + q.kuota);
+  L.push('');
+  L.push('KESIMPULAN');
+
+  if (!benar(pengaturan('pemilihan_aktif'))) {
+    L.push('  Melihat pesan "belum dibuka" karena pemilihan_aktif = FALSE.');
+  } else if (sudahPilih) {
+    L.push('  Melihat kursinya sendiri. Sudah selesai memilih.');
+  } else if (!lunas) {
+    L.push('  Melihat "Belum Lunas". Isi pembayarannya dulu.');
+  } else if (kosong(tglLunas)) {
+    L.push('  Melihat "Penempatan Diatur Panitia".');
+    L.push('  SEBAB: TglLunas kosong, jadi tidak pernah masuk antrean.');
+    L.push('  PERBAIKAN: isi TglLunas, lalu jalankan "Susun ulang SEMUA nomor antrean".');
+  } else if (!noAntrean) {
+    L.push('  Melihat "Penempatan Diatur Panitia".');
+    L.push('  SEBAB: TglLunas terisi tetapi nomor antrean belum terbit.');
+    L.push('  PERBAIKAN: jalankan "Terbitkan nomor antrean baru".');
+  } else if (terlewat) {
+    L.push('  Melihat "Penempatan Diatur Panitia".');
+    L.push('  SEBAB: Terlewat = TRUE, jendela gilirannya pernah habis.');
+    L.push('  PERBAIKAN uji coba: "Kosongkan SEMUA pilihan kursi".');
+    L.push('  PERBAIKAN satuan: kosongkan sel Terlewat siswa ini.');
+  } else if (q.terpakai >= q.kuota || q.fase === 'selesai') {
+    L.push('  Melihat "Penempatan Diatur Panitia".');
+    L.push('  SEBAB: kuota habis (' + q.terpakai + '/' + q.kuota + ') atau fase = selesai.');
+    L.push('  PERBAIKAN: bila ini sisa uji coba, jalankan "Kosongkan SEMUA pilihan kursi".');
+  } else if (noAntrean >= q.sekarang && noAntrean < q.sekarang + lebar) {
+    L.push('  SEKARANG GILIRANNYA. Bisa memilih kursi.');
+  } else if (noAntrean < q.sekarang) {
+    L.push('  Melihat layar tunggu, tetapi nomornya sudah terlewati antrean.');
+    L.push('  SEBAB: antrean_sekarang (' + q.sekarang + ') sudah melewati nomornya (' + noAntrean + ').');
+  } else {
+    L.push('  Menunggu giliran. Masih ada ' + (noAntrean - q.sekarang) + ' orang di depannya.');
+  }
+
+  ui.alert(L.join('\n'));
 }
 
 function menuHitungAntrean() {
