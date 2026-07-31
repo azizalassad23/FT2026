@@ -73,7 +73,18 @@ Ini menambahkan ke tab `DataSiswa`: `Gender`, `TglLunas`, `NoAntrean`, `Bus`,
 belum ada padanannya. **Kolom dan judul yang sudah dipakai tidak pernah
 disentuh atau ditimpa.**
 
-Lalu membuat tab `KonfigKursi` dan `Pengaturan` beserta nilai bawaannya.
+Lalu membuat tab `KonfigKursi` dan `Pengaturan` beserta nilai bawaannya, **dan
+memasang pemicu antrean sekali untuk selamanya.**
+
+Anda tidak perlu mengurus pemicu itu lagi. Ia berjalan tiap 5 menit, tetapi
+langsung berhenti tanpa mengerjakan apa pun selama `pemilihan_aktif` bernilai
+`FALSE`. Jadi **satu-satunya saklar adalah sel `pemilihan_aktif`** di tab
+`Pengaturan`:
+
+- `TRUE` → pemilihan terbuka, antrean berjalan.
+- `FALSE` → pemilihan tertutup, siswa melihat pesan `pesan_belum_dibuka`.
+
+Menjalankan menu ini berulang kali aman — pemicunya tidak akan menumpuk.
 
 ---
 
@@ -178,7 +189,7 @@ harus duduk berdekatan.
 | `total_biaya` | `2450000` | dasar hitungan persentase |
 | `syarat_jaket_persen` | `70` | ambang klaim jaket |
 | `link_grup_wa` | link undangan grup | dikirim setelah siswa menyimpan ukuran |
-| `pemilihan_aktif` | `FALSE` | **biarkan FALSE dulu** |
+| `pemilihan_aktif` | `FALSE` | **satu-satunya saklar.** Biarkan FALSE dulu |
 | `kuota_pilih_mandiri` | `50` | jumlah kursi pilih-sendiri |
 | `durasi_giliran_menit` | `15` | jendela waktu tiap nomor antrean |
 | `lebar_jendela` | `1` | **biarkan 1** — giliran ketat satu per satu |
@@ -234,10 +245,15 @@ Lalu uji antreannya:
 
 ## Langkah 10 — Saat hari pembukaan
 
-1. Menu **Field Trip → Pasang pemicu antrean (tiap 5 menit)**.
-   Tanpa ini, antrean hanya bergerak ketika ada yang membuka halaman.
-2. Ubah `pemilihan_aktif` menjadi `TRUE`.
-3. Umumkan ke siswa.
+Cukup satu tindakan: ubah `pemilihan_aktif` di tab `Pengaturan` menjadi
+`TRUE`, lalu umumkan ke siswa.
+
+Untuk menutup kembali, ubah menjadi `FALSE`. Tidak ada yang lain yang perlu
+dinyalakan atau dimatikan.
+
+Sementara menunggu giliran, siswa melihat **nomor antrean dan nama siswa yang
+sedang memilih** beserta sisa waktunya, dan berapa orang lagi di depan mereka.
+Layar itu memperbarui diri tiap 20 detik.
 
 Selama berjalan, pantau kolom `NoAntrean` dan `Terlewat`.
 

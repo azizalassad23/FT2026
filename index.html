@@ -577,6 +577,68 @@
             border-color: var(--ink-line);
         }
 
+        /* Papan "sekarang giliran siapa" */
+        .now-serving {
+            margin: 14px 0 4px;
+            border: var(--stroke);
+            border-radius: var(--r-md);
+            background: var(--card);
+            box-shadow: var(--lift-sm);
+            padding: 12px 14px;
+        }
+
+        .now-serving > small {
+            display: block;
+            font-size: 0.64rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 800;
+            color: var(--ink-soft);
+        }
+
+        .now-serving-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 7px 0 5px;
+            flex-wrap: wrap;
+        }
+
+        .now-num {
+            font-family: 'Baloo 2', cursive;
+            font-weight: 800;
+            font-size: 1.15rem;
+            line-height: 1;
+            color: #6b4405;
+            background: var(--sun);
+            border: 2px solid rgba(31, 61, 82, 0.25);
+            border-radius: 999px;
+            padding: 5px 13px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .now-name {
+            font-family: 'Baloo 2', cursive;
+            font-size: 1.3rem;
+            line-height: 1.1;
+            color: var(--ink);
+        }
+
+        .now-timer {
+            font-size: 0.82rem;
+            color: var(--ink-soft);
+        }
+
+        .now-timer strong {
+            font-variant-numeric: tabular-nums;
+            color: var(--ink);
+        }
+
+        .now-serving.is-me {
+            background: var(--mint-soft);
+        }
+
         .queue-refresh {
             font-size: 0.78rem;
             color: var(--ink-soft);
@@ -2846,6 +2908,16 @@
                     <div class="queue-panel">
                         <h3 id="seatWaitTitle">Menunggu Giliran</h3>
                         <p id="seatWaitDesc">Kursi dipilih bergantian menurut urutan pelunasan.</p>
+
+                        <div class="now-serving" id="nowServing">
+                            <small>Sedang memilih sekarang</small>
+                            <div class="now-serving-row">
+                                <span class="now-num" id="nsNum">–</span>
+                                <span class="now-name" id="nsName">–</span>
+                            </div>
+                            <span class="now-timer">Sisa waktu <strong id="nsTimer">--:--</strong></span>
+                        </div>
+
                         <div class="queue-grid">
                             <div class="queue-box is-me"><strong id="qMine">–</strong><span>Antrean Anda</span></div>
                             <div class="queue-box"><strong id="qNow">–</strong><span>Sedang Jalan</span></div>
@@ -3737,20 +3809,52 @@
             }
 
             document.getElementById('qMine').textContent = siswa.noAntrean != null ? siswa.noAntrean : '–';
-            document.getElementById('qNow').textContent = antrean.sekarang != null ? antrean.sekarang : '–';
+            document.getElementById('qNow').textContent = antrean.sekarang ? antrean.sekarang : '–';
             const sisa = (antrean.kuota != null && antrean.terpakai != null)
                 ? Math.max(0, antrean.kuota - antrean.terpakai) : null;
             document.getElementById('qLeft').textContent = sisa != null ? sisa : '–';
+
+            // Papan "sedang memilih sekarang": nomor antrean + nama siswanya.
+            const nowServing = document.getElementById('nowServing');
+            if (antrean.sekarang) {
+                document.getElementById('nsNum').textContent = '#' + antrean.sekarang;
+                document.getElementById('nsName').textContent = antrean.namaSekarang || 'Peserta';
+                nowServing.classList.remove('hidden');
+                startTurnCountdown(antrean.detikTersisa || 0);
+            } else {
+                nowServing.classList.add('hidden');
+                clearInterval(seatState.tickTimer);
+            }
+
+            // Perkiraan tunggu: satu jendela penuh untuk tiap nomor di depan,
+            // ditambah sisa waktu nomor yang sedang berjalan.
+            const desc = document.getElementById('seatWaitDesc');
+            const antriDiDepan = (siswa.noAntrean && antrean.sekarang)
+                ? siswa.noAntrean - antrean.sekarang : null;
+            if (antriDiDepan && antriDiDepan > 0) {
+                desc.textContent = antriDiDepan === 1
+                    ? 'Anda berikutnya. Biarkan halaman ini terbuka.'
+                    : `Masih ada ${antriDiDepan} orang di depan Anda.`;
+            } else {
+                desc.textContent = 'Kursi dipilih bergantian menurut urutan pelunasan.';
+            }
+
             showSeatStep('wait');
         }
 
+        // Satu penghitung mundur dipakai dua layar: bilah giliran saat memilih,
+        // dan papan "sedang memilih sekarang" saat menunggu. Nilainya selalu
+        // diselaraskan ulang dari server tiap kali polling masuk, jadi jam
+        // perangkat siswa yang meleset tidak menggeser apa pun.
         function startTurnCountdown(detik) {
             clearInterval(seatState.tickTimer);
             seatState.sisaDetik = detik;
+            const nsTimer = document.getElementById('nsTimer');
             const render = () => {
                 const s = Math.max(0, seatState.sisaDetik);
-                const m = Math.floor(s / 60);
-                turnTimer.textContent = `${String(m).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+                const teks = `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+                turnTimer.textContent = teks;
+                if (nsTimer) nsTimer.textContent = teks;
                 turnBar.classList.toggle('is-urgent', s <= 120);
                 if (seatState.sisaDetik <= 0) clearInterval(seatState.tickTimer);
                 seatState.sisaDetik -= 1;

@@ -144,6 +144,7 @@ Balasan sukses:
   "antrean": {
     "fase": "antrean",
     "sekarang": 18,
+    "namaSekarang": "Budi S.",
     "lebarJendela": 1,
     "giliranSaya": false,
     "detikTersisa": 540,
@@ -173,7 +174,11 @@ tersebut tiba, atau bila `fase` sudah `selesai`. Halaman web memakai ini untuk
 menampilkan pesan bahwa penempatannya akan diatur panitia — bukan pesan error.
 
 `detikTersisa` dihitung server, bukan klien, supaya jam perangkat siswa yang
-meleset tidak mengacaukan giliran.
+meleset tidak mengacaukan giliran. Nilainya diisi untuk semua orang, bukan
+hanya pemegang giliran, supaya yang menunggu bisa memperkirakan waktu.
+
+`namaSekarang` adalah nama pemegang giliran saat ini dalam bentuk singkat
+("Budi S."), dipakai halaman web untuk menampilkan sedang giliran siapa.
 
 ### `claim_seat`
 
@@ -313,8 +318,9 @@ Satu modal baru, memakai verifikasi NIS + PIN yang sama dengan fitur jaket.
 Setelah verifikasi, siswa melihat salah satu dari lima keadaan:
 
 1. **Belum lunas** — pesan bahwa hak memilih hanya untuk yang sudah lunas.
-2. **Menunggu giliran** — nomor antreannya, nomor yang sedang berjalan, sisa
-   kuota, dan perkiraan waktu. Menyegarkan sendiri tiap 20 detik.
+2. **Menunggu giliran** — nomor antrean dan nama siswa yang sedang memilih
+   beserta sisa waktunya, nomor antrean sendiri, sisa kuota, dan berapa orang
+   lagi di depannya. Menyegarkan sendiri tiap 20 detik.
 3. **Giliran tiba** — tiga denah bus dengan penghitung mundur jendela waktunya.
    Kursi guru, kursi terpagar, dan kursi yang tidak sesuai gender tampil tidak
    bisa diklik dengan alasan yang jelas.

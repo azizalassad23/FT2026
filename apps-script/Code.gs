@@ -732,9 +732,24 @@ function getSeatState(req) {
       && q.fase !== 'selesai'
       && q.terpakai < q.kuota;
 
+    // Sisa waktu dihitung untuk semua orang, bukan hanya pemegang giliran,
+    // supaya yang sedang menunggu bisa memperkirakan kapan gilirannya tiba.
     let detikTersisa = 0;
-    if (giliranSaya && q.mulai) {
+    if (q.mulai && q.fase === 'antrean') {
       detikTersisa = Math.max(0, Math.round((q.mulai.getTime() + q.durasiMs - Date.now()) / 1000));
+    }
+
+    // Nama pemegang giliran saat ini, untuk ditampilkan di layar tunggu.
+    let namaSekarang = '';
+    if (q.sekarang > 0) {
+      const cAntreKol = kolomWajib(t, 'NoAntrean');
+      const cNamaKol = kolomWajib(t, 'Nama');
+      for (let i = 0; i < t.baris.length; i++) {
+        if (angka(t.baris[i][cAntreKol]) === q.sekarang) {
+          namaSekarang = namaPendek(t.baris[i][cNamaKol]);
+          break;
+        }
+      }
     }
 
     return {
@@ -751,6 +766,7 @@ function getSeatState(req) {
       antrean: {
         fase: q.fase,
         sekarang: q.sekarang,
+        namaSekarang,
         lebarJendela: lebar,
         giliranSaya,
         detikTersisa,
@@ -889,9 +905,29 @@ function simpanAngket(req) {
  * ========================================================================== */
 
 /**
+ * Memastikan pemicu waktu terpasang, tepat satu buah. Dipanggil otomatis dari
+ * siapkanTab() sehingga tidak perlu diurus sendiri.
+ *
+ * Pemicunya sengaja dibiarkan terpasang terus. Fungsi yang dijalankannya
+ * berhenti seketika bila pemilihan_aktif bernilai FALSE, jadi satu-satunya
+ * saklar yang perlu Anda sentuh tetap sel TRUE/FALSE itu.
+ */
+function pastikanPemicu() {
+  const adaSekarang = ScriptApp.getProjectTriggers()
+    .filter(tr => tr.getHandlerFunction() === 'pemicuMajukanAntrean');
+
+  // Sisakan tepat satu; pemasangan berulang bisa meninggalkan duplikat.
+  adaSekarang.slice(1).forEach(tr => ScriptApp.deleteTrigger(tr));
+  if (adaSekarang.length) return false;
+
+  ScriptApp.newTrigger('pemicuMajukanAntrean').timeBased().everyMinutes(5).create();
+  return true;
+}
+
+/**
  * Dipanggil pemicu waktu tiap 5 menit supaya antrean tetap berjalan walau
- * tidak ada siswa yang sedang membuka halaman. Pasang lewat menu
- * Field Trip > Pasang pemicu antrean.
+ * tidak ada siswa yang sedang membuka halaman. Tidak melakukan apa-apa
+ * selama pemilihan_aktif bernilai FALSE.
  */
 function pemicuMajukanAntrean() {
   _cachePengaturan = null;
@@ -919,9 +955,6 @@ function onOpen() {
     .addItem('Siapkan tab yang belum ada', 'siapkanTab')
     .addItem('Terbitkan nomor antrean baru', 'menuHitungAntrean')
     .addItem('Susun ulang SEMUA nomor antrean', 'menuSusunUlangAntrean')
-    .addSeparator()
-    .addItem('Pasang pemicu antrean (tiap 5 menit)', 'pasangPemicu')
-    .addItem('Lepas pemicu antrean', 'lepasPemicu')
     .addSeparator()
     .addItem('Kosongkan SEMUA pilihan kursi', 'menuResetKursi')
     .addToUi();
@@ -971,9 +1004,20 @@ function siapkanTab() {
     }
   });
 
-  SpreadsheetApp.getUi().alert(
-    catatan.length ? catatan.join('\n') : 'Semua tab dan kolom sudah lengkap.'
-  );
+  // Pemicu dipasang di sini supaya tidak ada langkah terpisah yang harus
+  // diingat. Setelah ini, satu-satunya saklar adalah pemilihan_aktif.
+  try {
+    if (pastikanPemicu()) catatan.push('Pemicu antrean dipasang (tiap 5 menit).');
+    else catatan.push('Pemicu antrean sudah terpasang.');
+  } catch (err) {
+    catatan.push('Pemicu antrean GAGAL dipasang: ' + err.message);
+  }
+
+  catatan.push('');
+  catatan.push('Selesai. Untuk membuka atau menutup pemilihan, cukup ubah');
+  catatan.push('pemilihan_aktif di tab Pengaturan menjadi TRUE atau FALSE.');
+
+  SpreadsheetApp.getUi().alert(catatan.join('\n'));
 }
 
 /**
@@ -1068,6 +1112,20 @@ function periksaKesiapan() {
     if (!bukaSpreadsheet().getSheetByName(nama)) baris.push('Tab "' + nama + '" belum ada.');
   });
 
+  baris.push('');
+  baris.push('SAKLAR');
+  baris.push('  pemilihan_aktif = ' + String(pengaturan('pemilihan_aktif')).toUpperCase()
+    + (benar(pengaturan('pemilihan_aktif')) ? '  (pemilihan TERBUKA)' : '  (pemilihan tertutup)'));
+  try {
+    const jumlahPemicu = ScriptApp.getProjectTriggers()
+      .filter(tr => tr.getHandlerFunction() === 'pemicuMajukanAntrean').length;
+    baris.push('  Pemicu antrean: ' + (jumlahPemicu
+      ? 'terpasang, jalan tiap 5 menit'
+      : 'BELUM ADA — jalankan "Siapkan tab yang belum ada"'));
+  } catch (err) {
+    baris.push('  Pemicu antrean: tidak bisa diperiksa (' + err.message + ')');
+  }
+
   SpreadsheetApp.getUi().alert(baris.join('\n'));
 }
 
@@ -1123,18 +1181,6 @@ function menuSusunUlangAntrean() {
 
   const jumlah = t.baris.filter(b => angka(b[cAntre]) > 0).length;
   ui.alert(jumlah + ' siswa mendapat nomor antrean, urut menurut TglLunas.');
-}
-
-function pasangPemicu() {
-  lepasPemicu();
-  ScriptApp.newTrigger('pemicuMajukanAntrean').timeBased().everyMinutes(5).create();
-  SpreadsheetApp.getUi().alert('Pemicu antrean dipasang, berjalan tiap 5 menit.');
-}
-
-function lepasPemicu() {
-  ScriptApp.getProjectTriggers().forEach(tr => {
-    if (tr.getHandlerFunction() === 'pemicuMajukanAntrean') ScriptApp.deleteTrigger(tr);
-  });
 }
 
 function menuResetKursi() {

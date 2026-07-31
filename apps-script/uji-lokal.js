@@ -160,6 +160,13 @@ console.log('\n=== 2b. Giliran ketat: hanya satu nomor yang terbuka ===');
   ok('nomor 2-5 ditolak selama nomor 1 masih aktif', ditolak);
   ok('tidak ada kursi bocor terkunci',
     post({ action: 'get_seat_state', nis: nis(1), pin: pin(1) }).antrean.terpakai === 0);
+
+  // Yang menunggu harus tahu sedang giliran siapa, lengkap dengan sisa waktunya.
+  const penunggu = post({ action: 'get_seat_state', nis: nis(5), pin: pin(5) });
+  ok('penunggu melihat nomor giliran sekarang', penunggu.antrean.sekarang === 1);
+  ok('penunggu melihat nama pemegang giliran', penunggu.antrean.namaSekarang === 'Siswa 1.');
+  ok('penunggu melihat sisa waktu pemegang giliran',
+    penunggu.antrean.detikTersisa > 0 && penunggu.antrean.giliranSaya === false);
 }
 
 console.log('\n=== 2c. TglLunas hanya dari bendahara ===');
