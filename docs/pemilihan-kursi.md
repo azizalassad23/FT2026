@@ -12,7 +12,8 @@ kontrak di bawah ini, jadi nama aksi dan nama field harus sama persis.
 | Urutan memilih | Giliran ketat berdasarkan urutan pelunasan |
 | Bus | Siswa memilih sendiri bus **dan** kursinya, dari ketiga bus |
 | Kursi guru & zona gender | Diatur di tab konfigurasi Google Sheet |
-| Batas waktu giliran | 15 menit per nomor (bisa diubah di Sheet) |
+| Batas waktu giliran | Tidak ada; siswa memilih sesuai kecepatannya sendiri |
+| Perpindahan giliran | Hanya setelah pemegangnya memilih, atau dilewati panitia |
 | Yang terlewat | Dilewati; jatahnya diteruskan ke nomor berikutnya |
 | Nama di denah | Ditampilkan pada kursi yang sudah terisi |
 | `TglLunas` | Diisi bendahara; skrip tidak pernah mengarangnya |
@@ -103,7 +104,7 @@ Dua kolom: `Kunci` dan `Nilai`.
 |---|---|---|
 | `pemilihan_aktif` | `TRUE` | saklar utama fitur |
 | `kuota_pilih_mandiri` | `50` | berapa kursi yang boleh diambil sendiri |
-| `durasi_giliran_menit` | `15` | panjang jendela tiap nomor antrean |
+| `durasi_giliran_menit` | `0` | `0` = tanpa batas waktu; angka menit menyalakannya |
 | `lebar_jendela` | `1` | berapa nomor boleh memilih bersamaan; naikkan bila antrean terlalu lambat |
 | `antrean_sekarang` | `18` | nomor yang sedang berjalan, diperbarui skrip |
 | `antrean_mulai` | timestamp | kapan jendela nomor tersebut dimulai |
@@ -179,6 +180,12 @@ hanya pemegang giliran, supaya yang menunggu bisa memperkirakan waktu.
 
 `namaSekarang` adalah nama pemegang giliran saat ini dalam bentuk singkat
 ("Budi S."), dipakai halaman web untuk menampilkan sedang giliran siapa.
+
+`pakaiTimer` bernilai `false` bila `durasi_giliran_menit` diisi `0`. Dalam
+keadaan itu `detikTersisa` dikirim `null` dan halaman web menyembunyikan
+seluruh penghitung mundur. Giliran hanya berpindah setelah pemegangnya
+mengunci kursi, atau setelah panitia menjalankan menu
+**Lewati giliran sekarang**.
 
 ### `claim_seat`
 

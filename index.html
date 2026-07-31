@@ -2915,7 +2915,7 @@
                                 <span class="now-num" id="nsNum">–</span>
                                 <span class="now-name" id="nsName">–</span>
                             </div>
-                            <span class="now-timer">Sisa waktu <strong id="nsTimer">--:--</strong></span>
+                            <span class="now-timer" id="nsTimerWrap">Sisa waktu <strong id="nsTimer">--:--</strong></span>
                         </div>
 
                         <div class="queue-grid">
@@ -2925,13 +2925,13 @@
                         </div>
                         <p class="queue-refresh"><i class="fa-solid fa-rotate fa-spin" aria-hidden="true"></i> Halaman ini memperbarui sendiri, biarkan terbuka.</p>
                     </div>
-                    <p class="size-hint" style="margin-top: 12px;"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Tiap nomor antrean punya waktu <strong id="qWindow">15</strong> menit. Bila terlewat, giliran berpindah ke nomor berikutnya dan penempatan Anda diatur panitia.</p>
+                    <p class="size-hint" style="margin-top: 12px;"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> <span id="qHint">Giliran berpindah setelah orang di depan Anda selesai memilih. Tidak ada batas waktu, jadi silakan pilih dengan tenang saat giliran Anda tiba.</span></p>
                 </div>
 
                 <div id="stepSeatPick" class="hidden" tabindex="-1">
                     <div class="turn-bar" id="turnBar">
-                        <span><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> Giliran Anda — sisa waktu</span>
-                        <strong id="turnTimer">--:--</strong>
+                        <span id="turnLabel"><i class="fa-solid fa-hand-pointer" aria-hidden="true"></i> Sekarang giliran Anda — silakan pilih kursi</span>
+                        <strong id="turnTimer" class="hidden">--:--</strong>
                     </div>
 
                     <div class="bus-tabs" id="busTabs" role="tablist" aria-label="Pilih bus"></div>
@@ -3803,7 +3803,11 @@
                 turnBar.classList.remove('hidden');
                 renderBusTabs();
                 renderBusMap();
-                startTurnCountdown(antrean.detikTersisa || 0);
+                const pakaiTimer = antrean.pakaiTimer !== false;
+                document.getElementById('turnLabel').innerHTML = pakaiTimer
+                    ? '<i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> Giliran Anda — sisa waktu'
+                    : '<i class="fa-solid fa-hand-pointer" aria-hidden="true"></i> Sekarang giliran Anda — silakan pilih kursi';
+                startTurnCountdown(pakaiTimer ? (antrean.detikTersisa || 0) : null);
                 showSeatStep('pick');
                 return;
             }
@@ -3820,14 +3824,19 @@
                 document.getElementById('nsNum').textContent = '#' + antrean.sekarang;
                 document.getElementById('nsName').textContent = antrean.namaSekarang || 'Peserta';
                 nowServing.classList.remove('hidden');
-                startTurnCountdown(antrean.detikTersisa || 0);
+                startTurnCountdown(antrean.pakaiTimer === false ? null : (antrean.detikTersisa || 0));
             } else {
                 nowServing.classList.add('hidden');
                 clearInterval(seatState.tickTimer);
             }
 
-            // Perkiraan tunggu: satu jendela penuh untuk tiap nomor di depan,
-            // ditambah sisa waktu nomor yang sedang berjalan.
+            const qHint = document.getElementById('qHint');
+            if (qHint) {
+                qHint.textContent = antrean.pakaiTimer === false
+                    ? 'Giliran berpindah setelah orang di depan Anda selesai memilih. Tidak ada batas waktu, jadi silakan pilih dengan tenang saat giliran Anda tiba.'
+                    : 'Tiap nomor antrean punya batas waktu. Bila terlewat, giliran berpindah ke nomor berikutnya dan penempatan Anda diatur panitia.';
+            }
+
             const desc = document.getElementById('seatWaitDesc');
             const antriDiDepan = (siswa.noAntrean && antrean.sekarang)
                 ? siswa.noAntrean - antrean.sekarang : null;
@@ -3848,8 +3857,23 @@
         // perangkat siswa yang meleset tidak menggeser apa pun.
         function startTurnCountdown(detik) {
             clearInterval(seatState.tickTimer);
-            seatState.sisaDetik = detik;
+            const nsWrap = document.getElementById('nsTimerWrap');
             const nsTimer = document.getElementById('nsTimer');
+
+            // detik bernilai null berarti batas waktu giliran dimatikan
+            // (durasi_giliran_menit = 0). Tidak ada penghitung mundur sama
+            // sekali; siswa memilih tanpa dikejar waktu.
+            if (detik == null) {
+                seatState.sisaDetik = 0;
+                turnTimer.classList.add('hidden');
+                turnBar.classList.remove('is-urgent');
+                if (nsWrap) nsWrap.classList.add('hidden');
+                return;
+            }
+
+            turnTimer.classList.remove('hidden');
+            if (nsWrap) nsWrap.classList.remove('hidden');
+            seatState.sisaDetik = detik;
             const render = () => {
                 const s = Math.max(0, seatState.sisaDetik);
                 const teks = `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;

@@ -191,12 +191,33 @@ harus duduk berdekatan.
 | `link_grup_wa` | link undangan grup | dikirim setelah siswa menyimpan ukuran |
 | `pemilihan_aktif` | `FALSE` | **satu-satunya saklar.** Biarkan FALSE dulu |
 | `kuota_pilih_mandiri` | `50` | jumlah kursi pilih-sendiri |
-| `durasi_giliran_menit` | `15` | jendela waktu tiap nomor antrean |
+| `durasi_giliran_menit` | `0` | `0` = tanpa batas waktu (lihat catatan di bawah) |
 | `lebar_jendela` | `1` | **biarkan 1** — giliran ketat satu per satu |
 | `pesan_belum_dibuka` | kalimat pengumuman | tampil selama fitur belum dibuka |
 
 `link_grup_wa` penting: begitu diisi, link grup dikirim dari server dan tidak
 lagi perlu tertulis di HTML publik.
+
+### Tentang `durasi_giliran_menit = 0`
+
+Dengan nilai `0`, **tidak ada batas waktu**. Siswa memilih sesuai kecepatannya
+sendiri, dan giliran berpindah **hanya** setelah pemegangnya benar-benar
+mengunci kursi. Halaman web tidak menampilkan penghitung mundur sama sekali.
+
+Konsekuensinya harus disadari: **satu siswa yang tidak kunjung membuka halaman
+akan menahan seluruh antrean di belakangnya tanpa batas.** Sakit, ganti nomor
+HP, atau batal ikut — semuanya menghentikan antrean sampai panitia turun
+tangan.
+
+Penggantinya adalah menu **Field Trip → Lewati giliran sekarang**. Menu itu
+menampilkan siapa yang sedang memegang giliran, menandainya terlewat setelah
+Anda konfirmasi, lalu memindahkan giliran ke nomor berikutnya. Pantau kolom
+`NoAntrean` dan `WaktuPilih` selama acara; bila satu nomor tidak bergerak
+dalam waktu wajar, hubungi siswanya, lalu lewati bila perlu.
+
+Bila suatu saat Anda ingin batas waktu otomatis kembali, cukup isi kolom ini
+dengan angka menit (misalnya `15`). Halaman web langsung menampilkan
+penghitung mundurnya lagi tanpa perlu diubah atau di-deploy ulang.
 
 ---
 
@@ -257,17 +278,20 @@ Layar itu memperbarui diri tiap 20 detik.
 
 Selama berjalan, pantau kolom `NoAntrean` dan `Terlewat`.
 
-Dengan `lebar_jendela = 1`, giliran benar-benar ketat: selama nomor 1 masih
-punya sisa waktu, nomor 2 sampai terakhir tidak bisa memilih sama sekali —
-tombol kursinya mati dan permintaan langsung dari luar halaman pun ditolak
-server dengan kode `BUKAN_GILIRAN`. Nomor 2 baru terbuka setelah nomor 1
-memilih atau waktunya habis.
+Dengan `lebar_jendela = 1`, giliran benar-benar ketat: selama nomor 1 belum
+memilih, nomor 2 sampai terakhir tidak bisa memilih sama sekali — tombol
+kursinya mati dan permintaan langsung dari luar halaman pun ditolak server
+dengan kode `BUKAN_GILIRAN`.
 
-Ini juga berarti antreannya berjalan lambat: dengan jendela 15 menit, kasus
-terburuk 50 nomor memakan 12,5 jam. Bila di lapangan terasa terlalu lambat,
-ada dua tuas yang berlaku seketika tanpa perlu deploy ulang:
+**Yang perlu dipantau:** karena tidak ada batas waktu, antrean berhenti total
+bila pemegang giliran tidak kunjung memilih. Kalau satu nomor tidak bergerak
+dalam waktu wajar, hubungi siswanya. Bila tetap tidak ada kabar, jalankan
+**Field Trip → Lewati giliran sekarang**.
 
-- **`durasi_giliran_menit`** diturunkan, misalnya menjadi `7`.
+Tuas darurat lain, berlaku seketika tanpa deploy ulang:
+
+- **`durasi_giliran_menit`** diisi angka menit untuk menyalakan kembali batas
+  waktu otomatis.
 - **`lebar_jendela`** dinaikkan menjadi `3` atau `5`. Prioritas urutan tetap
   terjaga, tetapi beberapa nomor bisa memilih bersamaan — jadi ini **melanggar
   aturan giliran ketat satu per satu**. Pakai hanya sebagai jalan darurat.

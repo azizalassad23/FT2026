@@ -74,7 +74,7 @@ function buatSpreadsheet(jumlahSiswa) {
     ['total_biaya', 2450000], ['syarat_jaket_persen', 70],
     ['link_grup_wa', 'https://chat.whatsapp.com/CONTOH'],
     ['pemilihan_aktif', 'TRUE'], ['kuota_pilih_mandiri', 50],
-    ['durasi_giliran_menit', 15], ['lebar_jendela', 1],
+    ['durasi_giliran_menit', 15], ['lebar_jendela', 1], // skenario 11 mengubahnya jadi 0
     ['antrean_sekarang', 0], ['antrean_mulai', ''], ['fase', 'antrean'],
     ['pesan_belum_dibuka', 'Belum dibuka.']];
   return {
@@ -277,3 +277,36 @@ const tSet = sheets.Pengaturan;
 tSet.data.find(r2 => r2[0] === 'pemilihan_aktif')[1] = 'FALSE';
 r = post({ action: 'get_seat_state', nis: nis(1), pin: pin(1) });
 ok('mengembalikan BELUM_DIBUKA', r.kode === 'BELUM_DIBUKA' && r.message === 'Belum dibuka.');
+
+console.log('\n=== 11. Tanpa batas waktu (durasi_giliran_menit = 0) ===');
+{
+  // Lembar baru supaya bersih dari skenario sebelumnya.
+  const s2 = buatSpreadsheet(20);
+  s2.Pengaturan.data.find(x => x[0] === 'durasi_giliran_menit')[1] = 0;
+  const post2 = jalankan(s2);
+
+  let st = post2({ action: 'get_seat_state', nis: nis(1), pin: pin(1) });
+  ok('server memberi tahu timer dimatikan', st.antrean.pakaiTimer === false);
+  ok('sisa waktu dikirim null, bukan angka', st.antrean.detikTersisa === null);
+  ok('nomor 1 langsung dapat giliran', st.antrean.giliranSaya === true);
+
+  // Inti perubahannya: waktu berlalu jauh, giliran TIDAK boleh berpindah.
+  majuMenit(600);
+  st = post2({ action: 'get_seat_state', nis: nis(1), pin: pin(1) });
+  ok('setelah 10 jam giliran tetap di nomor 1',
+    st.antrean.sekarang === 1 && st.antrean.giliranSaya === true);
+  const s3 = post2({ action: 'get_seat_state', nis: nis(3), pin: pin(3) });
+  ok('nomor 3 masih terkunci, tidak kebagian gara-gara kedaluwarsa',
+    s3.antrean.giliranSaya === false && s3.siswa.dapatPrivilege === true);
+  ok('nomor 1 tidak ditandai terlewat',
+    post2({ action: 'get_seat_state', nis: nis(1), pin: pin(1) }).siswa.dapatPrivilege === true);
+
+  // Giliran berpindah hanya setelah pemegangnya benar-benar memilih.
+  post2({ action: 'claim_seat', nis: nis(1), pin: pin(1), bus: 2, kursi: 10 });
+  st = post2({ action: 'get_seat_state', nis: nis(2), pin: pin(2) });
+  ok('setelah nomor 1 memilih, giliran pindah ke nomor 2',
+    st.antrean.sekarang === 2 && st.antrean.giliranSaya === true);
+  majuMenit(600);
+  st = post2({ action: 'get_seat_state', nis: nis(2), pin: pin(2) });
+  ok('nomor 2 pun tidak kedaluwarsa', st.antrean.giliranSaya === true);
+}

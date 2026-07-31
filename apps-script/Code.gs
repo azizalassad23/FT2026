@@ -77,7 +77,9 @@ const PENGATURAN_BAWAAN = {
   link_grup_wa: '',
   pemilihan_aktif: 'FALSE',
   kuota_pilih_mandiri: 50,
-  durasi_giliran_menit: 15,
+  // 0 berarti tanpa batas waktu: giliran berpindah hanya setelah pemegangnya
+  // benar-benar memilih, atau setelah panitia melewatinya secara manual.
+  durasi_giliran_menit: 0,
   lebar_jendela: 1,
   antrean_sekarang: 0,
   antrean_mulai: '',
@@ -472,7 +474,8 @@ function keadaanAntrean(t) {
     terpakai,
     sekarang: angka(pengaturan('antrean_sekarang')),
     mulai,
-    durasiMs
+    durasiMs,
+    pakaiTimer: durasiMs > 0
   };
 }
 
@@ -547,7 +550,10 @@ function majukanAntrean(t) {
       break;
     }
 
-    if (now - mulai.getTime() > durasiMs) {
+    // durasiMs 0 berarti tanpa batas waktu: giliran tidak pernah kedaluwarsa
+    // sendiri. Perpindahan hanya terjadi lewat cabang di atas, yaitu ketika
+    // pemegang giliran sudah memilih, atau lewat menu "Lewati giliran sekarang".
+    if (durasiMs > 0 && now - mulai.getTime() > durasiMs) {
       // Jendela habis. Tandai terlewat, lalu geser titik mulai memakai akhir
       // jendela sebelumnya — bukan waktu sekarang — supaya antrean tidak
       // molor sedikit demi sedikit setiap kali dikejar.
@@ -669,10 +675,13 @@ function perluMajukan(t) {
   if (kandidat !== angka(pengaturan('antrean_sekarang'))) return true;
 
   // Jendela waktu giliran yang sedang berjalan sudah habis.
+  // Tanpa batas waktu, tidak ada lagi yang perlu digerakkan.
+  const durasiMs = angka(pengaturan('durasi_giliran_menit')) * 60000;
+  if (durasiMs <= 0) return false;
+
   const nilaiMulai = pengaturan('antrean_mulai');
   const mulai = nilaiMulai instanceof Date ? nilaiMulai : new Date(nilaiMulai);
   if (isNaN(mulai.getTime())) return true;
-  const durasiMs = angka(pengaturan('durasi_giliran_menit')) * 60000;
   return (Date.now() - mulai.getTime()) > durasiMs;
 }
 
@@ -732,10 +741,11 @@ function getSeatState(req) {
       && q.fase !== 'selesai'
       && q.terpakai < q.kuota;
 
-    // Sisa waktu dihitung untuk semua orang, bukan hanya pemegang giliran,
-    // supaya yang sedang menunggu bisa memperkirakan kapan gilirannya tiba.
-    let detikTersisa = 0;
-    if (q.mulai && q.fase === 'antrean') {
+    // Sisa waktu hanya berarti bila batas waktu giliran memang dipakai.
+    // Dengan durasi_giliran_menit = 0, nilainya null dan halaman web tidak
+    // menampilkan penghitung mundur sama sekali.
+    let detikTersisa = null;
+    if (q.pakaiTimer && q.mulai && q.fase === 'antrean') {
       detikTersisa = Math.max(0, Math.round((q.mulai.getTime() + q.durasiMs - Date.now()) / 1000));
     }
 
@@ -769,6 +779,7 @@ function getSeatState(req) {
         namaSekarang,
         lebarJendela: lebar,
         giliranSaya,
+        pakaiTimer: q.pakaiTimer,
         detikTersisa,
         kuota: q.kuota,
         terpakai: q.terpakai
@@ -955,6 +966,7 @@ function onOpen() {
     .addItem('Periksa status satu siswa', 'periksaSiswa')
     .addItem('Siapkan tab yang belum ada', 'siapkanTab')
     .addItem('Terbitkan nomor antrean baru', 'menuHitungAntrean')
+    .addItem('Lewati giliran sekarang', 'menuLewatiGiliran')
     .addItem('Susun ulang SEMUA nomor antrean', 'menuSusunUlangAntrean')
     .addSeparator()
     .addItem('Kosongkan SEMUA pilihan kursi', 'menuResetKursi')
@@ -1224,6 +1236,64 @@ function menuHitungAntrean() {
   SpreadsheetApp.getUi().alert(ada
     ? 'Nomor antrean baru sudah diterbitkan, melanjutkan dari nomor terakhir.'
     : 'Tidak ada siswa lunas ber-TglLunas yang belum punya nomor antrean.');
+}
+
+/**
+ * Melewati pemegang giliran saat ini secara manual.
+ *
+ * Ini pengganti batas waktu otomatis. Tanpa timer, satu siswa yang tidak
+ * kunjung membuka halaman — sakit, ganti nomor, atau batal ikut — akan
+ * menahan seluruh antrean di belakangnya tanpa batas. Menu ini yang
+ * membukanya kembali.
+ */
+function menuLewatiGiliran() {
+  const ui = SpreadsheetApp.getUi();
+  _cachePengaturan = null;
+
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(20000)) { ui.alert('Server sedang sibuk, coba lagi sebentar.'); return; }
+
+  try {
+    const t = bacaTabel(TAB_SISWA);
+    const q = keadaanAntrean(t);
+
+    if (!q.sekarang) { ui.alert('Belum ada giliran yang sedang berjalan.'); return; }
+
+    const cAntre = kolomWajib(t, 'NoAntrean');
+    const cKursi = kolomWajib(t, 'Kursi');
+    const cTerlewat = kolomWajib(t, 'Terlewat');
+    const cNama = kolomWajib(t, 'Nama');
+
+    let idx = -1;
+    for (let i = 0; i < t.baris.length; i++) {
+      if (angka(t.baris[i][cAntre]) === q.sekarang) { idx = i; break; }
+    }
+    if (idx === -1) { ui.alert('Siswa bernomor antrean ' + q.sekarang + ' tidak ditemukan.'); return; }
+
+    if (!kosong(t.baris[idx][cKursi])) {
+      ui.alert('Nomor ' + q.sekarang + ' sudah memilih kursi. Antrean akan berpindah sendiri.');
+      return;
+    }
+
+    const nama = t.baris[idx][cNama];
+    const jawab = ui.alert(
+      'Lewati giliran nomor ' + q.sekarang + '?',
+      nama + ' akan ditandai terlewat dan kehilangan hak memilih sendiri. ' +
+      'Penempatannya menjadi tanggung jawab panitia. Giliran berpindah ke nomor berikutnya.',
+      ui.ButtonSet.YES_NO
+    );
+    if (jawab !== ui.Button.YES) return;
+
+    t.sheet.getRange(idx + 2, cTerlewat + 1).setValue('TRUE');
+    t.baris[idx][cTerlewat] = 'TRUE';
+
+    majukanAntrean(t);
+    const baru = keadaanAntrean(t);
+    ui.alert('Nomor ' + q.sekarang + ' (' + nama + ') dilewati.\n' +
+      (baru.sekarang ? 'Sekarang giliran nomor ' + baru.sekarang + '.' : 'Antrean sudah selesai.'));
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 /**
