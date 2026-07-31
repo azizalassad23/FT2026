@@ -31,10 +31,18 @@ jobs:
         with:
           enablement: true
 
+      # PNG sumber (~16 MB) tetap disimpan di repo sebagai arsip, tetapi tidak ikut
+      # dipublikasikan karena halaman hanya memakai turunan .webp-nya.
+      - name: Siapkan folder publikasi
+        run: |
+          mkdir -p _site
+          rsync -a --exclude '.git' --exclude '.github' --exclude '.claude' --exclude '_site' --exclude '*.png' ./ _site/
+          du -sh _site
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: _site
 
       - name: Deploy to GitHub Pages
         id: deployment
