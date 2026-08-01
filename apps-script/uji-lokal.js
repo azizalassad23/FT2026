@@ -275,8 +275,15 @@ ok('penempatan manual TIDAK memakan kuota', manual.antrean.terpakai === 50);
 console.log('\n=== 10. Fitur dimatikan ===');
 const tSet = sheets.Pengaturan;
 tSet.data.find(r2 => r2[0] === 'pemilihan_aktif')[1] = 'FALSE';
+r = post({ action: 'get_seat_state', nis: nis(4), pin: pin(4) });
+ok('yang belum punya kursi melihat BELUM_DIBUKA',
+  r.kode === 'BELUM_DIBUKA' && r.message === 'Belum dibuka.');
+// Siswa 1 sudah mengunci kursi pada skenario 3; ia tetap boleh melihat denah.
 r = post({ action: 'get_seat_state', nis: nis(1), pin: pin(1) });
-ok('mengembalikan BELUM_DIBUKA', r.kode === 'BELUM_DIBUKA' && r.message === 'Belum dibuka.');
+ok('yang sudah punya kursi tetap bisa melihat denah',
+  r.status === 'success' && r.siswa.kursiTerpilih === 5 && r.bus.length === 3);
+ok('mode lihat saja, bukan giliran siapa pun',
+  r.antrean.giliranSaya === false && r.antrean.fase === 'selesai');
 
 console.log('\n=== 11. Tanpa batas waktu (durasi_giliran_menit = 0) ===');
 {

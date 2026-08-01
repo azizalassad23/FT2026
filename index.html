@@ -680,6 +680,29 @@
             color: #a5321f;
         }
 
+        /* Bilah mode lihat saja */
+        .viewer-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+            background: var(--sea-soft);
+            border: 2px solid rgba(31, 61, 82, 0.22);
+            border-radius: var(--r-sm);
+            padding: 9px 12px;
+            margin-bottom: 14px;
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: #1a4f74;
+        }
+
+        .btn-kembali {
+            padding: 7px 14px;
+            font-size: 0.74rem;
+            flex-shrink: 0;
+        }
+
         /* Tab pemilih bus */
         .bus-tabs {
             display: grid;
@@ -2934,6 +2957,11 @@
                         <strong id="turnTimer" class="hidden">--:--</strong>
                     </div>
 
+                    <div class="viewer-bar hidden" id="viewerBar">
+                        <span><i class="fa-solid fa-eye" aria-hidden="true"></i> Mode lihat saja — denah diperbarui otomatis</span>
+                        <button type="button" class="btn-soft btn-kembali" onclick="keluarDariDenah()">Kembali</button>
+                    </div>
+
                     <div class="bus-tabs" id="busTabs" role="tablist" aria-label="Pilih bus"></div>
 
                     <div class="bus-map-scroll" tabindex="0" role="region" aria-label="Denah kursi bus, geser ke samping bila terpotong">
@@ -3630,7 +3658,8 @@
             pollTimer: null,
             tickTimer: null,
             sisaDetik: 0,
-            readonly: false
+            readonly: false,
+            kembaliKe: null
         };
 
         [seatNIS, seatPIN].forEach(el => {
@@ -3681,6 +3710,9 @@
             seatState.dipilih = null;
             seatState.busAktif = 1;
             seatState.readonly = false;
+            seatState.kembaliKe = null;
+            const viewerBar = document.getElementById('viewerBar');
+            if (viewerBar) viewerBar.classList.add('hidden');
         }
 
         function showSeatStep(name) {
@@ -3766,6 +3798,7 @@
             const siswa = data.siswa || {};
             const antrean = data.antrean || {};
 
+            // Sedang melihat denah: cukup segarkan gambarnya, jangan pindah layar.
             if (seatState.readonly) {
                 renderBusTabs();
                 renderBusMap();
@@ -3801,6 +3834,7 @@
 
             if (antrean.giliranSaya) {
                 turnBar.classList.remove('hidden');
+                document.getElementById('viewerBar').classList.add('hidden');
                 renderBusTabs();
                 renderBusMap();
                 const pakaiTimer = antrean.pakaiTimer !== false;
@@ -4087,18 +4121,31 @@
         }
 
         // Denah baca-saja: dipakai dari layar "sudah punya kursi" dan
-        // layar "penempatan diatur panitia".
+        // layar "penempatan diatur panitia". Polling dinyalakan lagi selama
+        // denah dibuka supaya kursi yang baru diambil siswa lain ikut muncul;
+        // dimatikan lagi begitu ditutup agar tidak membebani server.
         function showSeatMapReadonly() {
             if (!seatState.data) return;
             seatState.readonly = true;
+            seatState.kembaliKe = seatSteps.none.classList.contains('hidden') ? 'done' : 'none';
             seatState.dipilih = null;
             seatConfirmBar.classList.add('hidden');
             turnBar.classList.add('hidden');
+            document.getElementById('viewerBar').classList.remove('hidden');
             const siswa = seatState.data.siswa || {};
             if (siswa.busTerpilih) seatState.busAktif = siswa.busTerpilih;
             renderBusTabs();
             renderBusMap();
             showSeatStep('pick');
+            startSeatPolling();
+        }
+
+        function keluarDariDenah() {
+            seatState.readonly = false;
+            clearInterval(seatState.pollTimer);
+            seatState.pollTimer = null;
+            document.getElementById('viewerBar').classList.add('hidden');
+            showSeatStep(seatState.kembaliKe || 'done');
         }
 
         function toggleReasonField() {

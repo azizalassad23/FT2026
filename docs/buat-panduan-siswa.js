@@ -268,6 +268,13 @@ const halaman5 = `
     <div class="tanya-item"><b>Halaman saya tertutup saat menunggu. Hilang?</b><br>
     Tidak. Buka lagi dan masukkan NIS serta PIN — nomor antrean Anda tetap sama.</div>
 
+    <div class="tanya-item"><b>Sudah memilih. Masih bisa lihat denahnya lagi?</b><br>
+    Bisa. Buka menu yang sama, masukkan NIS dan PIN, lalu tekan
+    <b>Lihat Denah Semua Bus</b>. Anda akan melihat seluruh kursi beserta nama
+    pengisinya — kursi Anda sendiri ditandai hijau tua. Tampilan ini hanya
+    untuk dilihat, tidak bisa diklik, dan ikut diperbarui otomatis setiap kali
+    ada teman yang baru memilih.</div>
+
     <div class="tanya-item"><b>Giliran saya lewat karena tidak sempat membuka?</b><br>
     Selama Anda belum dilewati panitia, giliran Anda tetap menunggu. Tetapi
     bila terlalu lama tidak ada kabar, panitia berhak melewati giliran Anda

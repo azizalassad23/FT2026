@@ -694,11 +694,34 @@ function getSeatState(req) {
   const siswa = cariSiswa(t, req.nis, req.pin);
   if (!siswa) return { status: 'error', message: PESAN_TIDAK_COCOK };
 
+  // Pemilihan tertutup. Siswa yang sudah punya kursi tetap boleh masuk untuk
+  // melihat kursinya dan denah akhir; sisanya melihat pesan pengumuman.
   if (!benar(pengaturan('pemilihan_aktif'))) {
+    if (kosong(siswa.data[kolomWajib(t, 'Kursi')])) {
+      return {
+        status: 'error',
+        kode: 'BELUM_DIBUKA',
+        message: String(pengaturan('pesan_belum_dibuka'))
+      };
+    }
+    const brs = siswa.data;
     return {
-      status: 'error',
-      kode: 'BELUM_DIBUKA',
-      message: String(pengaturan('pesan_belum_dibuka'))
+      status: 'success',
+      siswa: {
+        nama: String(brs[kolomWajib(t, 'Nama')]),
+        gender: String(brs[kolomWajib(t, 'Gender')]).trim().toUpperCase(),
+        lunas: siswaLunas(t, brs),
+        noAntrean: angka(brs[kolomWajib(t, 'NoAntrean')]) || null,
+        dapatPrivilege: true,
+        busTerpilih: angka(brs[kolomWajib(t, 'Bus')]),
+        kursiTerpilih: angka(brs[kolomWajib(t, 'Kursi')])
+      },
+      antrean: {
+        fase: 'selesai', sekarang: 0, namaSekarang: '', lebarJendela: 1,
+        giliranSaya: false, pakaiTimer: false, detikTersisa: null,
+        kuota: angka(pengaturan('kuota_pilih_mandiri')), terpakai: 0
+      },
+      bus: bangunDenah(t)
     };
   }
 
