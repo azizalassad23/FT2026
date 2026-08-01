@@ -1,0 +1,485 @@
+/**
+ * Membuat docs/panduan-siswa.html — panduan bergambar untuk siswa.
+ *
+ * Denah kursi dan tampilan layar digambar ulang dengan HTML/CSS memakai
+ * warna dan bentuk yang sama seperti halaman aslinya, supaya siswa mengenali
+ * apa yang akan mereka lihat. Semuanya statis, tidak ada JavaScript, agar
+ * hasil cetaknya bisa diandalkan.
+ *
+ *   node docs/buat-panduan-siswa.js
+ *   chrome --headless --print-to-pdf=... docs/panduan-siswa.html
+ */
+
+const fs = require('fs');
+const path = require('path');
+
+/* Tata letak SEAT 50: sebelas baris 2-2 lalu baris belakang enam kursi. */
+function denahKursi(tandai = {}) {
+  const sel = [];
+  for (let r = 0; r < 11; r++) {
+    const b = r * 4 + 1;
+    sel.push({ n: b, col: 1, row: r + 2 });
+    sel.push({ n: b + 1, col: 2, row: r + 2 });
+    sel.push({ n: b + 2, col: 5, row: r + 2 });
+    sel.push({ n: b + 3, col: 6, row: r + 2 });
+  }
+  for (let i = 0; i < 6; i++) sel.push({ n: 45 + i, col: i + 1, row: 13 });
+
+  const kursi = sel.map(c => {
+    const t = tandai[c.n] || {};
+    const kelas = ['seat', t.kelas || ''].filter(Boolean).join(' ');
+    const nama = t.nama ? `<span class="seat-name">${t.nama}</span>` : '';
+    return `<div class="${kelas}" style="grid-column:${c.col};grid-row:${c.row}">
+      <span class="seat-no">${c.n}</span>${nama}</div>`;
+  }).join('');
+
+  return `<div class="bus-map">
+    <div class="bus-front">
+      <span class="front-tag">PINTU</span>
+      <span class="front-tag">TOUR LEADER</span>
+      <span class="front-tag">DRIVER</span>
+    </div>${kursi}</div>`;
+}
+
+const layar = (judul, isi, lebar) => `
+<div class="layar" ${lebar ? `style="max-width:${lebar}"` : ''}>
+  <div class="layar-pita"></div>
+  <div class="layar-head"><h4>${judul}</h4><span class="tutup">&times;</span></div>
+  <div class="layar-isi">${isi}</div>
+</div>`;
+
+const badge = n => `<span class="badge">${n}</span>`;
+
+/* ------------------------------- HALAMAN ------------------------------- */
+
+const halaman1 = `
+<section class="page cover">
+  <div class="cover-kicker">SMA GUNUNG MADU &middot; FIELD TRIP 2026</div>
+  <h1>Cara Memilih<br>Kursi Bus</h1>
+  <div class="squiggle"></div>
+  <p class="cover-sub">Panduan singkat untuk peserta. Baca sampai selesai
+  sebelum giliran Anda tiba — supaya tidak bingung saat waktunya memilih.</p>
+
+  <div class="aturan">
+    <h3>Tiga hal yang perlu diketahui lebih dulu</h3>
+    <div class="aturan-item">
+      <div class="aturan-ikon">1</div>
+      <div><strong>Hanya 50 kursi yang bisa dipilih sendiri.</strong>
+      Hak ini diberikan kepada 50 siswa yang melunasi pembayaran paling awal.
+      Sisanya akan ditempatkan oleh panitia dan diumumkan sebelum keberangkatan.</div>
+    </div>
+    <div class="aturan-item">
+      <div class="aturan-ikon">2</div>
+      <div><strong>Urutan memilih mengikuti urutan pelunasan.</strong>
+      Yang lunas lebih dulu mendapat nomor antrean lebih kecil dan memilih
+      lebih dulu. Nomor antrean tidak bisa ditukar atau diminta.</div>
+    </div>
+    <div class="aturan-item">
+      <div class="aturan-ikon">3</div>
+      <div><strong>Satu orang memilih pada satu waktu.</strong>
+      Selama nomor sebelum Anda belum selesai memilih, tombol kursi Anda belum
+      bisa ditekan. Tidak ada batas waktu — jadi pilihlah dengan tenang saat
+      giliran Anda, tetapi jangan menghilang, karena teman-teman di belakang
+      menunggu Anda.</div>
+    </div>
+  </div>
+
+  <div class="siapkan">
+    <strong>Siapkan dua hal ini sebelum mulai:</strong>
+    <div class="siapkan-row">
+      <div class="siapkan-box"><span>NIS</span>Nomor Induk Siswa Anda</div>
+      <div class="siapkan-box"><span>PIN</span>4 digit terakhir nomor HP
+      yang Anda daftarkan ke panitia</div>
+    </div>
+  </div>
+</section>`;
+
+const halaman2 = `
+<section class="page">
+  <h2>Langkah 1 &middot; Buka halaman dan tekan tombolnya</h2>
+  <p class="ket">Buka <strong>azizalassad23.github.io/FT2026</strong> lewat HP
+  atau laptop. Di bagian atas halaman ada tiga tombol — tekan yang paling
+  kanan, bertuliskan <strong>Pilih Kursi Bus</strong>.</p>
+
+  <div class="tengah">
+    <div class="tombol-baris">
+      <span class="btn btn-putih">Mulai Jelajah</span>
+      <span class="btn btn-hijau">Klaim Ukuran Jaket</span>
+      <span class="btn btn-kuning sorot">Pilih Kursi Bus ${badge(1)}</span>
+    </div>
+  </div>
+
+  <h2>Langkah 2 &middot; Masukkan NIS dan PIN</h2>
+  <p class="ket">PIN adalah <strong>empat angka terakhir dari nomor HP</strong>
+  yang Anda daftarkan ke panitia. Contoh: bila nomor Anda 0812-3456-<strong>7890</strong>,
+  maka PIN Anda <strong>7890</strong>.</p>
+
+  <div class="tengah">
+    ${layar('Pilih Kursi Bus', `
+      <p class="mini">Hak memilih kursi diberikan kepada 50 siswa yang lunas
+      paling awal, sesuai urutan pelunasan.</p>
+      <div class="grup"><label>NOMOR INDUK SISWA (NIS)</label>
+        <div class="input">12345</div></div>
+      <div class="grup"><label>PIN (4 DIGIT TERAKHIR NO HP)</label>
+        <div class="input">7890</div>
+        <div class="hint">Empat angka terakhir dari nomor HP yang Anda daftarkan.</div></div>
+      <div class="btn btn-kuning penuh sorot">Lihat Antrean Saya ${badge(2)}</div>`, '400px')}
+  </div>
+
+  <div class="catatan">
+    <strong>Kalau muncul "NIS atau PIN tidak cocok":</strong> periksa lagi
+    angkanya. Bila sudah benar tetapi tetap ditolak, kemungkinan nomor HP Anda
+    di data panitia berbeda dengan yang Anda pakai sekarang. Hubungi panitia.
+  </div>
+</section>`;
+
+const halaman3 = `
+<section class="page">
+  <h2>Langkah 3 &middot; Lihat nomor antrean Anda</h2>
+  <p class="ket">Kalau giliran Anda belum tiba, layar ini yang muncul. Layar
+  memperbarui dirinya sendiri setiap 20 detik — <strong>biarkan terbuka</strong>,
+  tidak perlu ditutup atau di-refresh.</p>
+
+  <div class="tengah">
+    ${layar('Pilih Kursi Bus', `
+      <div class="panel-tunggu">
+        <h5>Menunggu Giliran</h5>
+        <p class="mini">Masih ada 5 orang di depan Anda.</p>
+        <div class="now">
+          <small>SEDANG MEMILIH SEKARANG</small>
+          <div class="now-row"><span class="now-num">#18</span>
+            <span class="now-name">Budi S.</span></div>
+        </div>
+        <div class="kotak-baris">
+          <div class="kotak kuning"><strong>23</strong><span>ANTREAN ANDA</span></div>
+          <div class="kotak"><strong>18</strong><span>SEDANG JALAN</span></div>
+          <div class="kotak"><strong>33</strong><span>SISA KURSI</span></div>
+        </div>
+      </div>
+      <p class="mini pusat">Halaman ini memperbarui sendiri, biarkan terbuka.</p>`, '400px')}
+  </div>
+
+  <div class="dua-kolom">
+    <div class="catatan hijau">
+      <strong>Nomor antrean Anda 23, yang jalan 18?</strong><br>
+      Berarti masih ada 5 orang di depan. Tunggu sampai nomor Anda yang muncul
+      di kotak "SEDANG JALAN".
+    </div>
+    <div class="catatan">
+      <strong>Muncul "Penempatan Diatur Panitia"?</strong><br>
+      Berarti Anda tidak termasuk 50 orang yang memilih sendiri, atau kuotanya
+      sudah penuh. Kursi Anda akan ditentukan panitia.
+    </div>
+  </div>
+</section>`;
+
+const halaman4 = `
+<section class="page">
+  <h2>Langkah 4 &middot; Giliran Anda tiba — pilih kursinya</h2>
+  <p class="ket">Begitu giliran Anda tiba, denah bus langsung muncul. Pilih
+  dulu busnya di bagian atas, lalu ketuk kursi yang Anda inginkan.</p>
+
+  <div class="tengah">
+    <div class="layar" style="max-width:520px">
+      <div class="layar-pita"></div>
+      <div class="layar-head"><h4>Pilih Kursi Bus</h4><span class="tutup">&times;</span></div>
+      <div class="layar-isi">
+        <div class="bar-giliran">Sekarang giliran Anda — silakan pilih kursi</div>
+        <div class="tab-baris">
+          <div class="tab aktif">Bus 1<span>32 kursi kosong</span>${badge(3)}</div>
+          <div class="tab">Bus 2<span>44 kursi kosong</span></div>
+          <div class="tab">Bus 3<span>50 kursi kosong</span></div>
+        </div>
+        ${denahKursi({
+          1: { kelas: 'guru', nama: 'Pak Fikar' },
+          2: { kelas: 'guru', nama: 'Ms Eka' },
+          3: { kelas: 'zona-p' }, 4: { kelas: 'zona-p' },
+          5: { kelas: 'zona-l' }, 6: { kelas: 'zona-l' },
+          9: { kelas: 'terisi', nama: 'Budi S.' },
+          12: { kelas: 'terisi', nama: 'Nabila A.' },
+          17: { kelas: 'pilih' },
+          40: { kelas: 'blok' }, 45: { kelas: 'blok' }
+        })}
+        <div class="konfirm">
+          <div><small>PILIHAN ANDA</small><strong>Bus 1 &middot; Kursi 17</strong></div>
+          <span class="btn btn-hijau sorot">Kunci Kursi Ini ${badge(4)}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="legenda">
+    <h3>Arti warna kursi</h3>
+    <div class="legenda-grid">
+      <div><i class="chip kosong"></i><b>Putih</b> — kosong, bisa Anda pilih</div>
+      <div><i class="chip zona-l"></i><b>Biru</b> — zona putra</div>
+      <div><i class="chip zona-p"></i><b>Merah muda</b> — zona putri</div>
+      <div><i class="chip terisi"></i><b>Hijau</b> — sudah diambil, ada namanya</div>
+      <div><i class="chip guru"></i><b>Kuning</b> — kursi guru</div>
+      <div><i class="chip blok"></i><b>Abu garis</b> — diatur panitia</div>
+    </div>
+    <p class="mini">Kursi yang tidak bisa Anda pilih otomatis tidak bisa
+    ditekan. Kalau Anda putri, kursi zona putra tidak akan bisa dipilih, dan
+    sebaliknya.</p>
+  </div>
+</section>`;
+
+const halaman5 = `
+<section class="page">
+  <h2>Langkah 5 &middot; Kunci kursinya</h2>
+  <p class="ket">Setelah menekan sebuah kursi, muncul kotak konfirmasi di
+  bagian bawah. Periksa lagi nomor bus dan nomor kursinya, baru tekan
+  <strong>Kunci Kursi Ini</strong>.</p>
+
+  <div class="tengah">
+    ${layar('Pilih Kursi Bus', `
+      <div class="sukses">
+        <div class="sukses-mark">&#10003;</div>
+        <small>KURSI ANDA</small>
+        <div class="sukses-kursi">Bus 1 &middot; Kursi 17</div>
+        <small>Rani Putri</small>
+      </div>
+      <p class="mini pusat">Kursi sudah terkunci dan tidak bisa diubah sendiri.
+      Bila ada keperluan mendesak, hubungi panitia.</p>`, '400px')}
+  </div>
+
+  <div class="penting">
+    <h3>Penting</h3>
+    <ul>
+      <li><strong>Pilihan tidak bisa diubah sendiri.</strong> Pastikan Anda
+      benar-benar yakin sebelum menekan tombol kunci. Kalau salah, hubungi
+      panitia — tetapi belum tentu bisa ditukar bila kursinya sudah diambil
+      orang lain.</li>
+      <li><strong>Kursi bisa direbut dalam hitungan detik.</strong> Bila muncul
+      pesan "Kursi ini baru saja diambil siswa lain", denah akan langsung
+      diperbarui. Pilih kursi lain.</li>
+      <li><strong>Setelah selesai, giliran otomatis pindah</strong> ke nomor
+      berikutnya. Anda tidak perlu memberi tahu siapa pun.</li>
+    </ul>
+  </div>
+
+  <div class="tanya">
+    <h3>Pertanyaan yang sering muncul</h3>
+    <div class="tanya-item"><b>Saya ingin duduk dengan teman. Bisa?</b><br>
+    Bisa, selama kursinya masih kosong saat giliran Anda tiba dan sesuai zona
+    gender. Nama siswa yang sudah memilih tertera di denah, jadi Anda bisa
+    melihat teman Anda duduk di mana.</div>
+
+    <div class="tanya-item"><b>Halaman saya tertutup saat menunggu. Hilang?</b><br>
+    Tidak. Buka lagi dan masukkan NIS serta PIN — nomor antrean Anda tetap sama.</div>
+
+    <div class="tanya-item"><b>Giliran saya lewat karena tidak sempat membuka?</b><br>
+    Selama Anda belum dilewati panitia, giliran Anda tetap menunggu. Tetapi
+    bila terlalu lama tidak ada kabar, panitia berhak melewati giliran Anda
+    dan menempatkan Anda sendiri.</div>
+
+    <div class="tanya-item"><b>Saya belum lunas. Bisa ikut memilih?</b><br>
+    Belum. Selesaikan pelunasan lebih dulu, lalu buka halaman ini kembali.</div>
+  </div>
+
+  <div class="footer">
+    Ada kendala? Hubungi panitia — Fikar Aditya Baskoro 0821-8466-9494 &middot;
+    Eka Setya Putri 0822-6996-4646
+  </div>
+</section>`;
+
+/* --------------------------------- CSS --------------------------------- */
+
+const css = `
+:root{
+  --paper:#fffaf0; --card:#fff; --ink:#1f3d52; --ink-soft:#4d6d80;
+  --sun:#ffc93c; --sun-soft:#ffe9a8; --sea:#4aa8f0; --sea-soft:#cfe9ff;
+  --mint:#5fd3a3; --mint-soft:#d5f6e7; --coral:#ff7a66; --coral-soft:#ffdfd8;
+  --line:rgba(31,61,82,.85);
+}
+@page{ size:A4; margin:13mm 12mm; }
+*{ box-sizing:border-box; margin:0; padding:0; }
+body{
+  font-family:'Nunito','Segoe UI',system-ui,sans-serif;
+  color:var(--ink); background:var(--paper); line-height:1.5; font-size:10.5pt;
+  -webkit-print-color-adjust:exact; print-color-adjust:exact;
+}
+h1,h2,h3,h4,h5{ font-family:'Baloo 2','Segoe UI',system-ui,sans-serif; line-height:1.15; }
+.page{ page-break-after:always; padding-bottom:4mm; }
+.page:last-child{ page-break-after:auto; }
+
+h2{ font-size:15pt; margin:0 0 3px; letter-spacing:-.01em; }
+h2+.ket{ margin-bottom:9px; }
+.ket{ color:var(--ink-soft); font-size:9.5pt; }
+.mini{ font-size:8.5pt; color:var(--ink-soft); }
+.pusat{ text-align:center; }
+.tengah{ display:flex; justify-content:center; margin:10px 0 12px; }
+
+/* Sampul */
+.cover{ padding-top:8mm; }
+.cover-kicker{ font-size:8pt; letter-spacing:.18em; font-weight:800; color:var(--ink-soft); }
+.cover h1{ font-size:34pt; margin-top:6px; letter-spacing:-.02em; }
+.squiggle{ width:160px; height:9px; margin:7px 0 12px;
+  background:url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 12' fill='none' stroke='%23ffc93c' stroke-width='6' stroke-linecap='round'%3e%3cpath d='M4 8c22-7 40 3 62-1s38-8 60-2 46 6 70 1'/%3e%3c/svg%3e") no-repeat;
+  background-size:100% 100%; }
+.cover-sub{ color:var(--ink-soft); max-width:78%; font-size:10.5pt; }
+
+.aturan{ margin-top:16px; border:2px solid var(--line); border-radius:14px;
+  background:var(--card); padding:14px 16px; box-shadow:5px 6px 0 rgba(31,61,82,.13); }
+.aturan h3{ font-size:13pt; margin-bottom:9px; }
+.aturan-item{ display:flex; gap:10px; margin-bottom:9px; font-size:9.5pt; }
+.aturan-item:last-child{ margin-bottom:0; }
+.aturan-ikon{ flex:0 0 24px; height:24px; border-radius:50%; background:var(--sun);
+  border:2px solid var(--line); display:flex; align-items:center; justify-content:center;
+  font-family:'Baloo 2',sans-serif; font-weight:800; font-size:10pt; }
+
+.siapkan{ margin-top:14px; border:2px dashed rgba(31,61,82,.35); border-radius:14px;
+  background:var(--sea-soft); padding:12px 14px; }
+.siapkan-row{ display:flex; gap:10px; margin-top:8px; }
+.siapkan-box{ flex:1; background:var(--card); border:2px solid rgba(31,61,82,.2);
+  border-radius:10px; padding:9px 11px; font-size:9pt; color:var(--ink-soft); }
+.siapkan-box span{ display:block; font-family:'Baloo 2',sans-serif; font-weight:800;
+  font-size:12pt; color:var(--ink); }
+
+/* Tombol */
+.btn{ display:inline-block; border:2px solid var(--line); border-radius:11px;
+  padding:8px 14px; font-size:8.5pt; font-weight:800; letter-spacing:.06em;
+  text-transform:uppercase; box-shadow:3px 4px 0 rgba(31,61,82,.12); position:relative; }
+.btn-kuning{ background:var(--sun); color:#6b4405; }
+.btn-hijau{ background:var(--mint); color:#14563c; }
+.btn-putih{ background:var(--card); }
+.btn.penuh{ display:block; text-align:center; margin-top:10px; }
+.tombol-baris{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.sorot{ outline:3px dashed var(--coral); outline-offset:4px; }
+
+.badge{ position:absolute; top:-11px; right:-11px; width:21px; height:21px;
+  border-radius:50%; background:var(--coral); color:#fff; border:2px solid var(--line);
+  font-family:'Baloo 2',sans-serif; font-size:9pt; font-weight:800;
+  display:flex; align-items:center; justify-content:center; letter-spacing:0; }
+
+/* Tiruan layar */
+.layar{ width:100%; border:2px solid var(--line); border-radius:14px; background:var(--paper);
+  box-shadow:6px 7px 0 rgba(31,61,82,.18); overflow:hidden; }
+.layar-pita{ height:6px; background:repeating-linear-gradient(90deg,
+  var(--sun) 0 26px,var(--mint) 26px 52px,var(--sea) 52px 78px,var(--coral) 78px 104px); }
+.layar-head{ display:flex; justify-content:space-between; align-items:center;
+  padding:9px 12px; border-bottom:2px dashed rgba(31,61,82,.2); }
+.layar-head h4{ font-size:12pt; }
+.tutup{ width:20px; height:20px; border:2px solid rgba(31,61,82,.25); border-radius:50%;
+  display:flex; align-items:center; justify-content:center; font-size:10pt; background:var(--card); }
+.layar-isi{ padding:11px 12px; }
+
+.grup{ margin-top:9px; }
+.grup label{ display:block; font-size:7.5pt; font-weight:800; letter-spacing:.07em;
+  color:var(--ink-soft); margin-bottom:4px; }
+.input{ border:2px solid rgba(31,61,82,.22); border-radius:9px; background:var(--card);
+  padding:8px 10px; font-size:10pt; }
+.hint{ font-size:7.5pt; color:var(--ink-soft); margin-top:3px; }
+
+/* Layar tunggu */
+.panel-tunggu{ border:2px dashed rgba(31,61,82,.25); border-radius:12px;
+  background:var(--sea-soft); padding:11px; text-align:center; }
+.panel-tunggu h5{ font-size:12pt; }
+.now{ margin:9px 0 8px; border:2px solid var(--line); border-radius:11px;
+  background:var(--card); padding:8px; box-shadow:3px 4px 0 rgba(31,61,82,.12); }
+.now small{ font-size:7pt; letter-spacing:.1em; font-weight:800; color:var(--ink-soft); }
+.now-row{ display:flex; align-items:center; justify-content:center; gap:8px; margin-top:5px; }
+.now-num{ background:var(--sun); border:2px solid rgba(31,61,82,.25); border-radius:99px;
+  padding:2px 10px; font-family:'Baloo 2',sans-serif; font-weight:800; font-size:10pt; color:#6b4405; }
+.now-name{ font-family:'Baloo 2',sans-serif; font-size:12pt; }
+.kotak-baris{ display:flex; gap:6px; }
+.kotak{ flex:1; background:var(--card); border:2px solid rgba(31,61,82,.2);
+  border-radius:9px; padding:7px 3px; }
+.kotak.kuning{ background:var(--sun-soft); border-color:var(--line); }
+.kotak strong{ display:block; font-family:'Baloo 2',sans-serif; font-size:14pt; line-height:1; }
+.kotak span{ font-size:6.5pt; font-weight:800; letter-spacing:.06em; color:var(--ink-soft); }
+
+/* Denah */
+.bar-giliran{ background:var(--mint-soft); border:2px solid rgba(31,61,82,.22);
+  border-radius:9px; padding:7px 10px; font-size:9pt; font-weight:700;
+  color:#14563c; text-align:center; margin-bottom:9px; }
+.tab-baris{ display:flex; gap:6px; margin-bottom:9px; }
+.tab{ flex:1; border:2px solid rgba(31,61,82,.2); border-radius:9px; background:var(--card);
+  padding:6px 4px; text-align:center; font-family:'Baloo 2',sans-serif; font-weight:700;
+  font-size:9pt; color:var(--ink-soft); position:relative; }
+.tab span{ display:block; font-family:'Nunito',sans-serif; font-size:6.5pt; font-weight:700; }
+.tab.aktif{ background:var(--sun-soft); border-color:var(--line); color:var(--ink);
+  box-shadow:3px 4px 0 rgba(31,61,82,.12); }
+
+.bus-map{ display:grid; grid-template-columns:repeat(6,1fr); gap:4px;
+  border:2px solid rgba(31,61,82,.2); border-radius:11px; background:#fffdf6; padding:9px; }
+.bus-front{ grid-column:1/-1; grid-row:1; display:flex; justify-content:space-between;
+  padding-bottom:6px; margin-bottom:2px; border-bottom:2px dashed rgba(31,61,82,.22); }
+.front-tag{ font-size:6pt; font-weight:800; letter-spacing:.08em; color:var(--ink-soft);
+  background:var(--card); border:2px solid rgba(31,61,82,.2); border-radius:99px; padding:2px 7px; }
+.seat{ border:2px solid rgba(31,61,82,.22); border-radius:7px 7px 4px 4px; background:var(--card);
+  min-height:26px; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:2px 1px; overflow:hidden; }
+.seat-no{ font-family:'Baloo 2',sans-serif; font-weight:700; font-size:7.5pt; line-height:1; }
+.seat-name{ font-size:5pt; font-weight:700; color:var(--ink-soft); line-height:1.05;
+  text-align:center; max-width:100%; overflow:hidden; }
+.seat.zona-l{ background:#e8f3fd; }
+.seat.zona-p{ background:#ffeef0; }
+.seat.terisi{ background:var(--mint-soft); }
+.seat.guru{ background:var(--sun-soft); border-color:rgba(178,60,40,.4); }
+.seat.blok{ background:repeating-linear-gradient(45deg,#eef1f3 0 4px,#e2e7ea 4px 8px); }
+.seat.pilih{ background:var(--sun); border-color:var(--line); box-shadow:2px 3px 0 rgba(31,61,82,.2); }
+.seat.pilih .seat-name{ color:#6b4405; }
+
+.konfirm{ display:flex; align-items:center; justify-content:space-between; gap:8px;
+  margin-top:9px; border:2px solid var(--line); border-radius:11px; background:var(--card);
+  padding:8px 10px; box-shadow:3px 4px 0 rgba(31,61,82,.12); }
+.konfirm small{ display:block; font-size:6.5pt; font-weight:800; letter-spacing:.08em; color:var(--ink-soft); }
+.konfirm strong{ font-family:'Baloo 2',sans-serif; font-size:11pt; }
+
+/* Legenda */
+.legenda{ margin-top:12px; border:2px solid var(--line); border-radius:14px;
+  background:var(--card); padding:12px 14px; box-shadow:5px 6px 0 rgba(31,61,82,.13); }
+.legenda h3{ font-size:12pt; margin-bottom:8px; }
+.legenda-grid{ display:grid; grid-template-columns:1fr 1fr; gap:6px 14px;
+  font-size:9pt; margin-bottom:8px; }
+.legenda-grid>div{ display:flex; align-items:center; gap:7px; }
+.chip{ width:15px; height:15px; border-radius:4px; border:2px solid rgba(31,61,82,.25); flex:0 0 auto; }
+.chip.kosong{ background:#fff; } .chip.zona-l{ background:#e8f3fd; }
+.chip.zona-p{ background:#ffeef0; } .chip.terisi{ background:var(--mint-soft); }
+.chip.guru{ background:var(--sun-soft); }
+.chip.blok{ background:repeating-linear-gradient(45deg,#eef1f3 0 4px,#e2e7ea 4px 8px); }
+
+/* Sukses */
+.sukses{ text-align:center; border:2px dashed rgba(31,61,82,.25); border-radius:12px;
+  background:var(--mint-soft); padding:14px; }
+.sukses-mark{ width:40px; height:40px; margin:0 auto 8px; border-radius:50%;
+  background:var(--card); border:3px solid var(--mint); color:#14814f;
+  display:flex; align-items:center; justify-content:center; font-size:18pt; }
+.sukses small{ font-size:7pt; letter-spacing:.12em; font-weight:800; color:var(--ink-soft); }
+.sukses-kursi{ font-family:'Baloo 2',sans-serif; font-size:19pt; color:#14563c; line-height:1.1; margin:3px 0; }
+
+/* Catatan & FAQ */
+.catatan{ border:2px dashed rgba(178,60,40,.4); border-radius:11px;
+  background:var(--coral-soft); padding:10px 12px; font-size:9pt; }
+.catatan.hijau{ border-color:rgba(47,168,122,.5); background:var(--mint-soft); }
+.dua-kolom{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+
+.penting{ margin-top:10px; border:2px solid var(--line); border-radius:14px;
+  background:var(--sun-soft); padding:12px 14px; box-shadow:5px 6px 0 rgba(31,61,82,.13); }
+.penting h3{ font-size:12pt; margin-bottom:7px; }
+.penting ul{ margin-left:16px; font-size:9pt; }
+.penting li{ margin-bottom:5px; }
+
+.tanya{ margin-top:12px; }
+.tanya h3{ font-size:12pt; margin-bottom:8px; }
+.tanya-item{ border:2px dashed rgba(31,61,82,.24); border-radius:10px; background:var(--card);
+  padding:8px 11px; margin-bottom:6px; font-size:9pt; color:var(--ink-soft); }
+.tanya-item b{ color:var(--ink); }
+
+.footer{ margin-top:14px; text-align:center; font-size:8.5pt; color:var(--ink-soft);
+  border-top:2px dashed rgba(31,61,82,.22); padding-top:9px; }
+`;
+
+const html = `<!DOCTYPE html>
+<html lang="id"><head><meta charset="UTF-8">
+<title>Panduan Memilih Kursi Bus — Field Trip 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<style>${css}</style></head>
+<body>${halaman1}${halaman2}${halaman3}${halaman4}${halaman5}</body></html>`;
+
+const keluar = path.join(__dirname, 'panduan-siswa.html');
+fs.writeFileSync(keluar, html, 'utf8');
+console.log('Ditulis:', keluar, '(' + (html.length / 1024).toFixed(0) + ' KB)');
