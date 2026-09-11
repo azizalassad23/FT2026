@@ -640,6 +640,179 @@ function bangunDenah(tSiswa) {
 }
 
 /* ==========================================================================
+ *  CETAK DENAH KURSI
+ * ========================================================================== */
+
+/**
+ * Mengumpulkan isi ketiga bus lengkap dengan nama panjang dan kelas.
+ * Berbeda dari bangunDenah() yang memakai nama singkat untuk halaman web,
+ * hasil cetak memerlukan nama utuh agar bisa dipakai absensi.
+ */
+function kumpulkanIsiBus() {
+  const t = bacaTabel(TAB_SISWA);
+  const tK = bacaTabel(TAB_KONFIG_KURSI);
+
+  const bus = {};
+  for (let i = 1; i <= JUMLAH_BUS; i++) bus[i] = {};
+
+  const kBus = kolomWajib(tK, 'Bus');
+  const kKursi = kolomWajib(tK, 'Kursi');
+  const kTipe = kolomWajib(tK, 'Tipe');
+  const kLabel = kolomOpsional(tK, 'Label');
+
+  tK.baris.forEach(b => {
+    const nb = angka(b[kBus]);
+    const nk = angka(b[kKursi]);
+    if (!bus[nb] || nk < 1 || nk > KURSI_PER_BUS) return;
+    bus[nb][nk] = {
+      tipe: String(b[kTipe]).trim().toUpperCase() || 'BEBAS',
+      label: kLabel !== -1 ? String(b[kLabel] || '').trim() : ''
+    };
+  });
+
+  const sBus = kolomWajib(t, 'Bus');
+  const sKursi = kolomWajib(t, 'Kursi');
+  const sNama = kolomWajib(t, 'Nama');
+  const sKelas = kolomOpsional(t, 'Kelas');
+  const sGender = kolomOpsional(t, 'Gender');
+
+  t.baris.forEach(b => {
+    const nb = angka(b[sBus]);
+    const nk = angka(b[sKursi]);
+    if (!bus[nb] || nk < 1 || nk > KURSI_PER_BUS) return;
+    const isi = bus[nb][nk] || { tipe: 'BEBAS', label: '' };
+    isi.nama = String(b[sNama] || '').trim();
+    isi.kelas = sKelas !== -1 ? String(b[sKelas] || '').trim() : '';
+    isi.gender = sGender !== -1 ? String(b[sGender] || '').trim().toUpperCase() : '';
+    bus[nb][nk] = isi;
+  });
+
+  return bus;
+}
+
+/** Tata letak SEAT 50 dalam bentuk sel grid, sama seperti di halaman web. */
+function selDenah() {
+  const sel = [];
+  for (let r = 0; r < 11; r++) {
+    const b = r * 4 + 1;
+    sel.push({ n: b, col: 1, row: r + 2 });
+    sel.push({ n: b + 1, col: 2, row: r + 2 });
+    sel.push({ n: b + 2, col: 5, row: r + 2 });
+    sel.push({ n: b + 3, col: 6, row: r + 2 });
+  }
+  for (let i = 0; i < 6; i++) sel.push({ n: 45 + i, col: i + 1, row: 13 });
+  return sel;
+}
+
+function amanHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/**
+ * Membangun halaman cetak berisi denah ketiga bus beserta daftar namanya.
+ * Dipisah dari cetakDenahKursi() supaya hasilnya bisa diuji tanpa UI.
+ */
+function buatHtmlDenahCetak() {
+  const bus = kumpulkanIsiBus();
+  const sel = selDenah();
+  const tanggal = Utilities.formatDate(new Date(),
+    Session.getScriptTimeZone() || 'Asia/Jakarta', "d MMMM yyyy, HH:mm");
+
+  let isi = '';
+  for (let nb = 1; nb <= JUMLAH_BUS; nb++) {
+    const data = bus[nb] || {};
+
+    let terisi = 0, guru = 0, kosongKursi = 0;
+    const daftar = [];
+    for (let n = 1; n <= KURSI_PER_BUS; n++) {
+      const k = data[n] || { tipe: 'BEBAS' };
+      if (k.nama) { terisi++; daftar.push({ n, nama: k.nama, kelas: k.kelas, gender: k.gender }); }
+      else if (k.tipe === 'GURU') guru++;
+      else kosongKursi++;
+    }
+
+    const kotak = sel.map(c => {
+      const k = data[c.n] || { tipe: 'BEBAS' };
+      let kelas = 'k';
+      let teks = '';
+      if (k.nama) { kelas += ' isi'; teks = amanHtml(k.nama); }
+      else if (k.tipe === 'GURU') { kelas += ' guru'; teks = amanHtml(k.label || 'Guru'); }
+      else if (k.tipe === 'PANITIA' || k.tipe === 'BLOK') { kelas += ' blok'; teks = k.tipe === 'BLOK' ? '-' : 'panitia'; }
+      else if (k.tipe === 'L') { kelas += ' zl'; }
+      else if (k.tipe === 'P') { kelas += ' zp'; }
+      return '<div class="' + kelas + '" style="grid-column:' + c.col + ';grid-row:' + c.row + '">' +
+        '<b>' + c.n + '</b>' + (teks ? '<span>' + teks + '</span>' : '') + '</div>';
+    }).join('');
+
+    const baris = daftar.length
+      ? daftar.map(d => '<tr><td class="no">' + d.n + '</td><td>' + amanHtml(d.nama) +
+          '</td><td>' + amanHtml(d.kelas) + '</td><td>' + amanHtml(d.gender) + '</td></tr>').join('')
+      : '<tr><td colspan="4" class="kosong">Belum ada kursi terisi di bus ini.</td></tr>';
+
+    isi += '<section class="bus">' +
+      '<div class="judul"><h2>Bus ' + nb + '</h2>' +
+      '<span class="ringkas">' + terisi + ' terisi &middot; ' + guru + ' guru &middot; ' + kosongKursi + ' kosong</span></div>' +
+      '<div class="peta"><div class="depan"><span>PINTU</span><span>TOUR LEADER</span><span>DRIVER</span></div>' +
+      kotak + '</div>' +
+      '<table class="daftar"><thead><tr><th>Kursi</th><th>Nama</th><th>Kelas</th><th>L/P</th></tr></thead>' +
+      '<tbody>' + baris + '</tbody></table>' +
+      '</section>';
+  }
+
+  return '<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><style>' +
+    '*{box-sizing:border-box;margin:0;padding:0}' +
+    'body{font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#1f3d52;padding:14px;background:#fff}' +
+    '.bar{position:sticky;top:0;background:#fffaf0;border:2px solid #1f3d52;border-radius:8px;' +
+      'padding:9px 12px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:10px}' +
+    '.bar b{font-size:14px}.bar small{color:#4d6d80}' +
+    '.cetak{background:#ffc93c;border:2px solid #1f3d52;border-radius:7px;padding:7px 16px;' +
+      'font-weight:bold;font-size:12px;cursor:pointer}' +
+    '.bus{page-break-after:always;margin-bottom:18px}' +
+    '.bus:last-child{page-break-after:auto}' +
+    '.judul{display:flex;align-items:baseline;gap:10px;border-bottom:2px solid #1f3d52;padding-bottom:4px;margin-bottom:8px}' +
+    '.judul h2{font-size:17px}.ringkas{color:#4d6d80;font-size:11px}' +
+    '.peta{display:grid;grid-template-columns:repeat(6,1fr);gap:3px;border:1.5px solid #9bb0bd;' +
+      'border-radius:7px;padding:7px;margin-bottom:10px}' +
+    '.depan{grid-column:1/-1;grid-row:1;display:flex;justify-content:space-between;' +
+      'border-bottom:1.5px dashed #9bb0bd;padding-bottom:4px;margin-bottom:2px}' +
+    '.depan span{font-size:8px;letter-spacing:.06em;color:#4d6d80;border:1px solid #9bb0bd;' +
+      'border-radius:9px;padding:1px 6px}' +
+    '.k{border:1px solid #9bb0bd;border-radius:4px;min-height:30px;padding:2px 1px;text-align:center;' +
+      'display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}' +
+    '.k b{font-size:10px;line-height:1}' +
+    '.k span{font-size:7px;line-height:1.1;color:#3c5b6e;word-break:break-word}' +
+    '.k.isi{background:#d5f6e7;border-color:#2fa87a}' +
+    '.k.guru{background:#ffe9a8;border-color:#c58b1a}' +
+    '.k.blok{background:#e8ecee;color:#7d8f9a}' +
+    '.k.zl{background:#e8f3fd}.k.zp{background:#ffeef0}' +
+    '.daftar{width:100%;border-collapse:collapse;font-size:10px}' +
+    '.daftar th{background:#1f3d52;color:#fff;padding:4px 6px;text-align:left;font-size:9px;letter-spacing:.05em}' +
+    '.daftar td{border-bottom:1px solid #d7dfe4;padding:3px 6px}' +
+    '.daftar td.no{width:42px;font-weight:bold;text-align:center}' +
+    '.daftar td.kosong{text-align:center;color:#7d8f9a;padding:10px}' +
+    '@media print{.bar{display:none}body{padding:0}}' +
+    '@page{size:A4 portrait;margin:11mm}' +
+    '</style></head><body>' +
+    '<div class="bar"><span><b>Denah Kursi Field Trip 2026</b><br>' +
+    '<small>Dicetak ' + tanggal + '</small></span>' +
+    '<button class="cetak" onclick="window.print()">Cetak / Simpan PDF</button></div>' +
+    isi + '</body></html>';
+}
+
+/**
+ * Menampilkan denah siap cetak. Hanya bisa dijalankan dari dalam
+ * spreadsheet, sehingga siswa tidak pernah melihat menu maupun hasilnya.
+ */
+function cetakDenahKursi() {
+  const html = HtmlService.createHtmlOutput(buatHtmlDenahCetak())
+    .setWidth(1000)
+    .setHeight(640);
+  SpreadsheetApp.getUi().showModalDialog(html, 'Denah Kursi — siap cetak');
+}
+
+/* ==========================================================================
  *  AKSI: get_seat_state
  * ========================================================================== */
 
@@ -987,6 +1160,7 @@ function onOpen() {
     .createMenu('Field Trip')
     .addItem('Periksa kesiapan spreadsheet', 'periksaKesiapan')
     .addItem('Periksa status satu siswa', 'periksaSiswa')
+    .addItem('Cetak denah kursi', 'cetakDenahKursi')
     .addItem('Siapkan tab yang belum ada', 'siapkanTab')
     .addItem('Terbitkan nomor antrean baru', 'menuHitungAntrean')
     .addItem('Lewati giliran sekarang', 'menuLewatiGiliran')

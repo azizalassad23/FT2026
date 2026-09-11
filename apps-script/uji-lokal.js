@@ -84,6 +84,8 @@ function buatSpreadsheet(jumlahSiswa) {
   };
 }
 
+let sandboxTerakhir = null;
+
 function jalankan(sheets) {
   const sandbox = {
     console,
@@ -107,11 +109,15 @@ function jalankan(sheets) {
       MimeType: { JSON: 'json' },
       createTextOutput: s => ({ _s: s, setMimeType() { return this; }, getContent() { return this._s; } })
     },
-    ScriptApp: { getProjectTriggers: () => [], newTrigger: () => ({ timeBased: () => ({ everyMinutes: () => ({ create() {} }) }) }) }
+    ScriptApp: { getProjectTriggers: () => [], newTrigger: () => ({ timeBased: () => ({ everyMinutes: () => ({ create() {} }) }) }) },
+    Session: { getScriptTimeZone: () => 'Asia/Jakarta' },
+    Utilities: { formatDate: () => '12 September 2026, 09:30' },
+    HtmlService: { createHtmlOutput: h => ({ _h: h, setWidth() { return this; }, setHeight() { return this; } }) }
   };
   sandbox.globalThis = sandbox;
   vm.createContext(sandbox);
   vm.runInContext(fs.readFileSync(require('path').join(__dirname, 'Code.gs'), 'utf8'), sandbox);
+  sandboxTerakhir = sandbox;
   return (payload) => JSON.parse(
     sandbox.doPost({ postData: { contents: JSON.stringify(payload) } }).getContent()
   );
@@ -284,6 +290,37 @@ ok('yang sudah punya kursi tetap bisa melihat denah',
   r.status === 'success' && r.siswa.kursiTerpilih === 5 && r.bus.length === 3);
 ok('mode lihat saja, bukan giliran siapa pun',
   r.antrean.giliranSaya === false && r.antrean.fase === 'selesai');
+
+console.log('\n=== 10b. Cetak denah kursi ===');
+{
+  // Pakai lembar utama yang sudah terisi 50 kursi dari skenario 8.
+  const sb = jalankan(sheets);
+  void sb;
+  const html = sandboxTerakhir.buatHtmlDenahCetak();
+  // Simpan contohnya hanya bila diminta: SIMPAN_HTML=1 node uji-lokal.js
+  if (process.env.SIMPAN_HTML) {
+    require('fs').writeFileSync(require('path').join(__dirname, 'contoh-cetak.html'), html);
+    console.log('       contoh disimpan: apps-script/contoh-cetak.html');
+  }
+
+  ok('menghasilkan halaman HTML utuh', /^<!DOCTYPE html>/.test(html) && /<\/html>$/.test(html));
+  ok('memuat ketiga bus', (html.match(/<h2>Bus \d<\/h2>/g) || []).length === 3);
+  ok('setiap bus punya 50 kotak kursi',
+    (html.match(/class="k[ "]/g) || []).length === 150, (html.match(/class="k[ "]/g) || []).length);
+  ok('tombol cetak disembunyikan saat mencetak', /@media print\{\.bar\{display:none\}/.test(html));
+  ok('tiap bus dipisah jadi halaman sendiri', /page-break-after:always/.test(html));
+  ok('memakai nama panjang, bukan singkatan', /Siswa 1</.test(html) && !/Siswa 1\.</.test(html));
+  ok('kursi guru tampil beserta labelnya', /Pak Fikar/.test(html) && /Ms Eka/.test(html));
+  ok('ada daftar nama untuk absensi', /<th>Kursi<\/th><th>Nama<\/th>/.test(html));
+
+  // Nama yang mengandung karakter HTML tidak boleh merusak halaman.
+  const kNama = HEADER_SISWA.indexOf('Nama Siswa') + 1;
+  sheets.DataSiswa.set(2, kNama, 'Budi <script>x</script> & Co');
+  const html2 = jalankan(sheets) && sandboxTerakhir.buatHtmlDenahCetak();
+  ok('nama berisi karakter HTML di-escape',
+    /Budi &lt;script&gt;x&lt;\/script&gt; &amp; Co/.test(html2) && !/<script>x<\/script>/.test(html2));
+  sheets.DataSiswa.set(2, kNama, 'Siswa 1');
+}
 
 console.log('\n=== 11. Tanpa batas waktu (durasi_giliran_menit = 0) ===');
 {

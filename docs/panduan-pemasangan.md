@@ -298,6 +298,28 @@ Tuas darurat lain, berlaku seketika tanpa deploy ulang:
 
 ---
 
+## Langkah 11 — Mencetak hasil pemilihan
+
+Menu **Field Trip → Cetak denah kursi**.
+
+Muncul jendela berisi denah ketiga bus lengkap dengan nama pengisi tiap kursi,
+diikuti daftar nama per bus untuk absensi. Tekan tombol **Cetak / Simpan PDF**
+di pojok kanan atas. Tiap bus otomatis jatuh ke halaman sendiri, dan tombolnya
+tidak ikut tercetak.
+
+Bisa dijalankan kapan saja, termasuk di tengah pemilihan — isinya selalu
+keadaan terbaru saat menu ditekan.
+
+**Kenapa lewat spreadsheet, bukan tombol di halaman web:** halaman web itu
+publik dan seluruh isinya tersimpan di perangkat siswa saat dibuka. Tombol apa
+pun di sana bisa ditemukan siswa yang membuka Inspect Element, dan
+menyembunyikannya lewat parameter URL rahasia hanya bertahan sampai satu orang
+membagikan tautannya. Menu spreadsheet aman dengan sendirinya karena hanya bisa
+dijalankan oleh pemilik akses edit spreadsheet — yaitu panitia. Siswa tidak
+pernah melihat menunya, tombolnya, maupun hasilnya.
+
+---
+
 ## Ringkasan yang wajib diisi manual
 
 | Hal | Di mana | Akibat bila dilewat |
