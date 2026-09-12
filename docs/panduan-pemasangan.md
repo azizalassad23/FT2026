@@ -320,6 +320,76 @@ pernah melihat menunya, tombolnya, maupun hasilnya.
 
 ---
 
+## Langkah 12 — Kamar dan pendamping
+
+Dikerjakan **setelah pemilihan kursi selesai**, karena kamar diturunkan dari
+nomor kursi.
+
+### Aturan kamarnya
+
+Satu baris kursi penuh — empat kursi melintasi lorong — menempati satu kamar.
+Jadi kursi 1, 2, 3, 4 sekamar; kursi 5, 6, 7, 8 sekamar; dan seterusnya sampai
+kursi 41–44. Setiap bus menghasilkan 11 kamar, dengan penomoran `B1-K01`,
+`B1-K02`, dan seterusnya.
+
+**Kursi 45–50 di baris belakang tidak diberi kamar otomatis.** Jumlahnya enam
+dan tidak membentuk baris utuh, jadi kolom `Kamar` untuk mereka Anda isi
+sendiri. Skrip tidak pernah menimpa isian manual itu, dan tetap membagikan
+pendamping untuk kamar yang Anda buat sendiri.
+
+### ⚠ Zona gender harus diatur per baris mendatar
+
+Ini konsekuensi yang harus disadari sejak mengisi `KonfigKursi`.
+
+Karena satu kamar meliputi **kedua sisi lorong**, zona putra dan putri harus
+dibagi per baris:
+
+```
+baris 1   1   2  |  3   4     ← seluruhnya putra
+baris 2   5   6  |  7   8     ← seluruhnya putra
+baris 6  21  22  | 23  24     ← seluruhnya putri
+```
+
+Kalau dibagi kiri–kanan — kursi 1, 2 putra dan 3, 4 putri — maka satu kamar
+berisi dua putra dan dua putri sekaligus. Skrip mendeteksi dan melaporkannya,
+tetapi tidak bisa memperbaikinya sendiri; kamar campur tidak diberi pendamping
+sampai zonanya dibetulkan.
+
+### Isi tab `Pendamping`
+
+| Nama | Gender | Bus | NoHP |
+|---|---|---|---|
+| Pak Adi | `L` | 1 | 0812... |
+| Bu Rina | `P` | 1 | 0813... |
+| Pak Budi | `L` | 2 | 0814... |
+
+Satu baris per pendamping. `Bus` menentukan bus mana yang ditemani — pendamping
+**hanya** menerima kamar dari busnya sendiri, tidak pernah lintas bus.
+
+Pastikan tiap bus punya pendamping putra **dan** putri, karena kamar putra
+hanya diberikan ke pendamping putra dan sebaliknya. Bus yang tidak punya
+pendamping putri akan membuat semua kamar putrinya tidak terisi pendamping, dan
+itu dilaporkan sebagai peringatan.
+
+### Jalankan
+
+Menu **Field Trip → Susun kamar & pendamping**.
+
+Skrip mengisi kolom `Kamar` dan `Pendamping` di tab `DataSiswa`, lalu
+menampilkan laporan: jumlah kamar terbentuk, jatah tiap pendamping, kamar
+campur gender bila ada, kamar tanpa pendamping, dan jumlah siswa baris belakang
+yang kamarnya masih kosong.
+
+Pembagiannya bergilir, jadi **selisih jumlah kamar antar pendamping paling
+banyak satu**. Aman dijalankan berulang kali — hasilnya selalu dihitung ulang
+dari keadaan terbaru.
+
+Setelah ini, menu **Cetak denah kursi** ikut menampilkan kolom Kamar dan
+Pendamping pada daftar nama tiap bus, sehingga satu lembar cetak bisa dipakai
+untuk absensi bus sekaligus pembagian kamar hotel.
+
+---
+
 ## Ringkasan yang wajib diisi manual
 
 | Hal | Di mana | Akibat bila dilewat |
@@ -327,6 +397,9 @@ pernah melihat menunya, tombolnya, maupun hasilnya.
 | Kolom `Gender` | tab `DataSiswa` | zona putra/putri tidak berfungsi |
 | Kolom `TglLunas` | tab `DataSiswa` | siswa tidak masuk antrean sama sekali |
 | Susun ulang nomor antrean | menu Field Trip | urutan salah bila ada tanggal yang diisi belakangan |
+| Zona gender per baris mendatar | tab KonfigKursi | kamar berisi putra dan putri sekaligus |
+| Tab Pendamping | tab Pendamping | kamar tidak dapat pendamping |
+| Kamar kursi 45-50 | tab DataSiswa | siswa baris belakang tanpa kamar |
 | Kursi guru & zona | tab `KonfigKursi` | siswa bisa mengambil kursi guru |
 | `link_grup_wa` | tab `Pengaturan` | link grup tetap memakai cadangan di HTML |
 | Deploy versi baru | editor Apps Script | semua perubahan tidak berpengaruh |

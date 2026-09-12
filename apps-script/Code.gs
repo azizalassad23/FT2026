@@ -39,6 +39,7 @@ const TAB_SISWA = 'DataSiswa';
 const TAB_KONFIG_KURSI = 'KonfigKursi';
 const TAB_PENGATURAN = 'Pengaturan';
 const TAB_ANGKET = 'Angket';
+const TAB_PENDAMPING = 'Pendamping';
 
 /**
  * Nama kolom dikenali lewat daftar padanan di bawah, jadi judul kolom di
@@ -63,11 +64,16 @@ const PADANAN_KOLOM = {
   WaktuPilih:  ['WaktuPilih', 'Waktu Pilih'],
   Terlewat:    ['Terlewat'],
   UkuranJaket: ['UkuranJaket', 'Ukuran Jaket', 'Ukuran', 'Jaket'],
-  WaktuJaket:  ['WaktuJaket', 'Waktu Jaket']
+  WaktuJaket:  ['WaktuJaket', 'Waktu Jaket'],
+  Kamar:       ['Kamar', 'No Kamar', 'Nomor Kamar'],
+  Pendamping:  ['Pendamping', 'Guru Pendamping', 'Wali', 'Pembimbing']
 };
 
 const JUMLAH_BUS = 3;
 const KURSI_PER_BUS = 50;
+// Kursi di atas nomor ini ada di baris belakang yang berisi enam kursi
+// menyatu; kamarnya tidak dibentuk otomatis, melainkan diisi panitia.
+const KURSI_KAMAR_OTOMATIS = 44;
 const UKURAN_JAKET_SAH = ['S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
 
 // Nilai bawaan bila baris terkait belum ada di tab Pengaturan.
@@ -640,6 +646,195 @@ function bangunDenah(tSiswa) {
 }
 
 /* ==========================================================================
+ *  KAMAR & PENDAMPING
+ * ========================================================================== */
+
+/**
+ * Kamar diturunkan dari baris kursi: satu baris penuh — empat kursi melintasi
+ * lorong — menempati satu kamar. Kursi 45-50 di baris belakang sengaja tidak
+ * diberi kamar otomatis karena jumlahnya enam dan tidak membentuk baris utuh;
+ * kolom Kamar untuk mereka diisi panitia manual dan tidak pernah ditimpa.
+ *
+ * PENTING: karena satu kamar meliputi kedua sisi lorong, zona gender di
+ * KonfigKursi harus diatur per baris mendatar. Bila diatur kiri-kanan, kamarnya
+ * berisi putra dan putri sekaligus. Skrip mendeteksi dan melaporkannya, tetapi
+ * tidak bisa memperbaikinya sendiri.
+ */
+function labelKamar(bus, kursi) {
+  if (!bus || kursi < 1 || kursi > KURSI_KAMAR_OTOMATIS) return '';
+  const baris = Math.ceil(kursi / 4);
+  return 'B' + bus + '-K' + (baris < 10 ? '0' + baris : String(baris));
+}
+
+function bacaPendamping() {
+  const t = bacaTabel(TAB_PENDAMPING);
+  const cNama = kolomWajib(t, 'Nama');
+  const cGender = kolomWajib(t, 'Gender');
+  const cBus = kolomWajib(t, 'Bus');
+
+  const daftar = [];
+  t.baris.forEach(b => {
+    const nama = String(b[cNama] == null ? '' : b[cNama]).trim();
+    if (!nama) return;
+    daftar.push({
+      nama: nama,
+      gender: String(b[cGender] == null ? '' : b[cGender]).trim().toUpperCase(),
+      bus: angka(b[cBus]),
+      jatah: 0
+    });
+  });
+  return daftar;
+}
+
+/**
+ * Mengisi kolom Kamar lalu membagi kamar ke pendamping.
+ *
+ * Pendamping hanya menerima kamar dari bus yang sama dan gender yang sama.
+ * Pembagiannya bergilir sehingga selisih jumlah kamar antar pendamping paling
+ * banyak satu.
+ */
+function susunKamarPendamping() {
+  const ui = SpreadsheetApp.getUi();
+  _cachePengaturan = null;
+
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(20000)) { ui.alert('Server sedang sibuk, coba lagi sebentar.'); return; }
+
+  try {
+    const t = bacaTabel(TAB_SISWA);
+    const cBus = kolomWajib(t, 'Bus');
+    const cKursi = kolomWajib(t, 'Kursi');
+    const cKamar = kolomWajib(t, 'Kamar');
+    const cPend = kolomWajib(t, 'Pendamping');
+    const cGender = kolomWajib(t, 'Gender');
+    const cNama = kolomWajib(t, 'Nama');
+
+    if (!t.baris.length) { ui.alert('Tab ' + TAB_SISWA + ' belum berisi data siswa.'); return; }
+
+    // 1. Isi kolom Kamar untuk kursi 1-44. Kursi 45-50 dibiarkan apa adanya.
+    //    Seluruh kolom ditulis sekali dengan setValues; menulis sel per sel
+    //    untuk 150 siswa terlalu lambat di Apps Script.
+    let kamarBaru = 0;
+    const kolomKamar = t.baris.map(b => {
+      const lama = String(b[cKamar] == null ? '' : b[cKamar]).trim();
+      const label = labelKamar(angka(b[cBus]), angka(b[cKursi]));
+      if (!label) return [lama];
+      if (label !== lama) kamarBaru += 1;
+      b[cKamar] = label;
+      return [label];
+    });
+    t.sheet.getRange(2, cKamar + 1, kolomKamar.length, 1).setValues(kolomKamar);
+
+    // 2. Kelompokkan siswa per kamar.
+    const kamar = {};
+    t.baris.forEach((b, i) => {
+      const label = String(b[cKamar] == null ? '' : b[cKamar]).trim();
+      if (!label) return;
+      const bus = angka(b[cBus]);
+      const kunci = bus + '|' + label;
+      if (!kamar[kunci]) kamar[kunci] = { bus: bus, label: label, anggota: [] };
+      kamar[kunci].anggota.push({
+        indeks: i,
+        nama: String(b[cNama] == null ? '' : b[cNama]).trim(),
+        gender: String(b[cGender] == null ? '' : b[cGender]).trim().toUpperCase()
+      });
+    });
+
+    const daftarKamar = Object.keys(kamar).map(k => kamar[k]);
+    daftarKamar.forEach(k => {
+      const jenis = {};
+      k.anggota.forEach(a => { if (a.gender) jenis[a.gender] = true; });
+      const kunci = Object.keys(jenis);
+      k.gender = kunci.length === 1 ? kunci[0] : (kunci.length === 0 ? '' : 'CAMPUR');
+    });
+    daftarKamar.sort((a, b) => a.bus - b.bus || (a.label < b.label ? -1 : 1));
+
+    // 3. Bagikan kamar ke pendamping: bus sama, gender sama, bergilir.
+    const pendamping = bacaPendamping();
+    const kolam = {};
+    pendamping.forEach(p => {
+      const kunci = p.bus + '|' + p.gender;
+      if (!kolam[kunci]) kolam[kunci] = { antre: [], putar: 0 };
+      kolam[kunci].antre.push(p);
+    });
+
+    const tanpaPendamping = [];
+    const kamarCampur = [];
+
+    daftarKamar.forEach(k => {
+      k.pendamping = '';
+      if (k.gender === 'CAMPUR') { kamarCampur.push(k.label); return; }
+      if (!k.gender) { tanpaPendamping.push(k.label + ' (gender siswa belum diisi)'); return; }
+      const pool = kolam[k.bus + '|' + k.gender];
+      if (!pool || !pool.antre.length) {
+        tanpaPendamping.push(k.label + ' (tidak ada pendamping ' +
+          (k.gender === 'L' ? 'putra' : 'putri') + ' di bus ' + k.bus + ')');
+        return;
+      }
+      const p = pool.antre[pool.putar % pool.antre.length];
+      pool.putar += 1;
+      p.jatah += 1;
+      k.pendamping = p.nama;
+    });
+
+    // 4. Tulis kolom Pendamping.
+    const peta = {};
+    daftarKamar.forEach(k => {
+      k.anggota.forEach(a => { peta[a.indeks] = k.pendamping || ''; });
+    });
+    const kolomPend = t.baris.map((b, i) => [peta[i] === undefined ? '' : peta[i]]);
+    t.sheet.getRange(2, cPend + 1, kolomPend.length, 1).setValues(kolomPend);
+
+    // 5. Laporan.
+    const barisBelakang = t.baris.filter(b =>
+      angka(b[cKursi]) > KURSI_KAMAR_OTOMATIS && kosong(b[cKamar])).length;
+
+    const L = [];
+    L.push('KAMAR');
+    L.push('  Kamar terbentuk  : ' + daftarKamar.length);
+    L.push('  Kolom Kamar diisi: ' + kamarBaru + ' baris');
+    L.push('  Siswa terkelompok: ' + daftarKamar.reduce((n, k) => n + k.anggota.length, 0));
+    L.push('');
+    L.push('PENDAMPING');
+    if (!pendamping.length) {
+      L.push('  Tab ' + TAB_PENDAMPING + ' masih kosong, belum ada yang bisa dibagi.');
+    } else {
+      pendamping.sort((a, b) => a.bus - b.bus || (a.nama < b.nama ? -1 : 1));
+      pendamping.forEach(p => {
+        L.push('  Bus ' + p.bus + ' - ' +
+          (p.gender === 'L' ? 'putra' : p.gender === 'P' ? 'putri' : 'gender?') +
+          ' - ' + p.nama + ' : ' + p.jatah + ' kamar');
+      });
+    }
+
+    if (kamarCampur.length) {
+      L.push('');
+      L.push('KAMAR CAMPUR PUTRA-PUTRI - PERLU DIPERBAIKI');
+      L.push('  ' + kamarCampur.join(', '));
+      L.push('  Sebabnya zona gender di KonfigKursi diatur kiri-kanan, bukan per');
+      L.push('  baris mendatar. Satu kamar meliputi kedua sisi lorong, jadi zonanya');
+      L.push('  harus per baris. Kamar ini tidak diberi pendamping.');
+    }
+    if (tanpaPendamping.length) {
+      L.push('');
+      L.push('KAMAR TANPA PENDAMPING');
+      tanpaPendamping.slice(0, 12).forEach(x => L.push('  ' + x));
+      if (tanpaPendamping.length > 12) L.push('  dan ' + (tanpaPendamping.length - 12) + ' lainnya');
+    }
+    if (barisBelakang) {
+      L.push('');
+      L.push('BARIS BELAKANG');
+      L.push('  ' + barisBelakang + ' siswa di kursi 45-50 belum punya kamar.');
+      L.push('  Isi kolom Kamar mereka manual, lalu jalankan menu ini lagi.');
+    }
+
+    ui.alert(L.join('\n'));
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/* ==========================================================================
  *  CETAK DENAH KURSI
  * ========================================================================== */
 
@@ -674,6 +869,8 @@ function kumpulkanIsiBus() {
   const sKursi = kolomWajib(t, 'Kursi');
   const sNama = kolomWajib(t, 'Nama');
   const sKelas = kolomOpsional(t, 'Kelas');
+  const sKamar = kolomOpsional(t, 'Kamar');
+  const sPend = kolomOpsional(t, 'Pendamping');
   const sGender = kolomOpsional(t, 'Gender');
 
   t.baris.forEach(b => {
@@ -684,6 +881,8 @@ function kumpulkanIsiBus() {
     isi.nama = String(b[sNama] || '').trim();
     isi.kelas = sKelas !== -1 ? String(b[sKelas] || '').trim() : '';
     isi.gender = sGender !== -1 ? String(b[sGender] || '').trim().toUpperCase() : '';
+    isi.kamar = sKamar !== -1 ? String(b[sKamar] || '').trim() : '';
+    isi.pendamping = sPend !== -1 ? String(b[sPend] || '').trim() : '';
     bus[nb][nk] = isi;
   });
 
@@ -728,7 +927,7 @@ function buatHtmlDenahCetak() {
     const daftar = [];
     for (let n = 1; n <= KURSI_PER_BUS; n++) {
       const k = data[n] || { tipe: 'BEBAS' };
-      if (k.nama) { terisi++; daftar.push({ n, nama: k.nama, kelas: k.kelas, gender: k.gender }); }
+      if (k.nama) { terisi++; daftar.push({ n, nama: k.nama, kelas: k.kelas, gender: k.gender, kamar: k.kamar, pendamping: k.pendamping }); }
       else if (k.tipe === 'GURU') guru++;
       else kosongKursi++;
     }
@@ -748,15 +947,17 @@ function buatHtmlDenahCetak() {
 
     const baris = daftar.length
       ? daftar.map(d => '<tr><td class="no">' + d.n + '</td><td>' + amanHtml(d.nama) +
-          '</td><td>' + amanHtml(d.kelas) + '</td><td>' + amanHtml(d.gender) + '</td></tr>').join('')
-      : '<tr><td colspan="4" class="kosong">Belum ada kursi terisi di bus ini.</td></tr>';
+          '</td><td>' + amanHtml(d.kelas) + '</td><td>' + amanHtml(d.gender) +
+          '</td><td>' + amanHtml(d.kamar) + '</td><td>' + amanHtml(d.pendamping) + '</td></tr>').join('')
+      : '<tr><td colspan="6" class="kosong">Belum ada kursi terisi di bus ini.</td></tr>';
 
     isi += '<section class="bus">' +
       '<div class="judul"><h2>Bus ' + nb + '</h2>' +
       '<span class="ringkas">' + terisi + ' terisi &middot; ' + guru + ' guru &middot; ' + kosongKursi + ' kosong</span></div>' +
       '<div class="peta"><div class="depan"><span>PINTU</span><span>TOUR LEADER</span><span>DRIVER</span></div>' +
       kotak + '</div>' +
-      '<table class="daftar"><thead><tr><th>Kursi</th><th>Nama</th><th>Kelas</th><th>L/P</th></tr></thead>' +
+      '<table class="daftar"><thead><tr><th>Kursi</th><th>Nama</th><th>Kelas</th><th>L/P</th>' +
+      '<th>Kamar</th><th>Pendamping</th></tr></thead>' +
       '<tbody>' + baris + '</tbody></table>' +
       '</section>';
   }
@@ -1161,6 +1362,8 @@ function onOpen() {
     .addItem('Periksa kesiapan spreadsheet', 'periksaKesiapan')
     .addItem('Periksa status satu siswa', 'periksaSiswa')
     .addItem('Cetak denah kursi', 'cetakDenahKursi')
+    .addSeparator()
+    .addItem('Susun kamar & pendamping', 'susunKamarPendamping')
     .addItem('Siapkan tab yang belum ada', 'siapkanTab')
     .addItem('Terbitkan nomor antrean baru', 'menuHitungAntrean')
     .addItem('Lewati giliran sekarang', 'menuLewatiGiliran')
@@ -1198,9 +1401,10 @@ function siapkanTab() {
   // terakhir kolom nomor HP, sama seperti skrip lama.
   pastikan(TAB_SISWA, [
     'Gender', 'TglLunas', 'NoAntrean', 'Bus', 'Kursi', 'WaktuPilih',
-    'Terlewat', 'UkuranJaket', 'WaktuJaket'
+    'Terlewat', 'UkuranJaket', 'WaktuJaket', 'Kamar', 'Pendamping'
   ]);
   pastikan(TAB_KONFIG_KURSI, ['Bus', 'Kursi', 'Tipe', 'Label']);
+  pastikan(TAB_PENDAMPING, ['Nama', 'Gender', 'Bus', 'NoHP']);
   const shSet = pastikan(TAB_PENGATURAN, ['Kunci', 'Nilai']);
 
   // Isi nilai bawaan untuk kunci yang belum ada.

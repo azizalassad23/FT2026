@@ -49,7 +49,8 @@ class Sheet {
 // tanpa kolom PIN (diambil dari No HP) dan tanpa kolom Lunas
 // (dihitung dari Total Bayar).
 const HEADER_SISWA = ['NIS', 'Nama Siswa', 'Kelas', 'Total Bayar', 'Ukuran Jaket', 'No HP',
-  'Gender', 'TglLunas', 'NoAntrean', 'Bus', 'Kursi', 'WaktuPilih', 'Terlewat', 'WaktuJaket'];
+  'Gender', 'TglLunas', 'NoAntrean', 'Bus', 'Kursi', 'WaktuPilih', 'Terlewat', 'WaktuJaket',
+  'Kamar', 'Pendamping'];
 
 function buatSpreadsheet(jumlahSiswa) {
   const siswa = [HEADER_SISWA.slice()];
@@ -62,7 +63,7 @@ function buatSpreadsheet(jumlahSiswa) {
       '08123456' + String(1000 + i),          // PIN = empat digit terakhir
       i % 2 === 0 ? 'P' : 'L',
       lunas ? new Date('2026-08-01T00:00:00Z').getTime() + i * 3600000 : '',
-      '', '', '', '', '', ''
+      '', '', '', '', '', '', '', ''
     ]);
   }
   const konfig = [['Bus', 'Kursi', 'Tipe', 'Label'],
@@ -77,8 +78,13 @@ function buatSpreadsheet(jumlahSiswa) {
     ['durasi_giliran_menit', 15], ['lebar_jendela', 1], // skenario 11 mengubahnya jadi 0
     ['antrean_sekarang', 0], ['antrean_mulai', ''], ['fase', 'antrean'],
     ['pesan_belum_dibuka', 'Belum dibuka.']];
+  const pend = [['Nama','Gender','Bus','NoHP'],
+    ['Pak Adi','L',2,'0811'], ['Pak Budi','L',2,'0812'],
+    ['Bu Rina','P',2,'0813'], ['Bu Sari','P',2,'0814'],
+    ['Pak Eko','L',3,'0815']];
   return {
     DataSiswa: new Sheet('DataSiswa', siswa),
+    Pendamping: new Sheet('Pendamping', pend),
     KonfigKursi: new Sheet('KonfigKursi', konfig),
     Pengaturan: new Sheet('Pengaturan', set)
   };
@@ -102,7 +108,7 @@ function jalankan(sheets) {
         getSheetByName: n => sheets[n] || null,
         insertSheet: n => (sheets[n] = new Sheet(n, []))
       }),
-      getUi: () => ({ alert: () => {}, createMenu: () => ({ addItem() { return this; }, addSeparator() { return this; }, addToUi() {} }) })
+      getUi: () => ({ alert: m => { sandbox.LAPORAN = m; }, prompt: () => ({ getSelectedButton: () => 'OK', getResponseText: () => '' }), Button: { YES: 'YES', OK: 'OK' }, ButtonSet: { YES_NO: 1, OK_CANCEL: 2 }, createMenu: () => ({ addItem() { return this; }, addSeparator() { return this; }, addToUi() {} }) })
     },
     LockService: { getScriptLock: () => ({ tryLock: () => true, releaseLock: () => {} }) },
     ContentService: {
@@ -353,4 +359,61 @@ console.log('\n=== 11. Tanpa batas waktu (durasi_giliran_menit = 0) ===');
   majuMenit(600);
   st = post2({ action: 'get_seat_state', nis: nis(2), pin: pin(2) });
   ok('nomor 2 pun tidak kedaluwarsa', st.antrean.giliranSaya === true);
+}
+
+console.log('\n=== 12. Kamar & pendamping ===');
+{
+  const s4 = buatSpreadsheet(30);
+  // Zona gender per baris mendatar: baris 1-3 putra, baris 4-6 putri.
+  s4.KonfigKursi.data = [['Bus','Kursi','Tipe','Label']];
+  const post4 = jalankan(s4);
+  const sb = sandboxTerakhir;
+  const kol = n => HEADER_SISWA.indexOf(n) + 1;
+
+  // Tempatkan 12 siswa di bus 2: baris 1-3 putra (kursi 1-12),
+  // baris 4-6 putri (kursi 13-24). Plus 2 siswa di baris belakang.
+  const taruh = (siswa, bus, kursi, gender) => {
+    s4.DataSiswa.set(siswa + 1, kol('Bus'), bus);
+    s4.DataSiswa.set(siswa + 1, kol('Kursi'), kursi);
+    s4.DataSiswa.set(siswa + 1, kol('Gender'), gender);
+  };
+  for (let i = 1; i <= 12; i++) taruh(i, 2, i, 'L');
+  for (let i = 13; i <= 24; i++) taruh(i, 2, i, 'P');
+  taruh(25, 2, 45, 'L');
+  taruh(26, 2, 46, 'L');
+
+  sb.susunKamarPendamping();
+  const lap = sb.LAPORAN;
+  const kamarDari = siswa => String(s4.DataSiswa.cell(siswa + 1, kol('Kamar'))).trim();
+  const pendDari = siswa => String(s4.DataSiswa.cell(siswa + 1, kol('Pendamping'))).trim();
+
+  ok('satu baris penuh jadi satu kamar',
+    [1,2,3,4].every(i => kamarDari(i) === 'B2-K01') && kamarDari(5) === 'B2-K02');
+  ok('penomoran kamar memuat nomor bus', kamarDari(13) === 'B2-K04');
+  ok('baris belakang TIDAK diberi kamar otomatis',
+    kamarDari(25) === '' && kamarDari(26) === '');
+  ok('baris belakang dilaporkan agar diisi manual', /2 siswa di kursi 45-50/.test(lap));
+
+  ok('sekamar dapat pendamping yang sama',
+    [1,2,3,4].every(i => pendDari(i) === pendDari(1)) && pendDari(1) !== '');
+  ok('kamar putra dapat pendamping putra',
+    ['Pak Adi','Pak Budi'].indexOf(pendDari(1)) !== -1);
+  ok('kamar putri dapat pendamping putri',
+    ['Bu Rina','Bu Sari'].indexOf(pendDari(13)) !== -1);
+  ok('pendamping bus 3 tidak kebagian siswa bus 2',
+    [1,13].every(i => pendDari(i) !== 'Pak Eko'));
+
+  // 3 kamar putra dibagi 2 pendamping -> 2 dan 1
+  const jatah = {};
+  [1,5,9,13,17,21].forEach(i => { const p = pendDari(i); jatah[p] = (jatah[p]||0)+1; });
+  const angkaJatah = Object.keys(jatah).map(k => jatah[k]).sort();
+  ok('beban kamar dibagi rata, selisih maksimal satu',
+    angkaJatah.length === 4 && angkaJatah[angkaJatah.length-1] - angkaJatah[0] <= 1,
+    JSON.stringify(jatah));
+
+  // Zona kiri-kanan membuat kamar campur -> harus terdeteksi
+  taruh(2, 2, 2, 'P');
+  sb.susunKamarPendamping();
+  ok('kamar campur putra-putri terdeteksi', /KAMAR CAMPUR PUTRA-PUTRI/.test(sb.LAPORAN));
+  ok('kamar campur tidak diberi pendamping', pendDari(1) === '' && pendDari(2) === '');
 }
