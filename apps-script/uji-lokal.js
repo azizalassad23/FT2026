@@ -148,6 +148,19 @@ ok('simpan XXXL + kirim link grup', r.status === 'success' && /chat.whatsapp/.te
 r = post({ action: 'save_jacket', nis: nis(1), pin: '0000', ukuran: 'M' });
 ok('save_jacket menolak PIN salah', r.status === 'error');
 
+console.log('\n=== 1b. Tautan grup WhatsApp ===');
+r = post({ action: 'get_group_link', nis: nis(1), pin: pin(1) });
+ok('siswa terdaftar menerima tautan grup',
+  r.status === 'success' && r.groupLink === 'https://chat.whatsapp.com/CONTOH');
+ok('nama dikembalikan untuk sapaan', r.nama === 'Siswa 1.');
+r = post({ action: 'get_group_link', nis: nis(1), pin: '9999' });
+ok('PIN salah tidak menerima tautan', r.status === 'error' && !r.groupLink);
+r = post({ action: 'get_group_link', nis: '99999', pin: '1234' });
+ok('NIS tak terdaftar tidak menerima tautan', r.status === 'error' && !r.groupLink);
+// Syaratnya hanya terdaftar, bukan lunas: siswa 70 baru bayar 40%.
+r = post({ action: 'get_group_link', nis: nis(70), pin: pin(70) });
+ok('siswa belum lunas tetap boleh masuk grup', r.status === 'success' && !!r.groupLink);
+
 console.log('\n=== 2. Antrean & giliran ===');
 r = post({ action: 'get_seat_state', nis: nis(1), pin: pin(1) });
 ok('nomor antrean terbit otomatis', r.siswa.noAntrean === 1);

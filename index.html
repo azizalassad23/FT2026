@@ -1065,7 +1065,8 @@
         /* ---------- TOMBOL ---------- */
         .btn-sun,
         .btn-soft,
-        .btn-mint {
+        .btn-mint,
+        .btn-wa {
             border: var(--stroke);
             border-radius: var(--r-md);
             padding: 12px 18px;
@@ -1094,6 +1095,12 @@
             background: var(--mint);
         }
 
+        /* Hijau khas WhatsApp, supaya langsung dikenali siswa. */
+        .btn-wa {
+            color: #0b3d22;
+            background: #25d366;
+        }
+
         .btn-soft {
             background: var(--card);
             color: var(--ink);
@@ -1101,6 +1108,7 @@
 
         .btn-sun:hover,
         .btn-mint:hover,
+        .btn-wa:hover,
         .btn-soft:hover {
             transform: translate(-2px, -3px);
             box-shadow: 6px 8px 0 rgba(31, 61, 82, 0.16);
@@ -1108,6 +1116,7 @@
 
         .btn-sun:active,
         .btn-mint:active,
+        .btn-wa:active,
         .btn-soft:active,
         .btn-confirm-payment:active {
             transform: translate(2px, 2px);
@@ -2138,7 +2147,8 @@
         }
 
         .btn-sun:disabled,
-        .btn-mint:disabled {
+        .btn-mint:disabled,
+        .btn-wa:disabled {
             opacity: 0.65;
             cursor: not-allowed;
             transform: none;
@@ -2308,7 +2318,8 @@
 
             .hero-actions .btn-sun,
             .hero-actions .btn-soft,
-            .hero-actions .btn-mint {
+            .hero-actions .btn-mint,
+            .hero-actions .btn-wa {
                 width: 100%;
             }
 
@@ -2564,6 +2575,7 @@
                         <a class="btn-soft" href="#explore">Mulai Jelajah</a>
                         <button type="button" class="btn-mint" onclick="openJacketModal(this)"><i class="fa-solid fa-shirt" aria-hidden="true"></i> Klaim Ukuran Jaket</button>
                         <button type="button" class="btn-sun" onclick="openSeatModal(this)"><i class="fa-solid fa-couch" aria-hidden="true"></i> Pilih Kursi Bus</button>
+                        <button type="button" class="btn-wa" onclick="openGroupModal(this)"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i> Gabung Grup WA</button>
                     </div>
 
                     <div class="depart-stamp" aria-hidden="true">
@@ -2892,6 +2904,52 @@
                     <a id="groupLink" href="#" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer" class="btn-confirm-payment">
                         <i class="fa-brands fa-whatsapp" aria-hidden="true"></i> Gabung Grup Peserta
                     </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="groupModal" aria-hidden="true">
+        <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="groupModalTitle">
+            <div class="modal-accent"></div>
+            <div class="modal-header">
+                <h2 id="groupModalTitle">Grup WhatsApp Peserta</h2>
+                <button class="close-btn" type="button" aria-label="Tutup" onclick="closeGroupModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+
+                <div id="stepGroupVerify">
+                    <p style="color: var(--ink-soft); margin-bottom: 14px; font-size: 0.92rem;">Grup ini khusus peserta Field Trip 2026. Masukkan NIS dan PIN untuk mendapatkan tautannya.</p>
+
+                    <div class="form-group">
+                        <label for="groupNIS">Nomor Induk Siswa (NIS)</label>
+                        <input type="text" id="groupNIS" class="form-control" inputmode="numeric" autocomplete="off"
+                               maxlength="12" placeholder="Contoh: 12345" data-autofocus required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="groupPIN">PIN (4 digit terakhir no HP)
+                            <span class="field-hint">Empat angka terakhir dari nomor HP yang Anda daftarkan ke panitia.</span>
+                        </label>
+                        <input type="text" id="groupPIN" class="form-control" inputmode="numeric" autocomplete="off"
+                               maxlength="4" placeholder="Contoh: 7890" required>
+                    </div>
+
+                    <button type="button" id="btnGroupCheck" class="btn-wa" style="width: 100%;" onclick="checkGroupAccess()"><i class="fa-solid fa-id-card" aria-hidden="true"></i> Verifikasi Data</button>
+                    <div id="groupAlert" class="alert-box alert-error" role="alert" aria-live="assertive"></div>
+                </div>
+
+                <div id="stepGroupOk" class="hidden success-panel" tabindex="-1">
+                    <div class="success-mark" aria-hidden="true">
+                        <i class="fa-brands fa-whatsapp"></i>
+                    </div>
+                    <h3 id="groupGreeting">Data Terverifikasi</h3>
+                    <p>Tekan tombol di bawah untuk bergabung ke Grup WhatsApp resmi peserta. Semua info keberangkatan akan diumumkan di sana.</p>
+
+                    <a id="groupJoinLink" href="#" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer" class="btn-confirm-payment">
+                        <i class="fa-brands fa-whatsapp" aria-hidden="true"></i> Buka Grup WhatsApp
+                    </a>
+                    <p class="size-hint" style="margin-top: 14px; justify-content: center;"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Mohon jangan meneruskan tautan grup ini ke orang di luar peserta.</p>
                 </div>
             </div>
         </div>
@@ -3605,6 +3663,144 @@
             } finally {
                 btnSubmitSize.disabled = false;
                 btnSubmitSize.innerHTML = originalText;
+            }
+        }
+
+        // ==========================================
+        // GABUNG GRUP WHATSAPP
+        // ==========================================
+
+        // Tautan grup tidak ditampilkan begitu saja di halaman publik. Siswa
+        // memverifikasi NIS + PIN dulu, lalu tautannya diambil dari server
+        // (Pengaturan > link_grup_wa). Dengan begitu tautannya hanya sampai ke
+        // peserta terdaftar, bukan ke siapa pun yang kebetulan membuka halaman.
+        //
+        // Batas percobaan gagal memakai penghitung yang SAMA dengan fitur jaket
+        // (failedAttempts / lockUntil), supaya kuncian tidak bisa dihindari
+        // hanya dengan berpindah ke modal lain.
+
+        const groupModal = document.getElementById('groupModal');
+        const groupNIS = document.getElementById('groupNIS');
+        const groupPIN = document.getElementById('groupPIN');
+        const btnGroupCheck = document.getElementById('btnGroupCheck');
+        const groupAlert = document.getElementById('groupAlert');
+        const groupJoinLink = document.getElementById('groupJoinLink');
+        let groupLockTimer = null;
+
+        [groupNIS, groupPIN].forEach(el => {
+            if (!el) return;
+            el.addEventListener('input', () => {
+                const clean = el.value.replace(/\D/g, '');
+                if (clean !== el.value) el.value = clean;
+            });
+            el.addEventListener('keydown', e => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    checkGroupAccess();
+                }
+            });
+        });
+
+        function resetGroupModal() {
+            clearInterval(groupLockTimer);
+            document.getElementById('stepGroupVerify').classList.remove('hidden');
+            document.getElementById('stepGroupOk').classList.add('hidden');
+            hideAlert(groupAlert);
+            groupNIS.value = '';
+            groupPIN.value = '';
+            groupJoinLink.href = '#';
+            btnGroupCheck.disabled = remainingLockSeconds() > 0;
+            if (remainingLockSeconds() > 0) startGroupLockCountdown();
+        }
+
+        function openGroupModal(opener) {
+            resetGroupModal();
+            openModal(groupModal, opener);
+        }
+
+        function closeGroupModal() {
+            clearInterval(groupLockTimer);
+            closeModal(groupModal);
+        }
+
+        function startGroupLockCountdown() {
+            clearInterval(groupLockTimer);
+            btnGroupCheck.disabled = true;
+            const render = () => {
+                const left = remainingLockSeconds();
+                if (left <= 0) {
+                    clearInterval(groupLockTimer);
+                    failedAttempts = 0;
+                    lockUntil = 0;
+                    btnGroupCheck.disabled = false;
+                    hideAlert(groupAlert);
+                    return;
+                }
+                showAlert(groupAlert, `Terlalu banyak percobaan gagal. Coba lagi dalam ${left} detik.`);
+            };
+            render();
+            groupLockTimer = setInterval(render, 1000);
+        }
+
+        async function checkGroupAccess() {
+            if (remainingLockSeconds() > 0) return;
+
+            const nis = groupNIS.value.trim();
+            const pin = groupPIN.value.trim();
+
+            if (!nis || !pin) {
+                showAlert(groupAlert, 'Harap masukkan NIS dan PIN dengan lengkap.');
+                return;
+            }
+            if (pin.length !== 4) {
+                showAlert(groupAlert, 'PIN harus berupa 4 digit terakhir nomor HP Anda.');
+                return;
+            }
+
+            const originalText = btnGroupCheck.innerHTML;
+            btnGroupCheck.disabled = true;
+            btnGroupCheck.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memeriksa data...';
+            hideAlert(groupAlert);
+
+            try {
+                const response = await fetch(APPS_SCRIPT_WEB_APP_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'get_group_link', nis, pin })
+                });
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
+
+                if (data.status !== 'success') {
+                    failedAttempts += 1;
+                    if (failedAttempts >= MAX_ATTEMPTS) {
+                        lockUntil = Date.now() + LOCK_MS;
+                        startGroupLockCountdown();
+                        return;
+                    }
+                    showAlert(groupAlert, data.message || 'NIS atau PIN tidak cocok.');
+                    return;
+                }
+
+                failedAttempts = 0;
+                const link = data.groupLink || decodeGroupLink(FALLBACK_GROUP_LINK_B64);
+                if (!link) {
+                    showAlert(groupAlert, 'Tautan grup belum disiapkan panitia. Silakan coba lagi nanti.');
+                    return;
+                }
+
+                groupJoinLink.href = link;
+                document.getElementById('groupGreeting').textContent =
+                    data.nama ? `Halo, ${data.nama}!` : 'Data Terverifikasi';
+                document.getElementById('stepGroupVerify').classList.add('hidden');
+                document.getElementById('stepGroupOk').classList.remove('hidden');
+                resetModalScroll(groupModal);
+                document.getElementById('stepGroupOk').focus({ preventScroll: true });
+            } catch (error) {
+                showAlert(groupAlert, 'Gagal terhubung ke server. Periksa koneksi internet Anda.');
+            } finally {
+                btnGroupCheck.innerHTML = originalText;
+                if (remainingLockSeconds() === 0) btnGroupCheck.disabled = false;
             }
         }
 

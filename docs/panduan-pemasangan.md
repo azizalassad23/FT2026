@@ -188,7 +188,7 @@ harus duduk berdekatan.
 |---|---|---|
 | `total_biaya` | `2450000` | dasar hitungan persentase |
 | `syarat_jaket_persen` | `70` | ambang klaim jaket |
-| `link_grup_wa` | link undangan grup | dikirim setelah siswa menyimpan ukuran |
+| `link_grup_wa` | link undangan grup | dipakai tombol **Gabung Grup WA** dan setelah siswa menyimpan ukuran jaket |
 | `pemilihan_aktif` | `FALSE` | **satu-satunya saklar.** Biarkan FALSE dulu |
 | `kuota_pilih_mandiri` | `50` | jumlah kursi pilih-sendiri |
 | `durasi_giliran_menit` | `0` | `0` = tanpa batas waktu (lihat catatan di bawah) |
@@ -197,6 +197,12 @@ harus duduk berdekatan.
 
 `link_grup_wa` penting: begitu diisi, link grup dikirim dari server dan tidak
 lagi perlu tertulis di HTML publik.
+
+Tombol **Gabung Grup WA** di halaman web meminta NIS dan PIN lebih dulu, lalu
+mengambil tautan dari sel ini. Syaratnya hanya terdaftar di `DataSiswa` —
+tidak perlu lunas — karena grup dipakai untuk semua pengumuman keberangkatan.
+Kalau suatu saat link grup diganti, cukup ubah sel ini; tombolnya langsung
+memakai link baru tanpa perlu deploy ulang.
 
 ### Tentang `durasi_giliran_menit = 0`
 

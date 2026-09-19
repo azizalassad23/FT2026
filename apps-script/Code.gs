@@ -113,6 +113,7 @@ function doPost(e) {
       case 'save_jacket':    return kirim(saveJacket(req));
       case 'get_seat_state': return kirim(getSeatState(req));
       case 'claim_seat':     return kirim(claimSeat(req));
+      case 'get_group_link': return kirim(getGroupLink(req));
       // Form konfirmasi lama: halaman web mengirim tanpa field action,
       // tetapi 'submit_mission' ikut diterima demi kompatibilitas.
       case 'submit_mission':
@@ -407,8 +408,34 @@ function saveJacket(req) {
 }
 
 /* ==========================================================================
- *  ANTREAN KURSI
+ *  AKSI: get_group_link
  * ========================================================================== */
+
+/**
+ * Memberikan tautan grup WhatsApp kepada siswa terdaftar.
+ *
+ * Syaratnya hanya NIS + PIN yang cocok, tanpa syarat pembayaran: grup dipakai
+ * untuk pengumuman keberangkatan, jadi semua peserta yang terdaftar perlu
+ * berada di dalamnya. Tautannya diambil dari Pengaturan > link_grup_wa
+ * sehingga tidak perlu tertulis di halaman publik.
+ *
+ * Hanya membaca, jadi tidak memakai kunci.
+ */
+function getGroupLink(req) {
+  const t = bacaTabel(TAB_SISWA);
+  const siswa = cariSiswa(t, req.nis, req.pin);
+  if (!siswa) return { status: 'error', message: PESAN_TIDAK_COCOK };
+
+  return {
+    status: 'success',
+    nama: namaPendek(siswa.data[kolomWajib(t, 'Nama')]),
+    groupLink: String(pengaturan('link_grup_wa') || '').trim()
+  };
+}
+
+/* ==========================================================================
+ *  ANTREAN KURSI
+ * ==========================================================================
 
 /**
  * Memberi nomor antrean kepada siswa lunas yang belum punya nomor, urut

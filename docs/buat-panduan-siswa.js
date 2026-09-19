@@ -98,14 +98,15 @@ const halaman2 = `
 <section class="page">
   <h2>Langkah 1 &middot; Buka halaman dan tekan tombolnya</h2>
   <p class="ket">Buka <strong>azizalassad23.github.io/FT2026</strong> lewat HP
-  atau laptop. Di bagian atas halaman ada tiga tombol — tekan yang paling
-  kanan, bertuliskan <strong>Pilih Kursi Bus</strong>.</p>
+  atau laptop. Di bagian atas halaman ada beberapa tombol — tekan yang
+  berwarna kuning, bertuliskan <strong>Pilih Kursi Bus</strong>.</p>
 
   <div class="tengah">
     <div class="tombol-baris">
       <span class="btn btn-putih">Mulai Jelajah</span>
       <span class="btn btn-hijau">Klaim Ukuran Jaket</span>
       <span class="btn btn-kuning sorot">Pilih Kursi Bus ${badge(1)}</span>
+      <span class="btn btn-wa">Gabung Grup WA</span>
     </div>
   </div>
 
@@ -280,6 +281,11 @@ const halaman5 = `
     bila terlalu lama tidak ada kabar, panitia berhak melewati giliran Anda
     dan menempatkan Anda sendiri.</div>
 
+    <div class="tanya-item"><b>Bagaimana cara masuk grup WhatsApp peserta?</b><br>
+    Tekan tombol hijau <b>Gabung Grup WA</b> di halaman yang sama, masukkan NIS
+    dan PIN, lalu tekan <b>Buka Grup WhatsApp</b>. Tautannya hanya muncul untuk
+    peserta terdaftar — mohon jangan diteruskan ke orang lain.</div>
+
     <div class="tanya-item"><b>Saya belum lunas. Bisa ikut memilih?</b><br>
     Belum. Selesaikan pelunasan lebih dulu, lalu buka halaman ini kembali.</div>
   </div>
@@ -349,6 +355,7 @@ h2+.ket{ margin-bottom:9px; }
   text-transform:uppercase; box-shadow:3px 4px 0 rgba(31,61,82,.12); position:relative; }
 .btn-kuning{ background:var(--sun); color:#6b4405; }
 .btn-hijau{ background:var(--mint); color:#14563c; }
+.btn-wa{ background:#25d366; color:#0b3d22; }
 .btn-putih{ background:var(--card); }
 .btn.penuh{ display:block; text-align:center; margin-top:10px; }
 .tombol-baris{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
@@ -449,8 +456,8 @@ h2+.ket{ margin-bottom:9px; }
 
 /* Sukses */
 .sukses{ text-align:center; border:2px dashed rgba(31,61,82,.25); border-radius:12px;
-  background:var(--mint-soft); padding:14px; }
-.sukses-mark{ width:40px; height:40px; margin:0 auto 8px; border-radius:50%;
+  background:var(--mint-soft); padding:10px; }
+.sukses-mark{ width:32px; height:32px; margin:0 auto 5px; border-radius:50%;
   background:var(--card); border:3px solid var(--mint); color:#14814f;
   display:flex; align-items:center; justify-content:center; font-size:18pt; }
 .sukses small{ font-size:7pt; letter-spacing:.12em; font-weight:800; color:var(--ink-soft); }
@@ -462,19 +469,19 @@ h2+.ket{ margin-bottom:9px; }
 .catatan.hijau{ border-color:rgba(47,168,122,.5); background:var(--mint-soft); }
 .dua-kolom{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
 
-.penting{ margin-top:10px; border:2px solid var(--line); border-radius:14px;
+.penting{ margin-top:8px; border:2px solid var(--line); border-radius:14px;
   background:var(--sun-soft); padding:12px 14px; box-shadow:5px 6px 0 rgba(31,61,82,.13); }
 .penting h3{ font-size:12pt; margin-bottom:7px; }
 .penting ul{ margin-left:16px; font-size:9pt; }
 .penting li{ margin-bottom:5px; }
 
-.tanya{ margin-top:12px; }
+.tanya{ margin-top:8px; }
 .tanya h3{ font-size:12pt; margin-bottom:8px; }
 .tanya-item{ border:2px dashed rgba(31,61,82,.24); border-radius:10px; background:var(--card);
-  padding:8px 11px; margin-bottom:6px; font-size:9pt; color:var(--ink-soft); }
+  padding:6px 10px; margin-bottom:4px; font-size:9pt; color:var(--ink-soft); }
 .tanya-item b{ color:var(--ink); }
 
-.footer{ margin-top:14px; text-align:center; font-size:8.5pt; color:var(--ink-soft);
+.footer{ margin-top:8px; text-align:center; font-size:8.5pt; color:var(--ink-soft);
   border-top:2px dashed rgba(31,61,82,.22); padding-top:9px; }
 `;
 
