@@ -39,7 +39,9 @@ const TAB_SISWA = 'DataSiswa';
 const TAB_KONFIG_KURSI = 'KonfigKursi';
 const TAB_PENGATURAN = 'Pengaturan';
 const TAB_ANGKET = 'Angket';
-const TAB_PENDAMPING = 'Pendamping';
+// Tab berisi pembagian kelompok yang disusun manual oleh panitia:
+// kolom A nama pendamping, kolom B dan seterusnya nama murid.
+const TAB_KELOMPOK = 'Kelompok';
 
 /**
  * Nama kolom dikenali lewat daftar padanan di bawah, jadi judul kolom di
@@ -773,34 +775,112 @@ function hitungKamar(t) {
   return { peta: peta, kamarInfo: kamarInfo, tanpaGender: tanpaGender };
 }
 
-function bacaPendamping() {
-  const t = bacaTabel(TAB_PENDAMPING);
-  const cNama = kolomWajib(t, 'Nama');
-  const cGender = kolomWajib(t, 'Gender');
-  const cBus = kolomWajib(t, 'Bus');
+/**
+ * Menormalkan nama untuk pencocokan: huruf kecil, tanda baca dibuang,
+ * spasi ganda dirapatkan. "Zahra S." dan "zahra  s" menjadi sama.
+ */
+function rapikanNama(s) {
+  return String(s == null ? '' : s)
+    .toLowerCase()
+    .replace(/[.,'"`\-_]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 
-  const daftar = [];
-  t.baris.forEach(b => {
-    const nama = String(b[cNama] == null ? '' : b[cNama]).trim();
-    if (!nama) return;
-    daftar.push({
-      nama: nama,
-      gender: String(b[cGender] == null ? '' : b[cGender]).trim().toUpperCase(),
-      bus: angka(b[cBus]),
-      jatah: 0
-    });
-  });
-  return daftar;
+/** Mengubah nomor baris dan kolom menjadi alamat sel seperti "C5". */
+function kodeSel(baris, kolom) {
+  let s = '';
+  let n = kolom;
+  while (n > 0) {
+    const sisa = (n - 1) % 26;
+    s = String.fromCharCode(65 + sisa) + s;
+    n = Math.floor((n - 1) / 26);
+  }
+  return s + baris;
 }
 
 /**
- * Mengisi kolom Kamar lalu membagi kamar ke pendamping.
+ * Mencocokkan satu nama dari tab Kelompok ke daftar siswa.
  *
- * Pendamping hanya menerima kamar dari bus yang sama dan gender yang sama.
- * Pembagiannya bergilir sehingga selisih jumlah kamar antar pendamping paling
- * banyak satu.
+ * Bertingkat dan sengaja tidak menebak:
+ *   1. Cocok persis setelah dinormalkan.
+ *   2. Cocok sebagai awalan kata: "Zahra S" cocok dengan "Zahra Salsabila"
+ *      karena "zahra" sama persis dan "s" adalah awalan "salsabila".
+ *
+ * Bila lebih dari satu siswa memenuhi, hasilnya 'ganda' dan nama itu
+ * dilaporkan beserta calonnya — bukan dipilih sembarangan. Ini penting
+ * karena ada nama yang nyaris kembar seperti "Zahra S" dan "Zahra S.".
  */
-function susunKamarPendamping() {
+function cocokkanNama(teks, kandidat) {
+  const kata = rapikanNama(teks).split(' ').filter(Boolean);
+  if (!kata.length) return { status: 'tidak' };
+
+  const persis = kandidat.filter(k => k.rapi === kata.join(' '));
+  if (persis.length === 1) return { status: 'ok', siswa: persis[0] };
+  if (persis.length > 1) return { status: 'ganda', calon: persis };
+
+  const awalan = kandidat.filter(k => {
+    const w = k.rapi.split(' ');
+    if (kata.length > w.length) return false;
+    for (let i = 0; i < kata.length; i++) {
+      if (!w[i] || w[i].indexOf(kata[i]) !== 0) return false;
+    }
+    return true;
+  });
+  if (awalan.length === 1) return { status: 'ok', siswa: awalan[0] };
+  if (awalan.length > 1) return { status: 'ganda', calon: awalan };
+  return { status: 'tidak' };
+}
+
+/**
+ * Membaca tab Kelompok yang disusun manual oleh panitia.
+ *
+ * Tata letaknya mengikuti cara panitia mencatat: kolom A berisi nama
+ * pendamping, diisi hanya pada baris pertama tiap blok; kolom B dan
+ * seterusnya berisi nama murid. Baris kosong di antara blok diabaikan.
+ *
+ *   Eka    | Anes   | Friska  | Claudia | Desna
+ *          | Chika  | Berlian | Nazhira | Nazwa
+ *   Husen  | Fareeha| Sesilia | Nabila N| Efta
+ *
+ * Baris pertama dianggap judul kolom hanya bila sel A1 memang berisi kata
+ * "pendamping" atau "pembimbing"; kalau tidak, baris itu ikut dibaca sebagai
+ * data supaya blok pertama tidak hilang.
+ */
+function bacaTabKelompok() {
+  const sheet = bukaSheet(TAB_KELOMPOK);
+  const nilai = sheet.getDataRange().getValues();
+  if (!nilai.length) return [];
+
+  const judulA = rapikanNama(nilai[0][0]);
+  const mulai = (judulA === 'pendamping' || judulA === 'pembimbing') ? 1 : 0;
+
+  const entri = [];
+  let pendamping = '';
+
+  for (let r = mulai; r < nilai.length; r++) {
+    const baris = nilai[r];
+    const a = String(baris[0] == null ? '' : baris[0]).trim();
+    if (a) pendamping = a;
+
+    for (let c = 1; c < baris.length; c++) {
+      const nama = String(baris[c] == null ? '' : baris[c]).trim();
+      if (!nama) continue;
+      entri.push({ pendamping: pendamping, teks: nama, sel: kodeSel(r + 1, c + 1) });
+    }
+  }
+  return entri;
+}
+
+/**
+ * Mengimpor pembagian kelompok manual, lalu menghitung kamar.
+ *
+ * Pendamping diambil apa adanya dari tab Kelompok — tidak dibagi otomatis,
+ * karena panitia sudah menyusunnya sendiri. Kamar tetap dihitung dari denah
+ * kursi per gender, sebab kelompok pendamping boleh campur putra-putri
+ * sedangkan kamar tidak.
+ */
+function imporKelompok() {
   const ui = SpreadsheetApp.getUi();
   _cachePengaturan = null;
 
@@ -808,167 +888,193 @@ function susunKamarPendamping() {
   if (!lock.tryLock(20000)) { ui.alert('Server sedang sibuk, coba lagi sebentar.'); return; }
 
   try {
+    const entri = bacaTabKelompok();
+    if (!entri.length) {
+      ui.alert('Tab ' + TAB_KELOMPOK + ' masih kosong.\n\n' +
+        'Isi kolom A dengan nama pendamping (hanya di baris pertama tiap blok) ' +
+        'dan kolom B dan seterusnya dengan nama murid.');
+      return;
+    }
+
     const t = bacaTabel(TAB_SISWA);
+    const cNama = kolomWajib(t, 'Nama');
     const cBus = kolomWajib(t, 'Bus');
     const cKursi = kolomWajib(t, 'Kursi');
     const cKamar = kolomWajib(t, 'Kamar');
     const cPend = kolomWajib(t, 'Pendamping');
-    const cGender = kolomWajib(t, 'Gender');
-    const cNama = kolomWajib(t, 'Nama');
 
-    if (!t.baris.length) { ui.alert('Tab ' + TAB_SISWA + ' belum berisi data siswa.'); return; }
+    const kandidat = t.baris
+      .map((b, i) => ({ indeks: i, nama: String(b[cNama] == null ? '' : b[cNama]).trim(), rapi: rapikanNama(b[cNama]) }))
+      .filter(k => k.rapi);
 
-    // 1. Hitung dan isi kolom Kamar untuk kursi 1-44. Kursi 45-50 dibiarkan
-    //    apa adanya. Seluruh kolom ditulis sekali dengan setValues; menulis
-    //    sel per sel untuk 150 siswa terlalu lambat di Apps Script.
+    // 1. Cocokkan tiap nama.
+    const petaPend = {};
+    const dipakai = {};
+    const takKetemu = [];
+    const ganda = [];
+    const duplikat = [];
+
+    entri.forEach(e => {
+      const hasil = cocokkanNama(e.teks, kandidat);
+
+      if (hasil.status === 'tidak') {
+        takKetemu.push(e.sel + '  "' + e.teks + '"');
+        return;
+      }
+      if (hasil.status === 'ganda') {
+        ganda.push(e.sel + '  "' + e.teks + '"  ->  ' +
+          hasil.calon.slice(0, 4).map(k => k.nama).join('  /  '));
+        return;
+      }
+      if (dipakai[hasil.siswa.indeks]) {
+        duplikat.push('"' + hasil.siswa.nama + '" dipakai di ' +
+          dipakai[hasil.siswa.indeks] + ' dan ' + e.sel);
+        return;
+      }
+      dipakai[hasil.siswa.indeks] = e.sel;
+      petaPend[hasil.siswa.indeks] = e.pendamping;
+    });
+
+    // 2. Tulis kolom Pendamping.
+    const kolomPend = t.baris.map((b, i) => {
+      const v = petaPend[i] === undefined ? '' : petaPend[i];
+      b[cPend] = v;
+      return [v];
+    });
+    t.sheet.getRange(2, cPend + 1, kolomPend.length, 1).setValues(kolomPend);
+
+    // 3. Hitung dan tulis kolom Kamar dari denah kursi.
     const hitung = hitungKamar(t);
-    let kamarBaru = 0;
     const kolomKamar = t.baris.map((b, i) => {
       const lama = String(b[cKamar] == null ? '' : b[cKamar]).trim();
       const label = hitung.peta[i];
-
       if (!label) {
-        // Kursi 1-44 tanpa kamar berarti gendernya belum diisi. Kode kamar
-        // lama dibersihkan supaya tidak tertinggal sebagai data basi.
         const kursi = angka(b[cKursi]);
         const otomatis = angka(b[cBus]) && kursi >= 1 && kursi <= KURSI_KAMAR_OTOMATIS;
         if (otomatis && lama) { b[cKamar] = ''; return ['']; }
         return [lama];
       }
-
-      if (label !== lama) kamarBaru += 1;
       b[cKamar] = label;
       return [label];
     });
     t.sheet.getRange(2, cKamar + 1, kolomKamar.length, 1).setValues(kolomKamar);
 
-    // 2. Kelompokkan siswa per kamar.
-    const kamar = {};
-    t.baris.forEach((b, i) => {
-      const label = String(b[cKamar] == null ? '' : b[cKamar]).trim();
-      if (!label) return;
-      const bus = angka(b[cBus]);
-      const kunci = bus + '|' + label;
-      if (!kamar[kunci]) kamar[kunci] = { bus: bus, label: label, anggota: [] };
-      kamar[kunci].anggota.push({
-        indeks: i,
-        nama: String(b[cNama] == null ? '' : b[cNama]).trim(),
-        gender: String(b[cGender] == null ? '' : b[cGender]).trim().toUpperCase()
-      });
+    // 4. Pemeriksaan silang.
+    const perPendamping = {};
+    Object.keys(petaPend).forEach(i => {
+      const nama = petaPend[i];
+      if (!perPendamping[nama]) perPendamping[nama] = { jumlah: 0, bus: {} };
+      perPendamping[nama].jumlah += 1;
+      const bus = angka(t.baris[i][cBus]);
+      if (bus) perPendamping[nama].bus[bus] = (perPendamping[nama].bus[bus] || 0) + 1;
     });
 
-    const daftarKamar = Object.keys(kamar).map(k => kamar[k]);
-    daftarKamar.forEach(k => {
-      const jenis = {};
-      k.anggota.forEach(a => { if (a.gender) jenis[a.gender] = true; });
-      const kunci = Object.keys(jenis);
-      k.gender = kunci.length === 1 ? kunci[0] : (kunci.length === 0 ? '' : 'CAMPUR');
-    });
-    daftarKamar.sort((a, b) => a.bus - b.bus || (a.label < b.label ? -1 : 1));
-
-    // 3. Bagikan kamar ke pendamping: bus sama, gender sama, bergilir.
-    const pendamping = bacaPendamping();
-    const kolam = {};
-    pendamping.forEach(p => {
-      const kunci = p.bus + '|' + p.gender;
-      if (!kolam[kunci]) kolam[kunci] = { antre: [], putar: 0 };
-      kolam[kunci].antre.push(p);
-    });
-
-    const tanpaPendamping = [];
-    const kamarCampur = [];
-
-    daftarKamar.forEach(k => {
-      k.pendamping = '';
-      if (k.gender === 'CAMPUR') { kamarCampur.push(k.label); return; }
-      if (!k.gender) { tanpaPendamping.push(k.label + ' (gender siswa belum diisi)'); return; }
-      const pool = kolam[k.bus + '|' + k.gender];
-      if (!pool || !pool.antre.length) {
-        tanpaPendamping.push(k.label + ' (tidak ada pendamping ' +
-          (k.gender === 'L' ? 'putra' : 'putri') + ' di bus ' + k.bus + ')');
-        return;
+    const lintasBus = [];
+    Object.keys(perPendamping).forEach(nama => {
+      const bus = Object.keys(perPendamping[nama].bus);
+      if (bus.length > 1) {
+        lintasBus.push(nama + ' : ' + bus.map(b => 'bus ' + b + ' (' +
+          perPendamping[nama].bus[b] + ' murid)').join(', '));
       }
-      const p = pool.antre[pool.putar % pool.antre.length];
-      pool.putar += 1;
-      p.jatah += 1;
-      k.pendamping = p.nama;
     });
 
-    // 4. Tulis kolom Pendamping.
-    const peta = {};
-    daftarKamar.forEach(k => {
-      k.anggota.forEach(a => { peta[a.indeks] = k.pendamping || ''; });
+    const tanpaKelompok = [];
+    t.baris.forEach((b, i) => {
+      if (petaPend[i] !== undefined) return;
+      if (!angka(b[cKursi])) return;
+      tanpaKelompok.push(String(b[cNama] == null ? '' : b[cNama]).trim());
     });
-    const kolomPend = t.baris.map((b, i) => [peta[i] === undefined ? '' : peta[i]]);
-    t.sheet.getRange(2, cPend + 1, kolomPend.length, 1).setValues(kolomPend);
+
+    // Kamar dihitung dari kursi, sedangkan kelompok disusun terpisah, jadi
+    // satu kamar bisa berisi murid dari pendamping berbeda. Bukan kesalahan,
+    // tetapi perlu diketahui panitia.
+    const kamarBedaPendamping = [];
+    const perKamar = {};
+    t.baris.forEach((b, i) => {
+      const k = String(b[cKamar] == null ? '' : b[cKamar]).trim();
+      if (!k) return;
+      if (!perKamar[k]) perKamar[k] = {};
+      const p = petaPend[i] === undefined ? '(tanpa pendamping)' : petaPend[i];
+      perKamar[k][p] = true;
+    });
+    Object.keys(perKamar).sort().forEach(k => {
+      const p = Object.keys(perKamar[k]);
+      if (p.length > 1) kamarBedaPendamping.push(k + ' : ' + p.join(', '));
+    });
 
     // 5. Laporan.
-    const barisBelakang = t.baris.filter(b =>
-      angka(b[cKursi]) > KURSI_KAMAR_OTOMATIS && kosong(b[cKamar])).length;
-
-    const gabungan = hitung.kamarInfo.filter(k => k.gabungan);
-    const belumPenuh = hitung.kamarInfo.filter(k => k.jumlah < KAPASITAS_KAMAR);
-
     const L = [];
-    L.push('KAMAR');
-    L.push('  Kamar terbentuk  : ' + daftarKamar.length);
-    L.push('  Kolom Kamar diisi: ' + kamarBaru + ' baris');
-    L.push('  Siswa terkelompok: ' + daftarKamar.reduce((n, k) => n + k.anggota.length, 0));
-    L.push('  Gabungan antarbaris: ' + gabungan.length + ' kamar');
+    L.push('HASIL IMPOR');
+    L.push('  Nama dibaca dari tab ' + TAB_KELOMPOK + ' : ' + entri.length);
+    L.push('  Cocok ke DataSiswa                : ' + Object.keys(petaPend).length);
+    L.push('  Kamar terbentuk                   : ' + hitung.kamarInfo.length);
+
+    const belumPenuh = hitung.kamarInfo.filter(k => k.jumlah < KAPASITAS_KAMAR);
+    const gabungan = hitung.kamarInfo.filter(k => k.gabungan);
+    if (gabungan.length) L.push('  Kamar gabungan antarbaris         : ' + gabungan.length);
+    if (hitung.tanpaGender.length) {
+      L.push('  Belum dapat kamar (Gender kosong) : ' + hitung.tanpaGender.length);
+    }
     L.push('');
     L.push('PENDAMPING');
-    if (!pendamping.length) {
-      L.push('  Tab ' + TAB_PENDAMPING + ' masih kosong, belum ada yang bisa dibagi.');
-    } else {
-      pendamping.sort((a, b) => a.bus - b.bus || (a.nama < b.nama ? -1 : 1));
-      pendamping.forEach(p => {
-        L.push('  Bus ' + p.bus + ' - ' +
-          (p.gender === 'L' ? 'putra' : p.gender === 'P' ? 'putri' : 'gender?') +
-          ' - ' + p.nama + ' : ' + p.jatah + ' kamar');
-      });
+    Object.keys(perPendamping).sort().forEach(nama => {
+      const bus = Object.keys(perPendamping[nama].bus);
+      L.push('  ' + nama + ' : ' + perPendamping[nama].jumlah + ' murid' +
+        (bus.length ? '  (bus ' + bus.join(', ') + ')' : ''));
+    });
+
+    const perluDicek = takKetemu.length + ganda.length + duplikat.length;
+    if (perluDicek) {
+      L.push('');
+      L.push('PERLU DIPERIKSA (' + perluDicek + ')');
+    }
+    if (takKetemu.length) {
+      L.push('  Tidak ditemukan di DataSiswa:');
+      takKetemu.slice(0, 15).forEach(x => L.push('    ' + x));
+      if (takKetemu.length > 15) L.push('    dan ' + (takKetemu.length - 15) + ' lagi');
+    }
+    if (ganda.length) {
+      L.push('  Cocok ke lebih dari satu siswa, tulis namanya lebih lengkap:');
+      ganda.slice(0, 15).forEach(x => L.push('    ' + x));
+      if (ganda.length > 15) L.push('    dan ' + (ganda.length - 15) + ' lagi');
+    }
+    if (duplikat.length) {
+      L.push('  Satu siswa tercantum di dua tempat:');
+      duplikat.slice(0, 10).forEach(x => L.push('    ' + x));
+      if (duplikat.length > 10) L.push('    dan ' + (duplikat.length - 10) + ' lagi');
     }
 
-    if (gabungan.length) {
+    if (lintasBus.length) {
       L.push('');
-      L.push('KAMAR GABUNGAN ANTARBARIS');
-      gabungan.slice(0, 12).forEach(k => {
-        L.push('  ' + k.label + ' (' + k.jumlah + ' org) dari baris ' + k.baris.join(' + '));
-      });
-      if (gabungan.length > 12) L.push('  dan ' + (gabungan.length - 12) + ' lainnya');
+      L.push('KELOMPOK TERSEBAR DI LEBIH DARI SATU BUS');
+      lintasBus.forEach(x => L.push('  ' + x));
     }
+
+    if (tanpaKelompok.length) {
+      L.push('');
+      L.push('SUDAH PUNYA KURSI TAPI BELUM MASUK KELOMPOK (' + tanpaKelompok.length + ')');
+      tanpaKelompok.slice(0, 15).forEach(x => L.push('  ' + x));
+      if (tanpaKelompok.length > 15) L.push('  dan ' + (tanpaKelompok.length - 15) + ' lagi');
+    }
+
     if (belumPenuh.length) {
       L.push('');
-      L.push('KAMAR BELUM PENUH');
+      L.push('KAMAR BELUM PENUH (' + belumPenuh.length + ')');
       belumPenuh.slice(0, 12).forEach(k => {
         L.push('  ' + k.label + ' : ' + k.jumlah + ' dari ' + KAPASITAS_KAMAR + ' orang');
       });
-      if (belumPenuh.length > 12) L.push('  dan ' + (belumPenuh.length - 12) + ' lainnya');
-      L.push('  Ini wajar bila jumlah siswa segender di satu bus bukan kelipatan ' + KAPASITAS_KAMAR + '.');
+      if (belumPenuh.length > 12) L.push('  dan ' + (belumPenuh.length - 12) + ' lagi');
+      L.push('  Wajar bila jumlah siswa segender di satu bus bukan kelipatan ' + KAPASITAS_KAMAR + '.');
     }
-    if (hitung.tanpaGender.length) {
+
+    if (kamarBedaPendamping.length) {
       L.push('');
-      L.push('BELUM DAPAT KAMAR');
-      L.push('  ' + hitung.tanpaGender.length + ' siswa sudah punya kursi tetapi kolom Gender');
-      L.push('  masih kosong atau tidak berisi L/P, jadi tidak bisa dikelompokkan.');
-    }
-    if (kamarCampur.length) {
-      L.push('');
-      L.push('KAMAR CAMPUR PUTRA-PUTRI');
-      L.push('  ' + kamarCampur.join(', '));
-      L.push('  Hanya mungkin terjadi pada kamar yang diisi manual. Kamar hasil');
-      L.push('  perhitungan otomatis selalu satu gender. Kamar ini tidak diberi pendamping.');
-    }
-    if (tanpaPendamping.length) {
-      L.push('');
-      L.push('KAMAR TANPA PENDAMPING');
-      tanpaPendamping.slice(0, 12).forEach(x => L.push('  ' + x));
-      if (tanpaPendamping.length > 12) L.push('  dan ' + (tanpaPendamping.length - 12) + ' lainnya');
-    }
-    if (barisBelakang) {
-      L.push('');
-      L.push('BARIS BELAKANG');
-      L.push('  ' + barisBelakang + ' siswa di kursi 45-50 belum punya kamar.');
-      L.push('  Isi kolom Kamar mereka manual, lalu jalankan menu ini lagi.');
+      L.push('CATATAN: kamar berisi murid dari pendamping berbeda (' +
+        kamarBedaPendamping.length + ' kamar)');
+      L.push('  Wajar, karena kamar mengikuti denah kursi sedangkan kelompok');
+      L.push('  Anda susun terpisah. Disebutkan agar tidak mengagetkan saat hari H.');
+      kamarBedaPendamping.slice(0, 8).forEach(x => L.push('  ' + x));
+      if (kamarBedaPendamping.length > 8) L.push('  dan ' + (kamarBedaPendamping.length - 8) + ' lagi');
     }
 
     ui.alert(L.join('\n'));
@@ -1669,7 +1775,7 @@ function onOpen() {
     .addItem('Periksa status satu siswa', 'periksaSiswa')
     .addItem('Cetak denah kursi', 'cetakDenahKursi')
     .addSeparator()
-    .addItem('Susun kamar & pendamping', 'susunKamarPendamping')
+    .addItem('Impor kelompok & susun kamar', 'imporKelompok')
     .addItem('Cetak denah kamar', 'cetakDenahKamar')
     .addItem('Siapkan tab yang belum ada', 'siapkanTab')
     .addItem('Terbitkan nomor antrean baru', 'menuHitungAntrean')
@@ -1711,7 +1817,7 @@ function siapkanTab() {
     'Terlewat', 'UkuranJaket', 'WaktuJaket', 'Kamar', 'Pendamping'
   ]);
   pastikan(TAB_KONFIG_KURSI, ['Bus', 'Kursi', 'Tipe', 'Label']);
-  pastikan(TAB_PENDAMPING, ['Nama', 'Gender', 'Bus', 'NoHP']);
+  pastikan(TAB_KELOMPOK, ['Pendamping', 'Murid 1', 'Murid 2', 'Murid 3', 'Murid 4', 'Murid 5']);
   const shSet = pastikan(TAB_PENGATURAN, ['Kunci', 'Nilai']);
 
   // Isi nilai bawaan untuk kunci yang belum ada.

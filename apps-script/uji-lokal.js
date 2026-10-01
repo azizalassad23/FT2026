@@ -78,13 +78,16 @@ function buatSpreadsheet(jumlahSiswa) {
     ['durasi_giliran_menit', 15], ['lebar_jendela', 1], // skenario 11 mengubahnya jadi 0
     ['antrean_sekarang', 0], ['antrean_mulai', ''], ['fase', 'antrean'],
     ['pesan_belum_dibuka', 'Belum dibuka.']];
-  const pend = [['Nama','Gender','Bus','NoHP'],
-    ['Pak Adi','L',2,'0811'], ['Pak Budi','L',2,'0812'],
-    ['Bu Rina','P',2,'0813'], ['Bu Sari','P',2,'0814'],
-    ['Pak Eko','L',3,'0815']];
+  // Tata letak sama seperti catatan panitia: kolom A pendamping (hanya di
+  // baris pertama blok), kolom B dst nama murid.
+  const pend = [['Pendamping','Murid 1','Murid 2','Murid 3','Murid 4'],
+    ['Pak Adi', 'Siswa 1', 'Siswa 2', 'Siswa 3', 'Siswa 4'],
+    ['',        'Siswa 5', 'Siswa 6', 'Siswa 7', 'Siswa 8'],
+    ['Bu Rina', 'Siswa 9', 'Siswa 10', 'Siswa 11', 'Siswa 12'],
+    ['',        'Siswa 13', 'Siswa 14', 'Siswa 15', 'Siswa 16']];
   return {
     DataSiswa: new Sheet('DataSiswa', siswa),
-    Pendamping: new Sheet('Pendamping', pend),
+    Kelompok: new Sheet('Kelompok', pend),
     KonfigKursi: new Sheet('KonfigKursi', konfig),
     Pengaturan: new Sheet('Pengaturan', set)
   };
@@ -374,87 +377,123 @@ console.log('\n=== 11. Tanpa batas waktu (durasi_giliran_menit = 0) ===');
   ok('nomor 2 pun tidak kedaluwarsa', st.antrean.giliranSaya === true);
 }
 
-console.log('\n=== 12. Kamar & pendamping ===');
+console.log('\n=== 12. Impor kelompok manual ===');
 {
   const s4 = buatSpreadsheet(30);
-  // Zona gender per baris mendatar: baris 1-3 putra, baris 4-6 putri.
   s4.KonfigKursi.data = [['Bus','Kursi','Tipe','Label']];
-  const post4 = jalankan(s4);
+  jalankan(s4);
   const sb = sandboxTerakhir;
   const kol = n => HEADER_SISWA.indexOf(n) + 1;
-
-  // Tempatkan 12 siswa di bus 2: baris 1-3 putra (kursi 1-12),
-  // baris 4-6 putri (kursi 13-24). Plus 2 siswa di baris belakang.
   const taruh = (siswa, bus, kursi, gender) => {
     s4.DataSiswa.set(siswa + 1, kol('Bus'), bus);
     s4.DataSiswa.set(siswa + 1, kol('Kursi'), kursi);
     s4.DataSiswa.set(siswa + 1, kol('Gender'), gender);
   };
+  // Bus 2: kursi 1-12 putra, kursi 13-24 putri, 2 orang di baris belakang.
   for (let i = 1; i <= 12; i++) taruh(i, 2, i, 'L');
   for (let i = 13; i <= 24; i++) taruh(i, 2, i, 'P');
   taruh(25, 2, 45, 'L');
   taruh(26, 2, 46, 'L');
 
-  sb.susunKamarPendamping();
+  sb.imporKelompok();
   const lap = sb.LAPORAN;
   const kamarDari = siswa => String(s4.DataSiswa.cell(siswa + 1, kol('Kamar'))).trim();
   const pendDari = siswa => String(s4.DataSiswa.cell(siswa + 1, kol('Pendamping'))).trim();
 
-  ok('satu baris penuh segender jadi satu kamar',
-    [1,2,3,4].every(i => kamarDari(i) === 'B2-L01') && kamarDari(5) === 'B2-L02');
-  ok('kode kamar memuat nomor bus dan gender',
-    kamarDari(13) === 'B2-P01' && /^B2-P/.test(kamarDari(24)));
-  ok('putra dan putri dinomori terpisah',
-    kamarDari(1) !== kamarDari(13));
-  ok('baris belakang TIDAK diberi kamar otomatis',
+  ok('pendamping diambil apa adanya dari tab Kelompok',
+    pendDari(1) === 'Pak Adi' && pendDari(9) === 'Bu Rina');
+  ok('baris lanjutan tanpa nama di kolom A ikut blok di atasnya',
+    pendDari(5) === 'Pak Adi' && pendDari(13) === 'Bu Rina');
+  ok('siswa di luar tab Kelompok tidak diberi pendamping',
+    pendDari(17) === '' && pendDari(24) === '');
+  ok('yang belum masuk kelompok dilaporkan',
+    /BELUM MASUK KELOMPOK/.test(lap));
+  ok('jumlah murid per pendamping dilaporkan',
+    /Pak Adi : 8 murid/.test(lap) && /Bu Rina : 8 murid/.test(lap));
+
+  // Kamar tetap dihitung otomatis dari denah kursi, per gender.
+  ok('kamar tetap terbentuk otomatis dari kursi',
+    [1,2,3,4].every(i => kamarDari(i) === 'B2-L01') && kamarDari(13) === 'B2-P01');
+  ok('baris belakang tetap tidak diberi kamar otomatis',
     kamarDari(25) === '' && kamarDari(26) === '');
-  ok('baris belakang dilaporkan agar diisi manual', /2 siswa di kursi 45-50/.test(lap));
+  ok('kamar dengan satu pendamping tidak dicatat sebagai bercampur',
+    !/kamar berisi murid dari pendamping berbeda/.test(lap));
 
-  ok('sekamar dapat pendamping yang sama',
-    [1,2,3,4].every(i => pendDari(i) === pendDari(1)) && pendDari(1) !== '');
-  ok('kamar putra dapat pendamping putra',
-    ['Pak Adi','Pak Budi'].indexOf(pendDari(1)) !== -1);
-  ok('kamar putri dapat pendamping putri',
-    ['Bu Rina','Bu Sari'].indexOf(pendDari(13)) !== -1);
-  ok('pendamping bus 3 tidak kebagian siswa bus 2',
-    [1,13].every(i => pendDari(i) !== 'Pak Eko'));
-
-  // 3 kamar putra dibagi 2 pendamping -> 2 dan 1
-  const jatah = {};
-  [1,5,9,13,17,21].forEach(i => { const p = pendDari(i); jatah[p] = (jatah[p]||0)+1; });
-  const angkaJatah = Object.keys(jatah).map(k => jatah[k]).sort();
-  ok('beban kamar dibagi rata, selisih maksimal satu',
-    angkaJatah.length === 4 && angkaJatah[angkaJatah.length-1] - angkaJatah[0] <= 1,
-    JSON.stringify(jatah));
-
-  // Zona kiri-kanan: baris terbelah per gender, lalu pecahan dipasangkan.
-  // Baris 1 jadi 2 putra (kursi 1,2) + 2 putri (kursi 3,4);
-  // baris 2 jadi 2 putra (kursi 5,6) + 2 putri (kursi 7,8).
-  const s5 = buatSpreadsheet(30);
-  s5.KonfigKursi.data = [['Bus','Kursi','Tipe','Label']];
-  jalankan(s5);
-  const sb5 = sandboxTerakhir;
-  const taruh5 = (siswa, bus, kursi, gender) => {
-    s5.DataSiswa.set(siswa + 1, kol('Bus'), bus);
-    s5.DataSiswa.set(siswa + 1, kol('Kursi'), kursi);
-    s5.DataSiswa.set(siswa + 1, kol('Gender'), gender);
-  };
-  [1,2,5,6].forEach((k,n) => taruh5(n+1, 2, k, 'L'));
-  [3,4,7,8].forEach((k,n) => taruh5(n+5, 2, k, 'P'));
-  sb5.susunKamarPendamping();
-  const kamar5 = siswa => String(s5.DataSiswa.cell(siswa + 1, kol('Kamar'))).trim();
-
-  ok('baris campur terbelah, tidak lagi jadi kamar campur',
-    kamar5(1) !== kamar5(5) && !/KAMAR CAMPUR/.test(sb5.LAPORAN));
-  ok('dua putra baris 1 + dua putra baris 2 jadi satu kamar',
-    [1,2,3,4].every(i => kamar5(i) === kamar5(1)));
-  ok('dua putri baris 1 + dua putri baris 2 jadi satu kamar',
-    [5,6,7,8].every(i => kamar5(i) === kamar5(5)));
-  ok('penggabungan antarbaris dilaporkan',
-    /KAMAR GABUNGAN ANTARBARIS/.test(sb5.LAPORAN));
+  // Pindahkan Siswa 3 ke pendamping lain supaya kamar B2-L01 berisi dua
+  // pendamping; kamar mengikuti kursi, kelompok disusun terpisah.
+  s4.Kelompok.set(2, 4, '');
+  s4.Kelompok.data.push(['Pak Zed', 'Siswa 3', '', '', '']);
+  sb.imporKelompok();
+  ok('kamar berisi pendamping berbeda dicatat sebagai catatan, bukan error',
+    /kamar berisi murid dari pendamping berbeda/.test(sb.LAPORAN) &&
+    /B2-L01/.test(sb.LAPORAN));
+  ok('pemindahan antar blok terbaca',
+    pendDari(3) === 'Pak Zed' && pendDari(1) === 'Pak Adi');
 }
 
-console.log('\n=== 12b. Bus jarang isi: dua murid per baris ===');
+console.log('\n=== 12b. Pencocokan nama ===');
+{
+  const s7 = buatSpreadsheet(10);
+  s7.KonfigKursi.data = [['Bus','Kursi','Tipe','Label']];
+  // Nama panjang di DataSiswa, nama singkat di tab Kelompok.
+  const kol = n => HEADER_SISWA.indexOf(n) + 1;
+  s7.DataSiswa.set(2, kol('Nama Siswa'), 'Zahra Salsabila');
+  s7.DataSiswa.set(3, kol('Nama Siswa'), 'Zahra Safira');
+  s7.DataSiswa.set(4, kol('Nama Siswa'), 'Radiyyan Henry Saputra');
+  s7.DataSiswa.set(5, kol('Nama Siswa'), 'Muhammad Wildan');
+  s7.DataSiswa.set(6, kol('Nama Siswa'), 'Wildan Pratama');
+  for (let i = 1; i <= 6; i++) {
+    s7.DataSiswa.set(i + 1, kol('Bus'), 1);
+    s7.DataSiswa.set(i + 1, kol('Kursi'), i);
+    s7.DataSiswa.set(i + 1, kol('Gender'), 'L');
+  }
+  s7.Kelompok.data = [['Pendamping','Murid 1','Murid 2','Murid 3','Murid 4'],
+    ['Bu Eka', 'Radiyyan Henry', 'M Wildan', 'Wildan', 'Zahra S'],
+    ['',       'Siswa 6', 'Entah Siapa', '', '']];
+  jalankan(s7);
+  const sb7 = sandboxTerakhir;
+  sb7.imporKelompok();
+  const lap7 = sb7.LAPORAN;
+  const pend7 = baris => String(s7.DataSiswa.cell(baris, kol('Pendamping'))).trim();
+
+  ok('nama singkat cocok lewat awalan kata',
+    pend7(4) === 'Bu Eka', 'Radiyyan Henry -> baris 4');
+  ok('"M Wildan" dan "Wildan" dibedakan dengan benar',
+    pend7(5) === 'Bu Eka' && pend7(6) === 'Bu Eka');
+  ok('nama ambigu TIDAK ditebak, tetapi dilaporkan',
+    pend7(2) === '' && pend7(3) === '' && /Cocok ke lebih dari satu siswa/.test(lap7));
+  ok('calon untuk nama ambigu ikut disebut',
+    /Zahra Salsabila/.test(lap7) && /Zahra Safira/.test(lap7));
+  ok('nama yang tidak ada di DataSiswa dilaporkan',
+    /Tidak ditemukan di DataSiswa/.test(lap7) && /Entah Siapa/.test(lap7));
+}
+
+console.log('\n=== 12c. Kelompok lintas bus ===');
+{
+  const s8 = buatSpreadsheet(10);
+  s8.KonfigKursi.data = [['Bus','Kursi','Tipe','Label']];
+  const kol = n => HEADER_SISWA.indexOf(n) + 1;
+  // Siswa 1-2 di bus 1, siswa 3-4 di bus 2, tetapi satu pendamping.
+  [[1,1],[2,1],[3,2],[4,2]].forEach(([i,bus]) => {
+    s8.DataSiswa.set(i + 1, kol('Bus'), bus);
+    s8.DataSiswa.set(i + 1, kol('Kursi'), i);
+    s8.DataSiswa.set(i + 1, kol('Gender'), 'L');
+  });
+  s8.Kelompok.data = [['Pendamping','Murid 1','Murid 2','Murid 3','Murid 4'],
+    ['Pak Lov', 'Siswa 1', 'Siswa 2', 'Siswa 3', 'Siswa 4']];
+  jalankan(s8);
+  const sb8 = sandboxTerakhir;
+  sb8.imporKelompok();
+  ok('kelompok yang tersebar di dua bus dilaporkan',
+    /TERSEBAR DI LEBIH DARI SATU BUS/.test(sb8.LAPORAN) && /Pak Lov/.test(sb8.LAPORAN));
+
+  // Satu siswa tercantum dua kali
+  s8.Kelompok.data.push(['Bu Kinan', 'Siswa 1', '', '', '']);
+  sb8.imporKelompok();
+  ok('siswa yang tercantum di dua kelompok dilaporkan',
+    /dipakai di/.test(sb8.LAPORAN));
+}
+console.log('\n=== 12d. Bus jarang isi: dua murid per baris ===');
 {
   // Meniru bus 3 yang hanya terisi dua murid per baris.
   const s6 = buatSpreadsheet(30);
@@ -469,7 +508,7 @@ console.log('\n=== 12b. Bus jarang isi: dua murid per baris ===');
   };
   // Enam baris, masing-masing hanya dua kursi terisi, semuanya putra.
   [1,2, 5,6, 9,10, 13,14, 17,18, 21,22].forEach((k,n) => taruh6(n+1, k, 'L'));
-  sb6.susunKamarPendamping();
+  sb6.imporKelompok();
   const kamar6 = siswa => String(s6.DataSiswa.cell(siswa + 1, kol('Kamar'))).trim();
 
   const unik = {};
@@ -487,7 +526,7 @@ console.log('\n=== 12b. Bus jarang isi: dua murid per baris ===');
   // Sisa ganjil: tambah satu baris berisi dua putra lagi -> 14 orang
   taruh6(13, 25, 'L');
   taruh6(14, 26, 'L');
-  sb6.susunKamarPendamping();
+  sb6.imporKelompok();
   const unik2 = {};
   for (let i = 1; i <= 14; i++) unik2[kamar6(i)] = (unik2[kamar6(i)] || 0) + 1;
   const sisa = Object.keys(unik2).filter(k => unik2[k] < 4);

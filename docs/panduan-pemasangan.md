@@ -370,34 +370,65 @@ pendamping untuk kamar yang Anda buat sendiri.
 bukan kelipatan empat. Sisanya menjadi satu kamar berisi dua atau tiga orang,
 dan laporannya menyebutkan kamar mana saja.
 
-### Isi tab `Pendamping`
+### Isi tab `Kelompok`
 
-| Nama | Gender | Bus | NoHP |
-|---|---|---|---|
-| Pak Adi | `L` | 1 | 0812... |
-| Bu Rina | `P` | 1 | 0813... |
-| Pak Budi | `L` | 2 | 0814... |
+Pembagian pendamping **tidak dihitung otomatis** — panitia sudah menyusunnya
+sendiri, jadi skrip hanya membacanya. Tata letaknya mengikuti cara mencatat
+yang sudah dipakai:
 
-Satu baris per pendamping. `Bus` menentukan bus mana yang ditemani — pendamping
-**hanya** menerima kamar dari busnya sendiri, tidak pernah lintas bus.
+| Pendamping | Murid 1 | Murid 2 | Murid 3 | Murid 4 | Murid 5 |
+|---|---|---|---|---|---|
+| Eka | Anes | Friska | Claudia | Desna | |
+| | Chika | Berlian | Nazhira | Nazwa | |
+| | Asifa E | Asih K | Nabila S. | Kayla P. | |
+| Husen | Fareeha | Sesilia | Nabila N | Efta | |
+| | Indah | Nasha | Anniza | Suci | |
 
-Pastikan tiap bus punya pendamping putra **dan** putri, karena kamar putra
-hanya diberikan ke pendamping putra dan sebaliknya. Bus yang tidak punya
-pendamping putri akan membuat semua kamar putrinya tidak terisi pendamping, dan
-itu dilaporkan sebagai peringatan.
+Aturannya:
+
+- **Kolom A** diisi nama pendamping, **hanya di baris pertama tiap blok**.
+  Baris berikutnya dibiarkan kosong dan otomatis ikut pendamping di atasnya.
+- **Kolom B dan seterusnya** diisi nama murid. Boleh empat, lima, atau berapa
+  pun per baris — jumlah per baris tidak berarti apa-apa, hanya tata letak.
+- Baris kosong antar blok diabaikan.
+
+Kelompok pendamping **boleh campur putra dan putri**. Kamar tetap dihitung
+terpisah dari denah kursi dan selalu satu gender.
+
+### Tentang pencocokan nama
+
+Nama di tab `Kelompok` dicocokkan ke kolom `Nama` di `DataSiswa` secara
+bertingkat: cocok persis dulu, lalu cocok sebagai awalan kata — "Zahra S"
+cocok dengan "Zahra Salsabila".
+
+**Bila satu nama cocok ke lebih dari satu siswa, skrip tidak menebak.** Nama
+itu dilewati dan dilaporkan beserta alamat selnya dan daftar calonnya, supaya
+Anda bisa menulis namanya lebih lengkap. Ini penting karena daftar Anda memang
+berisi nama yang nyaris kembar seperti "Zahra S" dan "Zahra S.", atau
+"Wildan" dan "M Wildan".
 
 ### Jalankan
 
-Menu **Field Trip → Susun kamar & pendamping**.
+Menu **Field Trip → Impor kelompok & susun kamar**.
 
-Skrip mengisi kolom `Kamar` dan `Pendamping` di tab `DataSiswa`, lalu
-menampilkan laporan: jumlah kamar terbentuk, jatah tiap pendamping, kamar
-campur gender bila ada, kamar tanpa pendamping, dan jumlah siswa baris belakang
-yang kamarnya masih kosong.
+Skrip mengisi kolom `Pendamping` dari tab `Kelompok`, lalu menghitung dan
+mengisi kolom `Kamar` dari denah kursi. Laporannya memuat:
 
-Pembagiannya bergilir, jadi **selisih jumlah kamar antar pendamping paling
-banyak satu**. Aman dijalankan berulang kali — hasilnya selalu dihitung ulang
-dari keadaan terbaru.
+- jumlah nama yang terbaca dan berapa yang cocok,
+- jumlah murid per pendamping beserta busnya,
+- nama yang tidak ditemukan, ambigu, atau tercantum dua kali — lengkap dengan
+  alamat selnya,
+- murid yang sudah punya kursi tetapi belum masuk kelompok mana pun,
+- kelompok yang ternyata tersebar di lebih dari satu bus,
+- kamar yang belum penuh,
+- kamar yang berisi murid dari pendamping berbeda.
+
+Yang terakhir itu **catatan, bukan kesalahan**: kamar mengikuti denah kursi
+sedangkan kelompok Anda susun terpisah, jadi wajar bila sekamar ada dua
+pendamping. Disebutkan supaya tidak mengagetkan di hari H.
+
+Aman dijalankan berulang kali — hasilnya selalu dihitung ulang dari keadaan
+terbaru.
 
 Setelah ini, menu **Cetak denah kursi** ikut menampilkan kolom Kamar dan
 Pendamping pada daftar nama tiap bus, sehingga satu lembar cetak bisa dipakai
@@ -428,7 +459,7 @@ tercetak.
 | Kolom `Gender` | tab `DataSiswa` | zona putra/putri tidak berfungsi |
 | Kolom `TglLunas` | tab `DataSiswa` | siswa tidak masuk antrean sama sekali |
 | Susun ulang nomor antrean | menu Field Trip | urutan salah bila ada tanggal yang diisi belakangan |
-| Tab Pendamping | tab Pendamping | kamar tidak dapat pendamping |
+| Tab Kelompok | tab Kelompok | kolom Pendamping kosong |
 | Kamar kursi 45-50 | tab DataSiswa | siswa baris belakang tanpa kamar |
 | Kursi guru & zona | tab `KonfigKursi` | siswa bisa mengambil kursi guru |
 | `link_grup_wa` | tab `Pengaturan` | link grup tetap memakai cadangan di HTML |
