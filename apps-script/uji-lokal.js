@@ -400,9 +400,12 @@ console.log('\n=== 12. Kamar & pendamping ===');
   const kamarDari = siswa => String(s4.DataSiswa.cell(siswa + 1, kol('Kamar'))).trim();
   const pendDari = siswa => String(s4.DataSiswa.cell(siswa + 1, kol('Pendamping'))).trim();
 
-  ok('satu baris penuh jadi satu kamar',
-    [1,2,3,4].every(i => kamarDari(i) === 'B2-K01') && kamarDari(5) === 'B2-K02');
-  ok('penomoran kamar memuat nomor bus', kamarDari(13) === 'B2-K04');
+  ok('satu baris penuh segender jadi satu kamar',
+    [1,2,3,4].every(i => kamarDari(i) === 'B2-L01') && kamarDari(5) === 'B2-L02');
+  ok('kode kamar memuat nomor bus dan gender',
+    kamarDari(13) === 'B2-P01' && /^B2-P/.test(kamarDari(24)));
+  ok('putra dan putri dinomori terpisah',
+    kamarDari(1) !== kamarDari(13));
   ok('baris belakang TIDAK diberi kamar otomatis',
     kamarDari(25) === '' && kamarDari(26) === '');
   ok('baris belakang dilaporkan agar diisi manual', /2 siswa di kursi 45-50/.test(lap));
@@ -424,9 +427,71 @@ console.log('\n=== 12. Kamar & pendamping ===');
     angkaJatah.length === 4 && angkaJatah[angkaJatah.length-1] - angkaJatah[0] <= 1,
     JSON.stringify(jatah));
 
-  // Zona kiri-kanan membuat kamar campur -> harus terdeteksi
-  taruh(2, 2, 2, 'P');
-  sb.susunKamarPendamping();
-  ok('kamar campur putra-putri terdeteksi', /KAMAR CAMPUR PUTRA-PUTRI/.test(sb.LAPORAN));
-  ok('kamar campur tidak diberi pendamping', pendDari(1) === '' && pendDari(2) === '');
+  // Zona kiri-kanan: baris terbelah per gender, lalu pecahan dipasangkan.
+  // Baris 1 jadi 2 putra (kursi 1,2) + 2 putri (kursi 3,4);
+  // baris 2 jadi 2 putra (kursi 5,6) + 2 putri (kursi 7,8).
+  const s5 = buatSpreadsheet(30);
+  s5.KonfigKursi.data = [['Bus','Kursi','Tipe','Label']];
+  jalankan(s5);
+  const sb5 = sandboxTerakhir;
+  const taruh5 = (siswa, bus, kursi, gender) => {
+    s5.DataSiswa.set(siswa + 1, kol('Bus'), bus);
+    s5.DataSiswa.set(siswa + 1, kol('Kursi'), kursi);
+    s5.DataSiswa.set(siswa + 1, kol('Gender'), gender);
+  };
+  [1,2,5,6].forEach((k,n) => taruh5(n+1, 2, k, 'L'));
+  [3,4,7,8].forEach((k,n) => taruh5(n+5, 2, k, 'P'));
+  sb5.susunKamarPendamping();
+  const kamar5 = siswa => String(s5.DataSiswa.cell(siswa + 1, kol('Kamar'))).trim();
+
+  ok('baris campur terbelah, tidak lagi jadi kamar campur',
+    kamar5(1) !== kamar5(5) && !/KAMAR CAMPUR/.test(sb5.LAPORAN));
+  ok('dua putra baris 1 + dua putra baris 2 jadi satu kamar',
+    [1,2,3,4].every(i => kamar5(i) === kamar5(1)));
+  ok('dua putri baris 1 + dua putri baris 2 jadi satu kamar',
+    [5,6,7,8].every(i => kamar5(i) === kamar5(5)));
+  ok('penggabungan antarbaris dilaporkan',
+    /KAMAR GABUNGAN ANTARBARIS/.test(sb5.LAPORAN));
+}
+
+console.log('\n=== 12b. Bus jarang isi: dua murid per baris ===');
+{
+  // Meniru bus 3 yang hanya terisi dua murid per baris.
+  const s6 = buatSpreadsheet(30);
+  s6.KonfigKursi.data = [['Bus','Kursi','Tipe','Label']];
+  jalankan(s6);
+  const sb6 = sandboxTerakhir;
+  const kol = n => HEADER_SISWA.indexOf(n) + 1;
+  const taruh6 = (siswa, kursi, gender) => {
+    s6.DataSiswa.set(siswa + 1, kol('Bus'), 3);
+    s6.DataSiswa.set(siswa + 1, kol('Kursi'), kursi);
+    s6.DataSiswa.set(siswa + 1, kol('Gender'), gender);
+  };
+  // Enam baris, masing-masing hanya dua kursi terisi, semuanya putra.
+  [1,2, 5,6, 9,10, 13,14, 17,18, 21,22].forEach((k,n) => taruh6(n+1, k, 'L'));
+  sb6.susunKamarPendamping();
+  const kamar6 = siswa => String(s6.DataSiswa.cell(siswa + 1, kol('Kamar'))).trim();
+
+  const unik = {};
+  for (let i = 1; i <= 12; i++) unik[kamar6(i)] = (unik[kamar6(i)] || 0) + 1;
+  const kode = Object.keys(unik);
+  ok('12 siswa dua-per-baris jadi 3 kamar, bukan 6',
+    kode.length === 3, kode.join(','));
+  ok('setiap kamar terisi penuh empat orang',
+    kode.every(k => unik[k] === 4), JSON.stringify(unik));
+  ok('baris 1 dan baris 2 digabung',
+    kamar6(1) === kamar6(2) && kamar6(1) === kamar6(3) && kamar6(1) === kamar6(4));
+  ok('tidak ada kamar yang dilaporkan belum penuh',
+    !/KAMAR BELUM PENUH/.test(sb6.LAPORAN));
+
+  // Sisa ganjil: tambah satu baris berisi dua putra lagi -> 14 orang
+  taruh6(13, 25, 'L');
+  taruh6(14, 26, 'L');
+  sb6.susunKamarPendamping();
+  const unik2 = {};
+  for (let i = 1; i <= 14; i++) unik2[kamar6(i)] = (unik2[kamar6(i)] || 0) + 1;
+  const sisa = Object.keys(unik2).filter(k => unik2[k] < 4);
+  ok('sisa yang tidak genap jadi satu kamar belum penuh',
+    sisa.length === 1 && unik2[sisa[0]] === 2, JSON.stringify(unik2));
+  ok('kamar belum penuh dilaporkan', /KAMAR BELUM PENUH/.test(sb6.LAPORAN));
 }

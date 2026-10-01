@@ -333,33 +333,42 @@ nomor kursi.
 
 ### Aturan kamarnya
 
-Satu baris kursi penuh — empat kursi melintasi lorong — menempati satu kamar.
-Jadi kursi 1, 2, 3, 4 sekamar; kursi 5, 6, 7, 8 sekamar; dan seterusnya sampai
-kursi 41–44. Setiap bus menghasilkan 11 kamar, dengan penomoran `B1-K01`,
-`B1-K02`, dan seterusnya.
+Satu kamar menampung **empat siswa**, dan pembagiannya dua lapis.
+
+**Lapis pertama — baris dipecah per gender.** Satu baris kursi adalah empat
+kursi melintasi lorong (1, 2, 3, 4 lalu 5, 6, 7, 8 dan seterusnya sampai 41–44).
+Baris yang seluruhnya putra atau seluruhnya putri langsung menjadi satu kamar.
+
+**Lapis kedua — pecahan digabungkan.** Baris yang tidak penuh satu gender
+menghasilkan pecahan. Pecahan sejenis dari bus yang sama lalu digabung sampai
+kamar terisi empat:
+
+```
+baris 1   1  2  |  3  4      ← 2 putra + 2 putri
+baris 2   5  6  |  7  8      ← 2 putra + 2 putri
+
+hasilnya:  kursi 1, 2, 5, 6  → satu kamar putra
+           kursi 3, 4, 7, 8  → satu kamar putri
+```
+
+Aturan yang sama menangani bus yang jarang terisi. Bila bus 3 hanya punya dua
+murid per baris, baris 1 dan baris 2 digabung menjadi satu kamar, baris 3 dan
+4 menjadi kamar berikutnya, dan seterusnya.
+
+Kode kamarnya memuat bus dan gender: `B1-L01`, `B1-L02`, `B1-P01`, dan
+seterusnya. `L` untuk kamar putra, `P` untuk kamar putri.
+
+**Zona gender di `KonfigKursi` boleh diatur bebas** — kiri–kanan maupun per
+baris mendatar, keduanya sama-sama menghasilkan kamar yang bersih satu gender.
 
 **Kursi 45–50 di baris belakang tidak diberi kamar otomatis.** Jumlahnya enam
 dan tidak membentuk baris utuh, jadi kolom `Kamar` untuk mereka Anda isi
 sendiri. Skrip tidak pernah menimpa isian manual itu, dan tetap membagikan
 pendamping untuk kamar yang Anda buat sendiri.
 
-### ⚠ Zona gender harus diatur per baris mendatar
-
-Ini konsekuensi yang harus disadari sejak mengisi `KonfigKursi`.
-
-Karena satu kamar meliputi **kedua sisi lorong**, zona putra dan putri harus
-dibagi per baris:
-
-```
-baris 1   1   2  |  3   4     ← seluruhnya putra
-baris 2   5   6  |  7   8     ← seluruhnya putra
-baris 6  21  22  | 23  24     ← seluruhnya putri
-```
-
-Kalau dibagi kiri–kanan — kursi 1, 2 putra dan 3, 4 putri — maka satu kamar
-berisi dua putra dan dua putri sekaligus. Skrip mendeteksi dan melaporkannya,
-tetapi tidak bisa memperbaikinya sendiri; kamar campur tidak diberi pendamping
-sampai zonanya dibetulkan.
+**Kamar yang tidak penuh itu wajar** bila jumlah siswa segender dalam satu bus
+bukan kelipatan empat. Sisanya menjadi satu kamar berisi dua atau tiga orang,
+dan laporannya menyebutkan kamar mana saja.
 
 ### Isi tab `Pendamping`
 
@@ -394,6 +403,22 @@ Setelah ini, menu **Cetak denah kursi** ikut menampilkan kolom Kamar dan
 Pendamping pada daftar nama tiap bus, sehingga satu lembar cetak bisa dipakai
 untuk absensi bus sekaligus pembagian kamar hotel.
 
+### Melihat hasilnya: Cetak denah kamar
+
+Menu **Field Trip → Cetak denah kamar**.
+
+Bentuknya sama seperti denah kursi, tetapi tiap kursi diwarnai menurut
+kamarnya dan diberi kode kamar. **Warna yang sama berarti satu kamar** —
+sehingga kamar hasil gabungan antarbaris langsung terlihat: kode dan warna
+yang sama muncul di dua baris berbeda.
+
+Di bawah denah ada daftar kamar lengkap: kode, putra/putri, jumlah isi, nama
+penghuni beserta nomor kursinya, dan pendampingnya. Siswa yang sudah punya
+kursi tetapi belum punya kamar ditandai merah supaya mudah ditemukan.
+
+Tiap bus jatuh ke halaman sendiri saat dicetak, dan tombol cetaknya tidak ikut
+tercetak.
+
 ---
 
 ## Ringkasan yang wajib diisi manual
@@ -403,7 +428,6 @@ untuk absensi bus sekaligus pembagian kamar hotel.
 | Kolom `Gender` | tab `DataSiswa` | zona putra/putri tidak berfungsi |
 | Kolom `TglLunas` | tab `DataSiswa` | siswa tidak masuk antrean sama sekali |
 | Susun ulang nomor antrean | menu Field Trip | urutan salah bila ada tanggal yang diisi belakangan |
-| Zona gender per baris mendatar | tab KonfigKursi | kamar berisi putra dan putri sekaligus |
 | Tab Pendamping | tab Pendamping | kamar tidak dapat pendamping |
 | Kamar kursi 45-50 | tab DataSiswa | siswa baris belakang tanpa kamar |
 | Kursi guru & zona | tab `KonfigKursi` | siswa bisa mengambil kursi guru |

@@ -74,6 +74,8 @@ const KURSI_PER_BUS = 50;
 // Kursi di atas nomor ini ada di baris belakang yang berisi enam kursi
 // menyatu; kamarnya tidak dibentuk otomatis, melainkan diisi panitia.
 const KURSI_KAMAR_OTOMATIS = 44;
+// Satu kamar menampung empat siswa.
+const KAPASITAS_KAMAR = 4;
 const UKURAN_JAKET_SAH = ['S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
 
 // Nilai bawaan bila baris terkait belum ada di tab Pengaturan.
@@ -677,20 +679,98 @@ function bangunDenah(tSiswa) {
  * ========================================================================== */
 
 /**
- * Kamar diturunkan dari baris kursi: satu baris penuh — empat kursi melintasi
- * lorong — menempati satu kamar. Kursi 45-50 di baris belakang sengaja tidak
- * diberi kamar otomatis karena jumlahnya enam dan tidak membentuk baris utuh;
- * kolom Kamar untuk mereka diisi panitia manual dan tidak pernah ditimpa.
+ * Menghitung pembagian kamar dari denah kursi.
  *
- * PENTING: karena satu kamar meliputi kedua sisi lorong, zona gender di
- * KonfigKursi harus diatur per baris mendatar. Bila diatur kiri-kanan, kamarnya
- * berisi putra dan putri sekaligus. Skrip mendeteksi dan melaporkannya, tetapi
- * tidak bisa memperbaikinya sendiri.
+ * Aturannya dua lapis:
+ *
+ * 1. Satu baris kursi (empat kursi melintasi lorong) dipecah dulu menurut
+ *    gender. Baris yang seluruhnya putra atau seluruhnya putri langsung
+ *    menjadi satu kamar berisi empat orang.
+ *
+ * 2. Baris yang tidak penuh menghasilkan pecahan — misalnya dua putra di
+ *    baris 3 dan dua putra di baris 7. Pecahan sejenis dari bus yang sama
+ *    digabungkan sampai kamar terisi empat. Jadi 2+2 menjadi satu kamar,
+ *    begitu pula 3+1.
+ *
+ * Dengan cara ini zona gender di KonfigKursi boleh diatur kiri-kanan maupun
+ * per baris; baris campur otomatis terbelah menjadi dua pecahan dan masing-
+ * masing dipasangkan dengan pecahan segender dari baris lain.
+ *
+ * Penggabungan memakai first-fit-decreasing: pecahan besar ditempatkan lebih
+ * dulu supaya sisa ruang terpakai habis. Urutan kedua memakai nomor baris,
+ * jadi hasilnya sama setiap kali dijalankan pada data yang sama.
+ *
+ * Kursi 45-50 di baris belakang tidak ikut dihitung; kamarnya diisi panitia
+ * secara manual dan tidak pernah ditimpa.
  */
-function labelKamar(bus, kursi) {
-  if (!bus || kursi < 1 || kursi > KURSI_KAMAR_OTOMATIS) return '';
-  const baris = Math.ceil(kursi / 4);
-  return 'B' + bus + '-K' + (baris < 10 ? '0' + baris : String(baris));
+function hitungKamar(t) {
+  const cBus = kolomWajib(t, 'Bus');
+  const cKursi = kolomWajib(t, 'Kursi');
+  const cGender = kolomWajib(t, 'Gender');
+
+  const pecahan = {};
+  const tanpaGender = [];
+
+  t.baris.forEach((b, i) => {
+    const bus = angka(b[cBus]);
+    const kursi = angka(b[cKursi]);
+    if (!bus || kursi < 1 || kursi > KURSI_KAMAR_OTOMATIS) return;
+
+    const g = String(b[cGender] == null ? '' : b[cGender]).trim().toUpperCase();
+    if (g !== 'L' && g !== 'P') { tanpaGender.push(i); return; }
+
+    const baris = Math.ceil(kursi / 4);
+    const kunci = bus + '|' + g + '|' + baris;
+    if (!pecahan[kunci]) pecahan[kunci] = { bus: bus, gender: g, baris: baris, anggota: [] };
+    pecahan[kunci].anggota.push(i);
+  });
+
+  const perGrup = {};
+  Object.keys(pecahan).forEach(k => {
+    const p = pecahan[k];
+    const grup = p.bus + '|' + p.gender;
+    if (!perGrup[grup]) perGrup[grup] = [];
+    perGrup[grup].push(p);
+  });
+
+  const peta = {};
+  const kamarInfo = [];
+
+  Object.keys(perGrup).sort().forEach(grup => {
+    const daftar = perGrup[grup];
+    daftar.sort((a, b) => b.anggota.length - a.anggota.length || a.baris - b.baris);
+
+    const wadah = [];
+    daftar.forEach(p => {
+      let muat = null;
+      for (let i = 0; i < wadah.length; i++) {
+        if (wadah[i].jumlah + p.anggota.length <= KAPASITAS_KAMAR) { muat = wadah[i]; break; }
+      }
+      if (!muat) { muat = { jumlah: 0, pecahan: [] }; wadah.push(muat); }
+      muat.jumlah += p.anggota.length;
+      muat.pecahan.push(p);
+    });
+
+    const barisTerkecil = w => w.pecahan.reduce((m, p) => Math.min(m, p.baris), 999);
+    wadah.sort((a, b) => barisTerkecil(a) - barisTerkecil(b));
+
+    wadah.forEach((w, idx) => {
+      const nomor = idx + 1;
+      const awal = w.pecahan[0];
+      const label = 'B' + awal.bus + '-' + awal.gender + (nomor < 10 ? '0' + nomor : String(nomor));
+      w.pecahan.forEach(p => p.anggota.forEach(i => { peta[i] = label; }));
+      kamarInfo.push({
+        label: label,
+        bus: awal.bus,
+        gender: awal.gender,
+        jumlah: w.jumlah,
+        baris: w.pecahan.map(p => p.baris).sort((x, y) => x - y),
+        gabungan: w.pecahan.length > 1
+      });
+    });
+  });
+
+  return { peta: peta, kamarInfo: kamarInfo, tanpaGender: tanpaGender };
 }
 
 function bacaPendamping() {
@@ -738,14 +818,24 @@ function susunKamarPendamping() {
 
     if (!t.baris.length) { ui.alert('Tab ' + TAB_SISWA + ' belum berisi data siswa.'); return; }
 
-    // 1. Isi kolom Kamar untuk kursi 1-44. Kursi 45-50 dibiarkan apa adanya.
-    //    Seluruh kolom ditulis sekali dengan setValues; menulis sel per sel
-    //    untuk 150 siswa terlalu lambat di Apps Script.
+    // 1. Hitung dan isi kolom Kamar untuk kursi 1-44. Kursi 45-50 dibiarkan
+    //    apa adanya. Seluruh kolom ditulis sekali dengan setValues; menulis
+    //    sel per sel untuk 150 siswa terlalu lambat di Apps Script.
+    const hitung = hitungKamar(t);
     let kamarBaru = 0;
-    const kolomKamar = t.baris.map(b => {
+    const kolomKamar = t.baris.map((b, i) => {
       const lama = String(b[cKamar] == null ? '' : b[cKamar]).trim();
-      const label = labelKamar(angka(b[cBus]), angka(b[cKursi]));
-      if (!label) return [lama];
+      const label = hitung.peta[i];
+
+      if (!label) {
+        // Kursi 1-44 tanpa kamar berarti gendernya belum diisi. Kode kamar
+        // lama dibersihkan supaya tidak tertinggal sebagai data basi.
+        const kursi = angka(b[cKursi]);
+        const otomatis = angka(b[cBus]) && kursi >= 1 && kursi <= KURSI_KAMAR_OTOMATIS;
+        if (otomatis && lama) { b[cKamar] = ''; return ['']; }
+        return [lama];
+      }
+
       if (label !== lama) kamarBaru += 1;
       b[cKamar] = label;
       return [label];
@@ -816,11 +906,15 @@ function susunKamarPendamping() {
     const barisBelakang = t.baris.filter(b =>
       angka(b[cKursi]) > KURSI_KAMAR_OTOMATIS && kosong(b[cKamar])).length;
 
+    const gabungan = hitung.kamarInfo.filter(k => k.gabungan);
+    const belumPenuh = hitung.kamarInfo.filter(k => k.jumlah < KAPASITAS_KAMAR);
+
     const L = [];
     L.push('KAMAR');
     L.push('  Kamar terbentuk  : ' + daftarKamar.length);
     L.push('  Kolom Kamar diisi: ' + kamarBaru + ' baris');
     L.push('  Siswa terkelompok: ' + daftarKamar.reduce((n, k) => n + k.anggota.length, 0));
+    L.push('  Gabungan antarbaris: ' + gabungan.length + ' kamar');
     L.push('');
     L.push('PENDAMPING');
     if (!pendamping.length) {
@@ -834,13 +928,35 @@ function susunKamarPendamping() {
       });
     }
 
+    if (gabungan.length) {
+      L.push('');
+      L.push('KAMAR GABUNGAN ANTARBARIS');
+      gabungan.slice(0, 12).forEach(k => {
+        L.push('  ' + k.label + ' (' + k.jumlah + ' org) dari baris ' + k.baris.join(' + '));
+      });
+      if (gabungan.length > 12) L.push('  dan ' + (gabungan.length - 12) + ' lainnya');
+    }
+    if (belumPenuh.length) {
+      L.push('');
+      L.push('KAMAR BELUM PENUH');
+      belumPenuh.slice(0, 12).forEach(k => {
+        L.push('  ' + k.label + ' : ' + k.jumlah + ' dari ' + KAPASITAS_KAMAR + ' orang');
+      });
+      if (belumPenuh.length > 12) L.push('  dan ' + (belumPenuh.length - 12) + ' lainnya');
+      L.push('  Ini wajar bila jumlah siswa segender di satu bus bukan kelipatan ' + KAPASITAS_KAMAR + '.');
+    }
+    if (hitung.tanpaGender.length) {
+      L.push('');
+      L.push('BELUM DAPAT KAMAR');
+      L.push('  ' + hitung.tanpaGender.length + ' siswa sudah punya kursi tetapi kolom Gender');
+      L.push('  masih kosong atau tidak berisi L/P, jadi tidak bisa dikelompokkan.');
+    }
     if (kamarCampur.length) {
       L.push('');
-      L.push('KAMAR CAMPUR PUTRA-PUTRI - PERLU DIPERBAIKI');
+      L.push('KAMAR CAMPUR PUTRA-PUTRI');
       L.push('  ' + kamarCampur.join(', '));
-      L.push('  Sebabnya zona gender di KonfigKursi diatur kiri-kanan, bukan per');
-      L.push('  baris mendatar. Satu kamar meliputi kedua sisi lorong, jadi zonanya');
-      L.push('  harus per baris. Kamar ini tidak diberi pendamping.');
+      L.push('  Hanya mungkin terjadi pada kamar yang diisi manual. Kamar hasil');
+      L.push('  perhitungan otomatis selalu satu gender. Kamar ini tidak diberi pendamping.');
     }
     if (tanpaPendamping.length) {
       L.push('');
@@ -1038,6 +1154,169 @@ function cetakDenahKursi() {
     .setWidth(1000)
     .setHeight(640);
   SpreadsheetApp.getUi().showModalDialog(html, 'Denah Kursi — siap cetak');
+}
+
+/* ==========================================================================
+ *  CETAK DENAH KAMAR
+ * ========================================================================== */
+
+// Warna lembut yang berputar per kamar. Kamar bersebelahan mendapat warna
+// berbeda supaya batas antarkamar langsung terlihat di denah.
+const WARNA_KAMAR = [
+  '#d5f6e7', '#cfe9ff', '#ffe9a8', '#ffdfd8', '#e6ddff', '#d9f3d1',
+  '#ffe3f1', '#d2f1f5', '#f6e7cd', '#e3e8ef'
+];
+
+/**
+ * Denah kamar memakai bentuk yang sama dengan denah kursi, tetapi diwarnai
+ * per kamar dan diberi kode kamar pada tiap kursi. Dengan begitu kamar hasil
+ * gabungan antarbaris langsung terlihat: kode yang sama muncul di dua baris
+ * berbeda dengan warna yang sama.
+ */
+function buatHtmlDenahKamar() {
+  const bus = kumpulkanIsiBus();
+  const sel = selDenah();
+  const tanggal = Utilities.formatDate(new Date(),
+    Session.getScriptTimeZone() || 'Asia/Jakarta', "d MMMM yyyy, HH:mm");
+
+  let isi = '';
+  for (let nb = 1; nb <= JUMLAH_BUS; nb++) {
+    const data = bus[nb] || {};
+
+    // Kumpulkan kamar beserta penghuninya.
+    const kamar = {};
+    for (let n = 1; n <= KURSI_PER_BUS; n++) {
+      const k = data[n];
+      if (!k || !k.nama || !k.kamar) continue;
+      if (!kamar[k.kamar]) {
+        kamar[k.kamar] = { kode: k.kamar, gender: k.gender || '', pendamping: k.pendamping || '', isi: [] };
+      }
+      kamar[k.kamar].isi.push({ kursi: n, nama: k.nama, kelas: k.kelas || '' });
+    }
+
+    const kode = Object.keys(kamar).sort();
+    const warna = {};
+    kode.forEach((k, i) => { warna[k] = WARNA_KAMAR[i % WARNA_KAMAR.length]; });
+
+    const tanpaKamar = [];
+    for (let n = 1; n <= KURSI_PER_BUS; n++) {
+      const k = data[n];
+      if (k && k.nama && !k.kamar) tanpaKamar.push(n);
+    }
+
+    const kotak = sel.map(c => {
+      const k = data[c.n] || { tipe: 'BEBAS' };
+      let kelas = 'k';
+      let gaya = '';
+      let baris1 = '';
+      let baris2 = '';
+
+      if (k.nama && k.kamar) {
+        gaya = 'background:' + warna[k.kamar];
+        baris1 = amanHtml(k.kamar);
+        baris2 = amanHtml(k.nama);
+      } else if (k.nama) {
+        kelas += ' nokamar';
+        baris1 = 'tanpa kamar';
+        baris2 = amanHtml(k.nama);
+      } else if (k.tipe === 'GURU') {
+        kelas += ' guru';
+        baris2 = amanHtml(k.label || 'Guru');
+      } else if (k.tipe === 'PANITIA' || k.tipe === 'BLOK') {
+        kelas += ' blok';
+      }
+
+      return '<div class="' + kelas + '" style="grid-column:' + c.col + ';grid-row:' + c.row +
+        (gaya ? ';' + gaya : '') + '"><b>' + c.n + '</b>' +
+        (baris1 ? '<i>' + baris1 + '</i>' : '') +
+        (baris2 ? '<span>' + baris2 + '</span>' : '') + '</div>';
+    }).join('');
+
+    const barisKamar = kode.length
+      ? kode.map(kk => {
+          const k = kamar[kk];
+          const anggota = k.isi.map(a =>
+            '<span class="orang">' + a.kursi + '. ' + amanHtml(a.nama) +
+            (a.kelas ? ' <em>' + amanHtml(a.kelas) + '</em>' : '') + '</span>').join('');
+          return '<tr>' +
+            '<td class="kode" style="background:' + warna[kk] + '">' + amanHtml(kk) + '</td>' +
+            '<td class="jk">' + (k.gender === 'L' ? 'Putra' : k.gender === 'P' ? 'Putri' : '-') + '</td>' +
+            '<td class="jml">' + k.isi.length + '</td>' +
+            '<td>' + anggota + '</td>' +
+            '<td>' + (k.pendamping ? amanHtml(k.pendamping) : '<i class="kurang">belum ada</i>') + '</td>' +
+            '</tr>';
+        }).join('')
+      : '<tr><td colspan="5" class="kosong">Belum ada kamar terbentuk di bus ini.</td></tr>';
+
+    const belumPenuh = kode.filter(k => kamar[k].isi.length < KAPASITAS_KAMAR).length;
+
+    isi += '<section class="bus">' +
+      '<div class="judul"><h2>Bus ' + nb + '</h2>' +
+      '<span class="ringkas">' + kode.length + ' kamar' +
+      (belumPenuh ? ' &middot; ' + belumPenuh + ' belum penuh' : '') +
+      (tanpaKamar.length ? ' &middot; kursi tanpa kamar: ' + tanpaKamar.join(', ') : '') +
+      '</span></div>' +
+      '<div class="peta"><div class="depan"><span>PINTU</span><span>TOUR LEADER</span><span>DRIVER</span></div>' +
+      kotak + '</div>' +
+      '<table class="daftar"><thead><tr><th>Kamar</th><th>Putra/Putri</th><th>Isi</th>' +
+      '<th>Penghuni</th><th>Pendamping</th></tr></thead><tbody>' + barisKamar + '</tbody></table>' +
+      '</section>';
+  }
+
+  return '<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><style>' +
+    '*{box-sizing:border-box;margin:0;padding:0}' +
+    'body{font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#1f3d52;padding:14px;background:#fff}' +
+    '.bar{position:sticky;top:0;background:#fffaf0;border:2px solid #1f3d52;border-radius:8px;' +
+      'padding:9px 12px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:10px}' +
+    '.bar b{font-size:14px}.bar small{color:#4d6d80}' +
+    '.cetak{background:#ffc93c;border:2px solid #1f3d52;border-radius:7px;padding:7px 16px;' +
+      'font-weight:bold;font-size:12px;cursor:pointer}' +
+    '.bus{page-break-after:always;margin-bottom:18px}' +
+    '.bus:last-child{page-break-after:auto}' +
+    '.judul{display:flex;align-items:baseline;gap:10px;border-bottom:2px solid #1f3d52;padding-bottom:4px;margin-bottom:8px}' +
+    '.judul h2{font-size:17px}.ringkas{color:#4d6d80;font-size:11px}' +
+    '.peta{display:grid;grid-template-columns:repeat(6,1fr);gap:3px;border:1.5px solid #9bb0bd;' +
+      'border-radius:7px;padding:7px;margin-bottom:10px}' +
+    '.depan{grid-column:1/-1;grid-row:1;display:flex;justify-content:space-between;' +
+      'border-bottom:1.5px dashed #9bb0bd;padding-bottom:4px;margin-bottom:2px}' +
+    '.depan span{font-size:8px;letter-spacing:.06em;color:#4d6d80;border:1px solid #9bb0bd;' +
+      'border-radius:9px;padding:1px 6px}' +
+    '.k{border:1px solid #9bb0bd;border-radius:4px;min-height:34px;padding:2px 1px;text-align:center;' +
+      'display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}' +
+    '.k b{font-size:9px;line-height:1;color:#64798a}' +
+    '.k i{font-size:8px;font-style:normal;font-weight:bold;line-height:1.2}' +
+    '.k span{font-size:7px;line-height:1.1;color:#3c5b6e;word-break:break-word}' +
+    '.k.guru{background:#ffe9a8;border-color:#c58b1a}' +
+    '.k.blok{background:#e8ecee;color:#7d8f9a}' +
+    '.k.nokamar{background:#ffd7d2;border-color:#c4493a}' +
+    '.k.nokamar i{color:#a5321f}' +
+    '.daftar{width:100%;border-collapse:collapse;font-size:10px}' +
+    '.daftar th{background:#1f3d52;color:#fff;padding:4px 6px;text-align:left;font-size:9px;letter-spacing:.05em}' +
+    '.daftar td{border-bottom:1px solid #d7dfe4;padding:4px 6px;vertical-align:top}' +
+    '.daftar td.kode{font-weight:bold;white-space:nowrap;text-align:center}' +
+    '.daftar td.jk{white-space:nowrap}.daftar td.jml{text-align:center;width:30px}' +
+    '.daftar td.kosong{text-align:center;color:#7d8f9a;padding:10px}' +
+    '.orang{display:inline-block;margin:0 10px 2px 0;white-space:nowrap}' +
+    '.orang em{color:#7d8f9a;font-style:normal}' +
+    '.kurang{color:#a5321f;font-style:normal}' +
+    '@media print{.bar{display:none}body{padding:0}}' +
+    '@page{size:A4 portrait;margin:11mm}' +
+    '</style></head><body>' +
+    '<div class="bar"><span><b>Denah Kamar Field Trip 2026</b><br>' +
+    '<small>Dicetak ' + tanggal + ' &middot; warna sama = satu kamar</small></span>' +
+    '<button class="cetak" onclick="window.print()">Cetak / Simpan PDF</button></div>' +
+    isi + '</body></html>';
+}
+
+/**
+ * Menampilkan denah kamar siap cetak. Seperti denah kursi, hanya bisa
+ * dijalankan dari dalam spreadsheet sehingga siswa tidak pernah melihatnya.
+ */
+function cetakDenahKamar() {
+  const html = HtmlService.createHtmlOutput(buatHtmlDenahKamar())
+    .setWidth(1000)
+    .setHeight(640);
+  SpreadsheetApp.getUi().showModalDialog(html, 'Denah Kamar — siap cetak');
 }
 
 /* ==========================================================================
@@ -1391,6 +1670,7 @@ function onOpen() {
     .addItem('Cetak denah kursi', 'cetakDenahKursi')
     .addSeparator()
     .addItem('Susun kamar & pendamping', 'susunKamarPendamping')
+    .addItem('Cetak denah kamar', 'cetakDenahKamar')
     .addItem('Siapkan tab yang belum ada', 'siapkanTab')
     .addItem('Terbitkan nomor antrean baru', 'menuHitungAntrean')
     .addItem('Lewati giliran sekarang', 'menuLewatiGiliran')
