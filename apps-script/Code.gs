@@ -1817,7 +1817,29 @@ function siapkanTab() {
     'Terlewat', 'UkuranJaket', 'WaktuJaket', 'Kamar', 'Pendamping'
   ]);
   pastikan(TAB_KONFIG_KURSI, ['Bus', 'Kursi', 'Tipe', 'Label']);
-  pastikan(TAB_KELOMPOK, ['Pendamping', 'Murid 1', 'Murid 2', 'Murid 3', 'Murid 4', 'Murid 5']);
+  // Tab Kelompok tidak lewat pastikan(): isinya tata letak bebas, bukan kolom
+  // bernama. Tidak ada batas jumlah murid — skrip membaca semua kolom yang
+  // terisi, dan satu pendamping boleh memakai sebanyak apa pun baris.
+  if (!ss.getSheetByName(TAB_KELOMPOK)) {
+    const shk = ss.insertSheet(TAB_KELOMPOK);
+    shk.appendRow(['Pendamping', 'Murid 1', 'Murid 2', 'Murid 3', 'Murid 4',
+      'Murid 5', 'Murid 6', 'Murid 7', 'Murid 8', 'Murid 9', 'Murid 10']);
+    shk.setFrozenRows(1);
+    shk.getRange('A1').setNote(
+      'CARA MENGISI\n\n' +
+      '1. Kolom A: nama pendamping, HANYA di baris pertama tiap blok.\n' +
+      '2. Kolom B dan seterusnya: nama murid.\n' +
+      '3. Satu pendamping boleh memakai BANYAK BARIS. Biarkan kolom A kosong\n' +
+      '   pada baris lanjutan; otomatis ikut pendamping di atasnya.\n' +
+      '4. Jumlah kolom bebas. Tambah sendiri bila sepuluh masih kurang.\n' +
+      '5. Baris kosong antar blok diabaikan.\n\n' +
+      'CONTOH (satu pendamping, 12 murid, tiga baris)\n' +
+      '  Eka   | Anes    | Friska  | Claudia  | Desna\n' +
+      '        | Chika   | Berlian | Nazhira  | Nazwa\n' +
+      '        | Asifa E | Asih K  | Nabila S | Kayla P\n' +
+      '  Husen | Fareeha | Sesilia | Nabila N | Efta');
+    catatan.push('Tab "' + TAB_KELOMPOK + '" dibuat. Arahkan kursor ke sel A1 untuk cara mengisinya.');
+  }
   const shSet = pastikan(TAB_PENGATURAN, ['Kunci', 'Nilai']);
 
   // Isi nilai bawaan untuk kunci yang belum ada.
@@ -1935,7 +1957,7 @@ function periksaKesiapan() {
     baris.push('bisa memilih bersamaan. Untuk giliran ketat satu per satu, isi 1.');
   }
 
-  ['KonfigKursi', 'Pengaturan'].forEach(nama => {
+  ['KonfigKursi', 'Pengaturan', TAB_KELOMPOK].forEach(nama => {
     if (!bukaSpreadsheet().getSheetByName(nama)) baris.push('Tab "' + nama + '" belum ada.');
   });
 

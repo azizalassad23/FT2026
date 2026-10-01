@@ -468,6 +468,56 @@ console.log('\n=== 12b. Pencocokan nama ===');
     /Tidak ditemukan di DataSiswa/.test(lap7) && /Entah Siapa/.test(lap7));
 }
 
+console.log('\n=== 12bb. Tidak ada batas jumlah murid ===');
+{
+  const s9 = buatSpreadsheet(40);
+  s9.KonfigKursi.data = [['Bus','Kursi','Tipe','Label']];
+  const kol = n => HEADER_SISWA.indexOf(n) + 1;
+  for (let i = 1; i <= 40; i++) {
+    s9.DataSiswa.set(i + 1, kol('Bus'), 1);
+    s9.DataSiswa.set(i + 1, kol('Kursi'), i);
+    s9.DataSiswa.set(i + 1, kol('Gender'), 'L');
+  }
+  const nama = i => 'Siswa ' + i;
+
+  // Bentuk A: satu pendamping memakai empat baris, lima nama per baris = 20.
+  const blokA = [['Pendamping','Murid 1','Murid 2','Murid 3','Murid 4','Murid 5']];
+  for (let r = 0; r < 4; r++) {
+    blokA.push([r === 0 ? 'Bu Eka' : ''].concat([1,2,3,4,5].map(c => nama(r * 5 + c))));
+  }
+  s9.Kelompok.data = blokA;
+  jalankan(s9);
+  sandboxTerakhir.imporKelompok();
+  ok('satu pendamping boleh punya 20 murid lewat empat baris',
+    /Bu Eka : 20 murid/.test(sandboxTerakhir.LAPORAN), sandboxTerakhir.LAPORAN.split('\n')[1]);
+
+  // Bentuk B: satu pendamping dalam SATU baris dengan 18 kolom.
+  const lebar = ['Pendamping'];
+  for (let c = 1; c <= 18; c++) lebar.push('Murid ' + c);
+  const satuBaris = [];
+  for (let c = 1; c <= 18; c++) satuBaris.push(nama(c));
+  s9.Kelompok.data = [lebar, ['Pak Husen'].concat(satuBaris)];
+  jalankan(s9);
+  sandboxTerakhir.imporKelompok();
+  ok('satu pendamping boleh punya 18 murid dalam satu baris lebar',
+    /Pak Husen : 18 murid/.test(sandboxTerakhir.LAPORAN));
+
+  // Bentuk C: jumlah kolom berbeda-beda antar baris.
+  s9.Kelompok.data = [['Pendamping','Murid 1','Murid 2','Murid 3','Murid 4','Murid 5'],
+    ['Pak Lov', nama(1), nama(2), nama(3), nama(4), nama(5)],
+    ['',        nama(6), nama(7), nama(8), nama(9)],
+    ['',        nama(10), nama(11), nama(12)],
+    ['', '', '', '', '', ''],
+    ['Bu Kinan', nama(13), nama(14)]];
+  jalankan(s9);
+  sandboxTerakhir.imporKelompok();
+  ok('jumlah nama per baris boleh berbeda-beda',
+    /Pak Lov : 12 murid/.test(sandboxTerakhir.LAPORAN) &&
+    /Bu Kinan : 2 murid/.test(sandboxTerakhir.LAPORAN));
+  ok('baris kosong antar blok tidak merusak pembacaan',
+    !/PERLU DIPERIKSA/.test(sandboxTerakhir.LAPORAN));
+}
+
 console.log('\n=== 12c. Kelompok lintas bus ===');
 {
   const s8 = buatSpreadsheet(10);

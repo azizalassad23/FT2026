@@ -390,6 +390,10 @@ Aturannya:
   Baris berikutnya dibiarkan kosong dan otomatis ikut pendamping di atasnya.
 - **Kolom B dan seterusnya** diisi nama murid. Boleh empat, lima, atau berapa
   pun per baris — jumlah per baris tidak berarti apa-apa, hanya tata letak.
+- **Tidak ada batas jumlah murid per pendamping.** Satu pendamping boleh
+  memakai sebanyak apa pun baris, dan kolomnya boleh ditambah sendiri bila
+  sepuluh kolom bawaan masih kurang. Judul `Murid 1`–`Murid 10` hanya
+  penanda, bukan batas.
 - Baris kosong antar blok diabaikan.
 
 Kelompok pendamping **boleh campur putra dan putri**. Kamar tetap dihitung
