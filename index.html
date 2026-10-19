@@ -1123,9 +1123,69 @@
             box-shadow: 1px 1px 0 rgba(31, 61, 82, 0.14);
         }
 
+        /* ---------- BANNER KEGIATAN SELESAI ---------- */
+        .banner-selesai {
+            position: relative;
+            border: var(--stroke);
+            border-radius: var(--r-lg);
+            background: var(--sun-soft);
+            box-shadow: 8px 10px 0 rgba(31, 61, 82, 0.11);
+            padding: clamp(22px, 3.6vw, 38px) clamp(20px, 3vw, 36px);
+            margin-top: 18px;
+            overflow: hidden;
+        }
+
+        .banner-selesai::after {
+            content: "";
+            position: absolute;
+            width: 190px;
+            height: 190px;
+            right: -70px;
+            bottom: -86px;
+            border-radius: 50%;
+            border: 3px dashed rgba(31, 61, 82, 0.16);
+            animation: spin-slow 48s linear infinite;
+            pointer-events: none;
+        }
+
+        .banner-stamp {
+            display: inline-block;
+            border: 3px double var(--coral);
+            border-radius: 12px;
+            padding: 6px 16px;
+            transform: rotate(-3deg);
+            background: rgba(255, 122, 102, 0.08);
+            color: #b23c28;
+            font-family: 'Baloo 2', cursive;
+            font-weight: 800;
+            font-size: 0.82rem;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+        }
+
+        .banner-selesai h2 {
+            margin-top: 14px;
+            font-size: clamp(1.7rem, 3.8vw, 2.8rem);
+            color: var(--ink);
+            letter-spacing: -0.015em;
+            position: relative;
+        }
+
+        .banner-selesai p {
+            margin-top: 10px;
+            color: var(--ink-soft);
+            max-width: 60ch;
+            position: relative;
+        }
+
         /* ---------- HERO: TIKET PERJALANAN ---------- */
         .hero {
             padding: 26px 0 20px;
+        }
+
+        /* Dipakai saat bonggol tiket (hero-side) sedang ditutup. */
+        .hero-shell.solo {
+            grid-template-columns: 1fr;
         }
 
         .hero-shell {
@@ -2557,32 +2617,49 @@
                     </div>
                 </div>
                 <span class="route-pill">Lampung ➔ Jawa 2026</span>
-                <span class="status-chip"><i class="fa-solid fa-lock" aria-hidden="true"></i> Konfirmasi Ditutup</span>
+                <!-- <span class="status-chip"><i class="fa-solid fa-lock" aria-hidden="true"></i> Konfirmasi Ditutup</span> -->
+                <span class="status-chip"><i class="fa-solid fa-flag-checkered" aria-hidden="true"></i> Kegiatan Selesai</span>
             </div>
         </div>
     </header>
 
     <main>
+        <section class="container">
+            <div class="banner-selesai reveal">
+                <span class="banner-stamp">Perjalanan Selesai</span>
+                <h2>Field Trip 2026 sudah usai.</h2>
+                <p>Terima kasih untuk setiap hari di Semarang, Yogyakarta, dan Bandung.
+                Seluruh informasi biaya, nomor kontak panitia, dan jadwal keberangkatan
+                sudah ditutup. Yang tersisa di halaman ini adalah jejak tujuan yang
+                kita datangi bersama.</p>
+            </div>
+        </section>
+
         <section class="hero container">
-            <div class="hero-shell reveal">
+            <div class="hero-shell reveal solo">
                 <article>
                     <span class="hero-kicker"><i class="fa-solid fa-map-location-dot" aria-hidden="true"></i> Semarang ➔ Jogja ➔ Bandung</span>
                     <h1 class="hero-title">Tiga kota. Seribu cerita. <em>Satu perjalanan.</em></h1>
                     <span class="squiggle" aria-hidden="true"></span>
-                    <p class="hero-copy">Bukan sekadar rute dari titik A ke titik B. Ini adalah sinkronisasi antara sejarah, budaya, dan inovasi.</p>
+                    <p class="hero-copy">Bukan sekadar rute dari titik A ke titik B. Lima hari yang menyatukan sejarah, budaya, dan inovasi dalam satu perjalanan.</p>
                     <div class="hero-actions">
                         <!-- <button class="btn-sun" onclick="openFormModal()">Buka Konsol Komunikasi</button> -->
-                        <a class="btn-soft" href="#explore">Mulai Jelajah</a>
+                        <a class="btn-soft" href="#explore">Lihat Tujuan</a>
+                        <!-- Ditutup setelah kegiatan selesai. Disimpan untuk dipakai lagi tahun depan.
                         <button type="button" class="btn-mint" onclick="openJacketModal(this)"><i class="fa-solid fa-shirt" aria-hidden="true"></i> Klaim Ukuran Jaket</button>
                         <button type="button" class="btn-sun" onclick="openSeatModal(this)"><i class="fa-solid fa-couch" aria-hidden="true"></i> Pilih Kursi Bus</button>
                         <button type="button" class="btn-wa" onclick="openGroupModal(this)"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i> Gabung Grup WA</button>
+                        -->
                     </div>
 
+                    <!-- Ditutup setelah kegiatan selesai.
                     <div class="depart-stamp" aria-hidden="true">
                         <small>Keberangkatan</small>
                         <strong>05 OKT 2026</strong>
                     </div>
+                    -->
 
+                    <!-- Ditutup setelah kegiatan selesai. Disimpan untuk dipakai lagi tahun depan.
                     <div class="rekening-box" style="margin-top: 20px;">
                         <div class="rekening-box-head"><i class="fa-solid fa-building-columns" aria-hidden="true"></i> Rekening Pembayaran</div>
                         <div class="rekening-detail">
@@ -2600,8 +2677,14 @@
                             <i class="fa-brands fa-whatsapp" aria-hidden="true"></i> Konfirmasi Pembayaran
                         </a>
                     </div>
+                    -->
                 </article>
 
+                <!-- Arsip: countdown, biaya, kontak panitia, dan benefit.
+                     Ditutup setelah kegiatan selesai, disimpan untuk tahun depan.
+                     Memakai <template>, bukan komentar, karena isinya mengandung
+                     komentar lain dan komentar HTML tidak bisa bersarang. -->
+                <template id="arsipHeroSide">
                 <aside class="hero-side">
                     <div class="bubble">
                         <h3>Countdown Keberangkatan</h3>
@@ -2668,6 +2751,7 @@
 
                     </div>
                 </aside>
+                </template>
             </div>
         </section>
 
@@ -2769,7 +2853,8 @@
 
         <section class="footer-cta container reveal">
             <div class="cta-box">
-                <h2>Sampai berjumpa di perjalanan seru kita!</h2>
+                <h2>Terima kasih sudah berjalan bersama.</h2>
+                <p>Sampai berjumpa di perjalanan berikutnya.</p>
                 <!-- <p>Apakah Anda siap bergabung atau ada yang ingin ditanyakan ke panitia?</p>
                 <button class="btn-sun" onclick="openFormModal()">BUKA KONSOL KOMUNIKASI</button> -->
             </div>
