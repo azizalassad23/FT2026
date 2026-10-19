@@ -40,6 +40,7 @@ class Sheet {
   getDataRange() { return new Range(this, 1, 1, this.data.length, this.lebar()); }
   getRange(r, c, nr, nc) { return new Range(this, r, c, nr === undefined ? 1 : nr, nc === undefined ? 1 : nc); }
   appendRow(row) { this.data.push(row.slice()); }
+  insertRowBefore(r) { this.data.splice(r - 1, 0, []); }
   getLastRow() { return this.data.length; }
   getLastColumn() { return this.lebar(); }
   setFrozenRows() {}
@@ -96,6 +97,13 @@ function buatSpreadsheet(jumlahSiswa) {
 let sandboxTerakhir = null;
 
 function jalankan(sheets) {
+  // Satu objek cache per sandbox, bukan objek baru tiap pemanggilan, supaya
+  // penghitung percobaan gagal benar-benar menumpuk seperti di Apps Script.
+  const cacheTiruan = {
+    _d: {},
+    get(k) { return this._d[k] === undefined ? null : this._d[k]; },
+    put(k, v) { this._d[k] = v; }
+  };
   const sandbox = {
     console,
     Date: class extends Date {
@@ -118,9 +126,18 @@ function jalankan(sheets) {
       MimeType: { JSON: 'json' },
       createTextOutput: s => ({ _s: s, setMimeType() { return this; }, getContent() { return this._s; } })
     },
+    CacheService: { getScriptCache: () => cacheTiruan },
     ScriptApp: { getProjectTriggers: () => [], newTrigger: () => ({ timeBased: () => ({ everyMinutes: () => ({ create() {} }) }) }) },
     Session: { getScriptTimeZone: () => 'Asia/Jakarta' },
-    Utilities: { formatDate: () => '12 September 2026, 09:30' },
+    Utilities: {
+      formatDate: (d, tz, fmt) => {
+        const p = n => String(n).padStart(2, '0');
+        if (fmt === 'yyyy-MM-dd') {
+          return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+        }
+        return '12 September 2026, 09:30';
+      }
+    },
     HtmlService: { createHtmlOutput: h => ({ _h: h, setWidth() { return this; }, setHeight() { return this; } }) }
   };
   sandbox.globalThis = sandbox;
@@ -163,6 +180,80 @@ ok('NIS tak terdaftar tidak menerima tautan', r.status === 'error' && !r.groupLi
 // Syaratnya hanya terdaftar, bukan lunas: siswa 70 baru bayar 40%.
 r = post({ action: 'get_group_link', nis: nis(70), pin: pin(70) });
 ok('siswa belum lunas tetap boleh masuk grup', r.status === 'success' && !!r.groupLink);
+
+console.log('\n=== 1c. Review anonim ===');
+{
+  const sr = buatSpreadsheet(20);
+  sr.Pengaturan.data.push(['review_aktif','TRUE'], ['kode_guru','1718'],
+    ['kode_biro','1819'], ['maks_review_guru',2], ['maks_review_biro',1],
+    ['pesan_review_tutup','Review belum dibuka.']);
+  const postR = jalankan(sr);
+  const kolom = [{id:'transportasi',judul:'Transportasi'},
+                 {id:'transportasi_alasan',judul:'Transportasi - alasan'},
+                 {id:'saran',judul:'Saran'}];
+  const isi = (extra) => Object.assign({action:'review_submit', kolom:kolom,
+    jawaban:{transportasi:4, transportasi_alasan:'bus nyaman', saran:'lanjutkan'}}, extra);
+
+  let r1 = postR({action:'review_verify', tipe:'murid', nis:nis(1), pin:pin(1)});
+  ok('murid dengan NIS+PIN benar boleh mengisi', r1.status === 'success');
+  r1 = postR({action:'review_verify', tipe:'murid', nis:nis(1), pin:'0000'});
+  ok('murid dengan PIN salah ditolak', r1.status === 'error');
+  r1 = postR({action:'review_verify', tipe:'guru', kode:'1718'});
+  ok('kode guru benar diterima', r1.status === 'success');
+  r1 = postR({action:'review_verify', tipe:'guru', kode:'9999'});
+  ok('kode guru salah ditolak', r1.status === 'error');
+  r1 = postR({action:'review_verify', tipe:'biro', kode:'1819'});
+  ok('kode biro benar diterima', r1.status === 'success');
+
+  ok('kirim review murid berhasil',
+    postR(isi({tipe:'murid', nis:nis(1), pin:pin(1)})).status === 'success');
+  ok('murid yang sama tidak bisa mengisi dua kali',
+    postR(isi({tipe:'murid', nis:nis(1), pin:pin(1)})).kode === 'SUDAH_MENGISI');
+  ok('murid lain tetap bisa mengisi',
+    postR(isi({tipe:'murid', nis:nis(2), pin:pin(2)})).status === 'success');
+
+  ok('jawaban murid masuk ke tab ReviewMurid', !!sr.ReviewMurid);
+  const hdr = sr.ReviewMurid.data[0];
+  ok('judul kolom dibuat dari daftar pertanyaan',
+    hdr[0] === 'Tanggal' && hdr[1] === 'Transportasi' && hdr[3] === 'Saran');
+  ok('hanya tanggal yang dicatat, bukan jam',
+    /^\d{4}-\d{2}-\d{2}$/.test(String(sr.ReviewMurid.data[1][0])));
+
+  const terkirim = sr.ReviewTerkirim.data.slice(1);
+  ok('penanda pengisi disimpan terpisah dari jawaban',
+    terkirim.length === 2 && terkirim.every(x => /^\d{4}-\d{2}-\d{2}$/.test(String(x[2]))));
+  const kolomJawaban = sr.ReviewMurid.data[0].join('|');
+  ok('tab jawaban tidak memuat kolom identitas',
+    !/NIS|Nama|Penanda/i.test(kolomJawaban));
+
+  // Kuota guru 2, biro 1
+  ok('guru pertama bisa mengisi', postR(isi({tipe:'guru', kode:'1718'})).status === 'success');
+  ok('guru kedua bisa mengisi', postR(isi({tipe:'guru', kode:'1718'})).status === 'success');
+  ok('guru ketiga ditolak karena kuota habis',
+    postR(isi({tipe:'guru', kode:'1718'})).kode === 'KUOTA_HABIS');
+  ok('biro pertama bisa mengisi', postR(isi({tipe:'biro', kode:'1819'})).status === 'success');
+  ok('biro kedua ditolak karena kuota habis',
+    postR(isi({tipe:'biro', kode:'1819'})).kode === 'KUOTA_HABIS');
+  ok('jawaban guru dan biro masuk ke tab berbeda',
+    !!sr.ReviewGuru && !!sr.ReviewBiro && sr.ReviewGuru.data.length === 3);
+
+  // Peredam tebakan kode
+  const sr2 = buatSpreadsheet(5);
+  sr2.Pengaturan.data.push(['review_aktif','TRUE'], ['kode_guru','1718']);
+  const postR2 = jalankan(sr2);
+  for (let i = 0; i < 31; i++) postR2({action:'review_verify', tipe:'guru', kode:'0000'});
+  const setelah = postR2({action:'review_verify', tipe:'guru', kode:'1718'});
+  ok('tebakan kode beruntun menutup verifikasi sementara',
+    setelah.kode === 'TERKUNCI', setelah.kode);
+
+  // Saklar tutup
+  const sr3 = buatSpreadsheet(5);
+  sr3.Pengaturan.data.push(['review_aktif','FALSE'], ['pesan_review_tutup','Review belum dibuka.']);
+  const postR3 = jalankan(sr3);
+  const tutup = postR3({action:'review_verify', tipe:'murid', nis:nis(1), pin:pin(1)});
+  ok('saklar review_aktif FALSE menutup pengisian',
+    tutup.kode === 'BELUM_DIBUKA' && tutup.message === 'Review belum dibuka.');
+}
 
 console.log('\n=== 2. Antrean & giliran ===');
 r = post({ action: 'get_seat_state', nis: nis(1), pin: pin(1) });

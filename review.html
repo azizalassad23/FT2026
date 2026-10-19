@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Review Field Trip 2026 | SMA Gunung Madu</title>
+
+    <meta name="description" content="Formulir review anonim Field Trip 2026 SMA Gunung Madu untuk murid, guru pendamping, dan biro perjalanan.">
+    <meta name="theme-color" content="#fffaf0">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="referrer" content="no-referrer">
+
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23ffc93c'/%3E%3Cpath d='M18 20h28v20H34l-8 8v-8h-8z' fill='%231f3d52'/%3E%3C/svg%3E">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --paper: #fffaf0;
+            --card: #ffffff;
+            --ink: #1f3d52;
+            --ink-soft: #4d6d80;
+            --ink-line: rgba(31, 61, 82, 0.85);
+            --sun: #ffc93c;
+            --sun-soft: #ffe9a8;
+            --sea: #4aa8f0;
+            --sea-soft: #cfe9ff;
+            --mint: #5fd3a3;
+            --mint-soft: #d5f6e7;
+            --coral: #ff7a66;
+            --coral-soft: #ffdfd8;
+            --stroke: 2px solid var(--ink-line);
+            --lift: 5px 6px 0 rgba(31, 61, 82, 0.13);
+            --lift-sm: 3px 4px 0 rgba(31, 61, 82, 0.12);
+            --r-lg: 22px;
+            --r-md: 14px;
+            --r-sm: 10px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            color: var(--ink);
+            background: var(--paper);
+            line-height: 1.55;
+            padding: 0 0 60px;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: -2;
+            opacity: 0.5;
+            background-image:
+                linear-gradient(rgba(31, 61, 82, 0.055) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(31, 61, 82, 0.055) 1px, transparent 1px);
+            background-size: 28px 28px;
+        }
+
+        h1, h2, h3, h4 { font-family: 'Baloo 2', cursive; line-height: 1.1; }
+
+        .wrap { width: min(760px, 92%); margin-inline: auto; }
+
+        /* ---------- KEPALA ---------- */
+        .topbar {
+            margin-top: 18px;
+            border: var(--stroke);
+            border-radius: 18px;
+            background: var(--card);
+            box-shadow: var(--lift);
+            padding: 11px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .brand { display: flex; align-items: center; gap: 10px; font-family: 'Baloo 2', cursive; font-weight: 700; }
+
+        .brand-icon {
+            width: 36px; height: 36px; border-radius: 11px;
+            background: var(--sun); border: var(--stroke);
+            display: grid; place-items: center; transform: rotate(-4deg); flex-shrink: 0;
+        }
+
+        .brand small {
+            display: block; font-family: 'Nunito', sans-serif;
+            color: var(--ink-soft); letter-spacing: 0.08em;
+            text-transform: uppercase; font-size: 0.66rem; font-weight: 700; margin-top: -3px;
+        }
+
+        .chip-anon {
+            border: 2px dashed rgba(31, 61, 82, 0.35);
+            border-radius: 999px; padding: 7px 13px;
+            font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em;
+            font-weight: 800; color: #14563c; background: var(--mint-soft);
+        }
+
+        /* ---------- KARTU ---------- */
+        .kartu {
+            margin-top: 18px;
+            border: var(--stroke);
+            border-radius: var(--r-lg);
+            background: var(--card);
+            box-shadow: 8px 10px 0 rgba(31, 61, 82, 0.11);
+            padding: clamp(20px, 3.4vw, 34px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kartu::after {
+            content: ""; position: absolute; inset: 0 0 auto 0; height: 7px;
+            background: repeating-linear-gradient(90deg,
+                var(--sun) 0 44px, var(--mint) 44px 88px, var(--sea) 88px 132px, var(--coral) 132px 176px);
+        }
+
+        .kartu h1 { font-size: clamp(1.7rem, 4vw, 2.5rem); margin-top: 8px; }
+        .kartu h2 { font-size: clamp(1.4rem, 3.2vw, 1.9rem); margin-top: 6px; }
+        .kartu > p { color: var(--ink-soft); margin-top: 10px; }
+
+        .catatan-anon {
+            margin-top: 16px;
+            border: 2px dashed rgba(47, 168, 122, 0.45);
+            border-radius: var(--r-md);
+            background: var(--mint-soft);
+            padding: 12px 14px;
+            font-size: 0.9rem;
+        }
+
+        .catatan-anon strong { display: block; margin-bottom: 4px; }
+
+        /* ---------- PILIH TIPE ---------- */
+        .tipe-grid { display: grid; gap: 12px; margin-top: 20px; }
+        @media (min-width: 620px) { .tipe-grid { grid-template-columns: repeat(3, 1fr); } }
+
+        .tipe-kartu {
+            border: var(--stroke); border-radius: var(--r-md);
+            background: var(--card); box-shadow: var(--lift-sm);
+            padding: 18px 16px; text-align: left; cursor: pointer; font: inherit;
+            transition: transform 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease;
+        }
+
+        .tipe-kartu:hover { transform: translate(-2px, -3px); box-shadow: 6px 8px 0 rgba(31, 61, 82, 0.16); background: var(--sun-soft); }
+        .tipe-kartu i { font-size: 1.5rem; }
+        .tipe-kartu b { display: block; font-family: 'Baloo 2', cursive; font-size: 1.2rem; margin-top: 8px; }
+        .tipe-kartu span { display: block; font-size: 0.85rem; color: var(--ink-soft); margin-top: 3px; }
+
+        /* ---------- ISIAN ---------- */
+        .grup { margin-top: 16px; }
+
+        .grup label.judul {
+            display: block; margin-bottom: 6px;
+            text-transform: uppercase; letter-spacing: 0.07em;
+            font-size: 0.76rem; font-weight: 800; color: var(--ink-soft);
+        }
+
+        .isian {
+            width: 100%; border-radius: 11px;
+            border: 2px solid rgba(31, 61, 82, 0.22);
+            background: var(--card); color: var(--ink);
+            padding: 11px 12px; font: inherit;
+        }
+
+        .isian:focus { outline: none; border-color: var(--sea); box-shadow: 0 0 0 3px rgba(74, 168, 240, 0.28); }
+        textarea.isian { min-height: 84px; resize: vertical; }
+
+        .petunjuk { display: block; margin-top: 5px; font-size: 0.8rem; color: var(--ink-soft); font-weight: 600; }
+
+        /* ---------- PERTANYAAN ---------- */
+        .soal {
+            border: 2px solid rgba(31, 61, 82, 0.18);
+            border-radius: var(--r-md);
+            background: #fffdf6;
+            padding: 14px 15px;
+            margin-top: 14px;
+        }
+
+        .soal-judul { font-family: 'Baloo 2', cursive; font-size: 1.08rem; line-height: 1.25; }
+        .soal-nomor { color: var(--ink-soft); font-size: 0.8rem; font-weight: 800; letter-spacing: 0.08em; }
+
+        .skala { display: flex; gap: 7px; margin-top: 10px; flex-wrap: wrap; }
+
+        .skala input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+
+        .skala label {
+            flex: 1 1 52px; min-width: 46px; text-align: center;
+            border: 2px solid rgba(31, 61, 82, 0.2); border-radius: var(--r-sm);
+            background: var(--card); padding: 10px 4px; cursor: pointer;
+            font-family: 'Baloo 2', cursive; font-weight: 700; font-size: 1.05rem;
+            transition: transform 0.14s ease, background-color 0.14s ease, box-shadow 0.14s ease;
+        }
+
+        .skala label:hover { background: var(--sea-soft); }
+
+        .skala input:checked + label {
+            background: var(--mint-soft); border-color: var(--ink-line);
+            transform: translate(-2px, -3px); box-shadow: var(--lift-sm);
+        }
+
+        .skala input:focus-visible + label { outline: 3px solid var(--sea); outline-offset: 2px; }
+
+        .skala-ket {
+            display: flex; justify-content: space-between;
+            font-size: 0.74rem; color: var(--ink-soft); margin-top: 6px; font-weight: 700;
+        }
+
+        .pilihan { display: grid; gap: 8px; margin-top: 10px; }
+
+        .pilihan input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+
+        .pilihan label {
+            border: 2px solid rgba(31, 61, 82, 0.2); border-radius: var(--r-sm);
+            background: var(--card); padding: 10px 12px; cursor: pointer; font-weight: 700;
+        }
+
+        .pilihan input:checked + label { background: var(--mint-soft); border-color: var(--ink-line); box-shadow: var(--lift-sm); }
+        .pilihan input:focus-visible + label { outline: 3px solid var(--sea); outline-offset: 2px; }
+
+        .buka-alasan {
+            margin-top: 10px; border: none; background: none; padding: 0;
+            font: inherit; font-size: 0.84rem; font-weight: 800; color: #1a4f74;
+            cursor: pointer; text-decoration: underline;
+        }
+
+        .kotak-alasan { margin-top: 10px; }
+
+        /* ---------- TOMBOL ---------- */
+        .btn {
+            border: var(--stroke); border-radius: var(--r-md);
+            padding: 13px 20px; font: inherit; font-size: 0.85rem;
+            letter-spacing: 0.07em; text-transform: uppercase; font-weight: 800;
+            cursor: pointer; text-decoration: none;
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            box-shadow: var(--lift-sm);
+            transition: transform 0.16s ease, box-shadow 0.16s ease;
+        }
+
+        .btn:hover { transform: translate(-2px, -3px); box-shadow: 6px 8px 0 rgba(31, 61, 82, 0.16); }
+        .btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 rgba(31, 61, 82, 0.14); }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .btn-kuning { background: var(--sun); color: #6b4405; }
+        .btn-hijau { background: var(--mint); color: #14563c; }
+        .btn-putih { background: var(--card); color: var(--ink); }
+        .btn-penuh { width: 100%; margin-top: 18px; }
+
+        .baris-tombol { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+        .baris-tombol .btn { flex: 1 1 auto; }
+
+        /* ---------- PESAN ---------- */
+        .pesan {
+            margin-top: 14px; padding: 11px 14px; border-radius: var(--r-sm);
+            font-size: 0.88rem; font-weight: 700; display: none;
+        }
+
+        .pesan.tampil { display: block; }
+        .pesan-salah { background: var(--coral-soft); border: 2px solid rgba(198, 55, 33, 0.35); color: #9c2f1c; }
+
+        .sukses { text-align: center; padding: 10px 0 4px; }
+
+        .sukses-tanda {
+            width: 76px; height: 76px; margin: 0 auto 14px; border-radius: 50%;
+            display: grid; place-items: center;
+            background: var(--mint-soft); border: 3px solid var(--mint);
+            color: #14814f; font-size: 2.2rem; font-family: 'Baloo 2', cursive;
+        }
+
+        .hidden { display: none !important; }
+
+        footer { text-align: center; color: var(--ink-soft); padding: 26px 0 0; font-size: 0.9rem; }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation: none !important; transition: none !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <header class="topbar">
+            <div class="brand">
+                <span class="brand-icon" aria-hidden="true">💬</span>
+                <div>
+                    Review Field Trip 2026
+                    <small>SMA Gunung Madu</small>
+                </div>
+            </div>
+            <span class="chip-anon">Anonim</span>
+        </header>
+
+        <!-- Tahap 1: pilih siapa yang mengisi -->
+        <main class="kartu" id="stepTipe">
+            <h1>Bagaimana perjalanannya?</h1>
+            <p>Masukan Anda dipakai panitia untuk memperbaiki kegiatan tahun depan.
+            Pengisian hanya memakan waktu sekitar lima menit.</p>
+
+            <div class="catatan-anon">
+                <strong>Jawaban Anda anonim.</strong>
+                Nama dan NIS tidak ikut tersimpan bersama jawaban. Verifikasi di awal
+                hanya dipakai untuk memastikan pengisinya memang peserta kegiatan, dan
+                agar satu orang tidak mengisi berkali-kali.
+            </div>
+
+            <h2 style="margin-top: 22px;">Anda mengisi sebagai</h2>
+            <div class="tipe-grid">
+                <button type="button" class="tipe-kartu" onclick="pilihTipe('murid')">
+                    <i aria-hidden="true">🎒</i>
+                    <b>Murid</b>
+                    <span>Peserta field trip</span>
+                </button>
+                <button type="button" class="tipe-kartu" onclick="pilihTipe('guru')">
+                    <i aria-hidden="true">🧑‍🏫</i>
+                    <b>Guru</b>
+                    <span>Pendamping rombongan</span>
+                </button>
+                <button type="button" class="tipe-kartu" onclick="pilihTipe('biro')">
+                    <i aria-hidden="true">🚌</i>
+                    <b>Biro</b>
+                    <span>Penyedia perjalanan</span>
+                </button>
+            </div>
+        </main>
+
+        <!-- Tahap 2: verifikasi -->
+        <main class="kartu hidden" id="stepVerifikasi" tabindex="-1">
+            <span class="soal-nomor" id="labelTipe">MURID</span>
+            <h2>Verifikasi dulu sebentar</h2>
+            <p id="ketVerifikasi">Masukkan NIS dan PIN Anda. Keduanya tidak disimpan bersama jawaban.</p>
+
+            <div id="kolomMurid">
+                <div class="grup">
+                    <label class="judul" for="vNIS">Nomor Induk Siswa (NIS)</label>
+                    <input type="text" id="vNIS" class="isian" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="Contoh: 12345">
+                </div>
+                <div class="grup">
+                    <label class="judul" for="vPIN">PIN (4 digit terakhir no HP)</label>
+                    <input type="text" id="vPIN" class="isian" inputmode="numeric" autocomplete="off" maxlength="4" placeholder="Contoh: 7890">
+                    <span class="petunjuk">Empat angka terakhir dari nomor HP yang Anda daftarkan ke panitia.</span>
+                </div>
+            </div>
+
+            <div id="kolomKode" class="hidden">
+                <div class="grup">
+                    <label class="judul" for="vKode">Kode Akses</label>
+                    <input type="text" id="vKode" class="isian" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="Masukkan kode dari panitia">
+                    <span class="petunjuk">Kode diberikan panitia. Mohon tidak diteruskan ke pihak lain.</span>
+                </div>
+            </div>
+
+            <div class="pesan pesan-salah" id="pesanVerifikasi" role="alert" aria-live="assertive"></div>
+
+            <div class="baris-tombol">
+                <button type="button" class="btn btn-putih" onclick="kembaliKeTipe()">Kembali</button>
+                <button type="button" class="btn btn-kuning" id="btnVerifikasi" onclick="verifikasi()">Lanjut</button>
+            </div>
+        </main>
+
+        <!-- Tahap 3: formulir -->
+        <main class="kartu hidden" id="stepForm" tabindex="-1">
+            <span class="soal-nomor" id="labelTipeForm">MURID</span>
+            <h2>Beri penilaian Anda</h2>
+            <p>Skala 1 sampai 5. Kolom alasan boleh dikosongkan, tetapi sangat membantu bila diisi.</p>
+
+            <form id="formReview" novalidate>
+                <div id="daftarSoal"></div>
+                <div class="pesan pesan-salah" id="pesanForm" role="alert" aria-live="assertive"></div>
+                <button type="submit" class="btn btn-hijau btn-penuh" id="btnKirim">Kirim Review</button>
+            </form>
+        </main>
+
+        <!-- Tahap 4: selesai -->
+        <main class="kartu hidden" id="stepSelesai" tabindex="-1">
+            <div class="sukses">
+                <div class="sukses-tanda" aria-hidden="true">✓</div>
+                <h2>Terima kasih!</h2>
+                <p>Review Anda sudah tersimpan secara anonim. Masukan ini akan dibaca
+                panitia saat menyiapkan kegiatan berikutnya.</p>
+                <a class="btn btn-putih" href="index.html" style="margin-top: 20px;">Kembali ke Halaman Utama</a>
+            </div>
+        </main>
+
+        <footer>
+            <p>&copy; 2026 Java Overland | SMA Gunung Madu</p>
+        </footer>
+    </div>
+
+    <script>
+        const APPS_SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbza-jtbqCxG0fQFk8CXJ4foRze2Vkm49ldU7czix-IS3iKXIEAAhQ7f-qqXbMwc89Uq/exec';
+
+        /*
+         * Daftar pertanyaan ditulis hanya di sini. Judulnya ikut terkirim ke
+         * Apps Script dan dipakai sebagai judul kolom di spreadsheet, jadi
+         * tidak perlu disalin ke dua tempat.
+         *
+         * tipe soal:
+         *   skala   1-5, wajib
+         *   nps     1-10, wajib
+         *   pilihan daftar pilihan, wajib
+         *   teks    isian bebas, opsional
+         * alasan: true menambahkan kotak alasan opsional di bawahnya.
+         */
+        const PERTANYAAN = {
+            murid: [
+                { id: 'transportasi', judul: 'Bus: kenyamanan, kebersihan, dan cara mengemudi sopir', tipe: 'skala', alasan: true },
+                { id: 'penginapan', judul: 'Penginapan: kebersihan dan fasilitas kamar', tipe: 'skala', alasan: true },
+                { id: 'kamar', judul: 'Pembagian kamar terasa adil dan nyaman', tipe: 'skala', alasan: true },
+                { id: 'konsumsi', judul: 'Konsumsi: rasa, porsi, dan ketepatan jam makan', tipe: 'skala', alasan: true },
+                { id: 'semarang', judul: 'Kunjungan di Semarang', tipe: 'skala', alasan: true },
+                { id: 'jogja', judul: 'Kunjungan di Yogyakarta', tipe: 'skala', alasan: true },
+                { id: 'bandung', judul: 'Kunjungan di Bandung', tipe: 'skala', alasan: true },
+                { id: 'jadwal', judul: 'Kepadatan jadwal dan waktu istirahat', tipe: 'skala', alasan: true },
+                { id: 'pendamping', judul: 'Pendamping: keramahan, mudah dihubungi, rasa aman', tipe: 'skala', alasan: true },
+                { id: 'kesehatan', judul: 'Penanganan saat ada yang sakit atau butuh bantuan', tipe: 'skala', alasan: true },
+                { id: 'informasi', judul: 'Kejelasan informasi sebelum berangkat (website dan grup WA)', tipe: 'skala', alasan: true },
+                { id: 'favorit', judul: 'Destinasi paling berkesan', tipe: 'pilihan',
+                  pilihan: ['Semarang', 'Yogyakarta', 'Bandung', 'Perjalanan di bus'], alasanWajibTampil: true },
+                { id: 'saran', judul: 'Saran untuk kegiatan berikutnya', tipe: 'teks' },
+                { id: 'rekomendasi', judul: 'Akan merekomendasikan kegiatan ini ke adik kelas?', tipe: 'nps', alasanWajibTampil: true }
+            ],
+            guru: [
+                { id: 'koordinasi', judul: 'Koordinasi panitia sebelum dan selama kegiatan', tipe: 'skala', alasan: true },
+                { id: 'rasio', judul: 'Rasio pendamping terhadap murid dan beban tugas', tipe: 'skala', alasan: true },
+                { id: 'disiplin', judul: 'Kedisiplinan murid selama perjalanan', tipe: 'skala', alasan: true },
+                { id: 'komunikasi', judul: 'Komunikasi di lapangan (grup WA, penyebaran info)', tipe: 'skala', alasan: true },
+                { id: 'fasilitas', judul: 'Akomodasi dan konsumsi untuk pendamping', tipe: 'skala', alasan: true },
+                { id: 'jadwal', judul: 'Kesesuaian jadwal dengan rencana', tipe: 'skala', alasan: true },
+                { id: 'darurat', judul: 'Penanganan kejadian tak terduga', tipe: 'skala', alasan: true },
+                { id: 'biro', judul: 'Kinerja biro perjalanan', tipe: 'skala', alasan: true },
+                { id: 'sistem', judul: 'Sistem pemilihan kursi dan pembagian kamar lewat website', tipe: 'skala', alasan: true },
+                { id: 'saran', judul: 'Saran perbaikan', tipe: 'teks' }
+            ],
+            biro: [
+                { id: 'brief', judul: 'Kejelasan permintaan dan brief dari sekolah', tipe: 'skala', alasan: true },
+                { id: 'administrasi', judul: 'Kelancaran administrasi dan pembayaran', tipe: 'skala', alasan: true },
+                { id: 'disiplin', judul: 'Kedisiplinan rombongan terhadap jadwal', tipe: 'skala', alasan: true },
+                { id: 'koordinasi', judul: 'Koordinasi dengan panitia di lapangan', tipe: 'skala', alasan: true },
+                { id: 'kendala', judul: 'Kendala yang ditemui selama kegiatan', tipe: 'teks' },
+                { id: 'saran', judul: 'Saran untuk kerja sama berikutnya', tipe: 'teks' }
+            ]
+        };
+
+        const NAMA_TIPE = { murid: 'Murid', guru: 'Guru Pendamping', biro: 'Biro Perjalanan' };
+
+        const langkah = {
+            tipe: document.getElementById('stepTipe'),
+            verifikasi: document.getElementById('stepVerifikasi'),
+            form: document.getElementById('stepForm'),
+            selesai: document.getElementById('stepSelesai')
+        };
+
+        const keadaan = { tipe: '', nis: '', pin: '', kode: '' };
+
+        function tampilkan(nama) {
+            Object.keys(langkah).forEach(k => langkah[k].classList.toggle('hidden', k !== nama));
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            const el = langkah[nama];
+            if (el) setTimeout(() => el.focus({ preventScroll: true }), 80);
+        }
+
+        function pesan(el, teks) {
+            el.textContent = teks;
+            el.classList.toggle('tampil', !!teks);
+        }
+
+        // Hanya izinkan angka pada NIS, PIN, dan kode.
+        ['vNIS', 'vPIN', 'vKode'].forEach(id => {
+            const el = document.getElementById(id);
+            el.addEventListener('input', () => {
+                const bersih = el.value.replace(/\D/g, '');
+                if (bersih !== el.value) el.value = bersih;
+            });
+            el.addEventListener('keydown', e => {
+                if (e.key === 'Enter') { e.preventDefault(); verifikasi(); }
+            });
+        });
+
+        function pilihTipe(tipe) {
+            keadaan.tipe = tipe;
+            document.getElementById('labelTipe').textContent = NAMA_TIPE[tipe].toUpperCase();
+            document.getElementById('labelTipeForm').textContent = NAMA_TIPE[tipe].toUpperCase();
+
+            const murid = tipe === 'murid';
+            document.getElementById('kolomMurid').classList.toggle('hidden', !murid);
+            document.getElementById('kolomKode').classList.toggle('hidden', murid);
+            document.getElementById('ketVerifikasi').textContent = murid
+                ? 'Masukkan NIS dan PIN Anda. Keduanya tidak disimpan bersama jawaban.'
+                : 'Masukkan kode akses dari panitia. Kode tidak disimpan bersama jawaban.';
+
+            pesan(document.getElementById('pesanVerifikasi'), '');
+            document.getElementById('vNIS').value = '';
+            document.getElementById('vPIN').value = '';
+            document.getElementById('vKode').value = '';
+            tampilkan('verifikasi');
+        }
+
+        function kembaliKeTipe() {
+            keadaan.tipe = '';
+            tampilkan('tipe');
+        }
+
+        async function kirimKeServer(muatan) {
+            const respons = await fetch(APPS_SCRIPT_WEB_APP_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(muatan)
+            });
+            if (!respons.ok) throw new Error('Network response was not ok');
+            return respons.json();
+        }
+
+        async function verifikasi() {
+            const kotak = document.getElementById('pesanVerifikasi');
+            const tombol = document.getElementById('btnVerifikasi');
+            pesan(kotak, '');
+
+            if (keadaan.tipe === 'murid') {
+                keadaan.nis = document.getElementById('vNIS').value.trim();
+                keadaan.pin = document.getElementById('vPIN').value.trim();
+                if (!keadaan.nis || !keadaan.pin) { pesan(kotak, 'Harap mengisi NIS dan PIN dengan lengkap.'); return; }
+                if (keadaan.pin.length !== 4) { pesan(kotak, 'PIN harus berupa 4 digit terakhir nomor HP Anda.'); return; }
+            } else {
+                keadaan.kode = document.getElementById('vKode').value.trim();
+                if (!keadaan.kode) { pesan(kotak, 'Harap mengisi kode akses.'); return; }
+            }
+
+            const semula = tombol.textContent;
+            tombol.disabled = true;
+            tombol.textContent = 'Memeriksa...';
+
+            try {
+                const data = await kirimKeServer({
+                    action: 'review_verify',
+                    tipe: keadaan.tipe,
+                    nis: keadaan.nis,
+                    pin: keadaan.pin,
+                    kode: keadaan.kode
+                });
+                if (data.status !== 'success') { pesan(kotak, data.message || 'Verifikasi gagal.'); return; }
+                bangunForm(keadaan.tipe);
+                tampilkan('form');
+            } catch (err) {
+                pesan(kotak, 'Gagal terhubung ke server. Periksa koneksi internet Anda.');
+            } finally {
+                tombol.disabled = false;
+                tombol.textContent = semula;
+            }
+        }
+
+        function amanHtml(teks) {
+            const d = document.createElement('div');
+            d.textContent = teks;
+            return d.innerHTML;
+        }
+
+        function bangunForm(tipe) {
+            const wadah = document.getElementById('daftarSoal');
+            const daftar = PERTANYAAN[tipe] || [];
+            let html = '';
+
+            daftar.forEach((s, i) => {
+                html += '<div class="soal" data-id="' + s.id + '" data-tipe="' + s.tipe + '">';
+                html += '<span class="soal-nomor">Pertanyaan ' + (i + 1) + ' dari ' + daftar.length + '</span>';
+                html += '<div class="soal-judul">' + amanHtml(s.judul) + '</div>';
+
+                if (s.tipe === 'skala' || s.tipe === 'nps') {
+                    const maksimal = s.tipe === 'nps' ? 10 : 5;
+                    html += '<div class="skala">';
+                    for (let n = 1; n <= maksimal; n++) {
+                        const kode = s.id + '_' + n;
+                        html += '<input type="radio" name="' + s.id + '" id="' + kode + '" value="' + n + '">' +
+                                '<label for="' + kode + '">' + n + '</label>';
+                    }
+                    html += '</div>';
+                    html += '<div class="skala-ket"><span>' +
+                            (s.tipe === 'nps' ? 'Tidak akan' : 'Sangat kurang') +
+                            '</span><span>' +
+                            (s.tipe === 'nps' ? 'Pasti akan' : 'Sangat baik') +
+                            '</span></div>';
+                } else if (s.tipe === 'pilihan') {
+                    html += '<div class="pilihan">';
+                    s.pilihan.forEach((p, j) => {
+                        const kode = s.id + '_p' + j;
+                        html += '<input type="radio" name="' + s.id + '" id="' + kode + '" value="' + amanHtml(p) + '">' +
+                                '<label for="' + kode + '">' + amanHtml(p) + '</label>';
+                    });
+                    html += '</div>';
+                } else {
+                    html += '<div class="grup"><textarea class="isian" id="' + s.id +
+                            '" placeholder="Tulis di sini (opsional)"></textarea></div>';
+                }
+
+                if (s.alasan || s.alasanWajibTampil) {
+                    const tampil = s.alasanWajibTampil;
+                    html += '<button type="button" class="buka-alasan' + (tampil ? ' hidden' : '') +
+                            '" onclick="bukaAlasan(this)">+ Tambah alasan</button>';
+                    html += '<div class="kotak-alasan' + (tampil ? '' : ' hidden') + '">' +
+                            '<textarea class="isian" id="' + s.id + '_alasan" placeholder="Alasan (opsional)"></textarea></div>';
+                }
+
+                html += '</div>';
+            });
+
+            wadah.innerHTML = html;
+
+            // Kotak alasan terbuka sendiri saat nilainya rendah, karena di situlah
+            // penjelasannya paling dibutuhkan. Tetap opsional.
+            wadah.querySelectorAll('.skala input[type="radio"]').forEach(r => {
+                r.addEventListener('change', () => {
+                    if (Number(r.value) > 2) return;
+                    const soal = r.closest('.soal');
+                    const kotak = soal.querySelector('.kotak-alasan');
+                    const tombol = soal.querySelector('.buka-alasan');
+                    if (kotak) kotak.classList.remove('hidden');
+                    if (tombol) tombol.classList.add('hidden');
+                });
+            });
+
+            pesan(document.getElementById('pesanForm'), '');
+        }
+
+        function bukaAlasan(tombol) {
+            tombol.classList.add('hidden');
+            const kotak = tombol.parentElement.querySelector('.kotak-alasan');
+            if (kotak) {
+                kotak.classList.remove('hidden');
+                const area = kotak.querySelector('textarea');
+                if (area) area.focus();
+            }
+        }
+
+        document.getElementById('formReview').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const kotak = document.getElementById('pesanForm');
+            const tombol = document.getElementById('btnKirim');
+            pesan(kotak, '');
+
+            const daftar = PERTANYAAN[keadaan.tipe] || [];
+            const kolom = [];
+            const jawaban = {};
+            let belumDiisi = null;
+
+            daftar.forEach(s => {
+                kolom.push({ id: s.id, judul: s.judul });
+
+                if (s.tipe === 'teks') {
+                    jawaban[s.id] = document.getElementById(s.id).value.trim();
+                } else {
+                    const terpilih = document.querySelector('input[name="' + s.id + '"]:checked');
+                    if (!terpilih && !belumDiisi) belumDiisi = s;
+                    jawaban[s.id] = terpilih ? terpilih.value : '';
+                }
+
+                if (s.alasan || s.alasanWajibTampil) {
+                    const area = document.getElementById(s.id + '_alasan');
+                    kolom.push({ id: s.id + '_alasan', judul: s.judul + ' — alasan' });
+                    jawaban[s.id + '_alasan'] = area ? area.value.trim() : '';
+                }
+            });
+
+            if (belumDiisi) {
+                pesan(kotak, 'Masih ada pertanyaan yang belum dijawab: "' + belumDiisi.judul + '".');
+                const soal = document.querySelector('.soal[data-id="' + belumDiisi.id + '"]');
+                if (soal) soal.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+
+            const semula = tombol.textContent;
+            tombol.disabled = true;
+            tombol.textContent = 'Mengirim...';
+
+            try {
+                const data = await kirimKeServer({
+                    action: 'review_submit',
+                    tipe: keadaan.tipe,
+                    nis: keadaan.nis,
+                    pin: keadaan.pin,
+                    kode: keadaan.kode,
+                    kolom: kolom,
+                    jawaban: jawaban
+                });
+                if (data.status !== 'success') { pesan(kotak, data.message || 'Gagal menyimpan review.'); return; }
+                tampilkan('selesai');
+            } catch (err) {
+                pesan(kotak, 'Gagal terhubung ke server. Review belum tersimpan, silakan coba lagi.');
+            } finally {
+                tombol.disabled = false;
+                tombol.textContent = semula;
+            }
+        });
+    </script>
+</body>
+</html>

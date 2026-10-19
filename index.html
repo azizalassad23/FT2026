@@ -2645,6 +2645,7 @@
                     <div class="hero-actions">
                         <!-- <button class="btn-sun" onclick="openFormModal()">Buka Konsol Komunikasi</button> -->
                         <a class="btn-soft" href="#explore">Lihat Tujuan</a>
+                        <button type="button" class="btn-mint" onclick="openReviewModal(this)"><i class="fa-solid fa-comment-dots" aria-hidden="true"></i> Isi Review</button>
                         <!-- Ditutup setelah kegiatan selesai. Disimpan untuk dipakai lagi tahun depan.
                         <button type="button" class="btn-mint" onclick="openJacketModal(this)"><i class="fa-solid fa-shirt" aria-hidden="true"></i> Klaim Ukuran Jaket</button>
                         <button type="button" class="btn-sun" onclick="openSeatModal(this)"><i class="fa-solid fa-couch" aria-hidden="true"></i> Pilih Kursi Bus</button>
@@ -2990,6 +2991,39 @@
                         <i class="fa-brands fa-whatsapp" aria-hidden="true"></i> Gabung Grup Peserta
                     </a>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="reviewModal" aria-hidden="true">
+        <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="reviewModalTitle">
+            <div class="modal-accent"></div>
+            <div class="modal-header">
+                <h2 id="reviewModalTitle">Review Field Trip 2026</h2>
+                <button class="close-btn" type="button" aria-label="Tutup" onclick="closeReviewModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <p style="color: var(--ink-soft); font-size: 0.93rem;">Kegiatan sudah selesai, dan panitia ingin mendengar pendapat Anda.
+                Masukan ini dipakai untuk menyiapkan kegiatan tahun depan.</p>
+
+                <div class="verify-ok" style="margin-top: 16px;">
+                    <h4><i class="fa-solid fa-user-secret" aria-hidden="true"></i> Jawaban Anda anonim</h4>
+                    <p>Nama dan NIS tidak ikut tersimpan bersama jawaban. Verifikasi di awal hanya
+                    untuk memastikan pengisinya memang peserta kegiatan, dan agar satu orang tidak
+                    mengisi berkali-kali.</p>
+                </div>
+
+                <div class="benefits-head">Siapa yang bisa mengisi</div>
+                <div class="benefits-grid">
+                    <div class="benefit-item"><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i><span><strong>Murid</strong> — verifikasi dengan NIS dan PIN, sama seperti saat memilih kursi.</span></div>
+                    <div class="benefit-item"><i class="fa-solid fa-chalkboard-user" aria-hidden="true"></i><span><strong>Guru pendamping</strong> — memakai kode akses dari panitia.</span></div>
+                    <div class="benefit-item"><i class="fa-solid fa-bus" aria-hidden="true"></i><span><strong>Biro perjalanan</strong> — memakai kode akses dari panitia.</span></div>
+                </div>
+
+                <a class="btn-confirm-payment" href="review.html" style="background: var(--mint); color: #14563c;">
+                    <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> Buka Halaman Review
+                </a>
+                <p class="size-hint" style="margin-top: 12px;"><i class="fa-solid fa-clock" aria-hidden="true"></i> Perkiraan waktu pengisian sekitar lima menit.</p>
             </div>
         </div>
     </div>
@@ -3749,6 +3783,22 @@
                 btnSubmitSize.disabled = false;
                 btnSubmitSize.innerHTML = originalText;
             }
+        }
+
+        // ==========================================
+        // REVIEW ANONIM
+        // ==========================================
+
+        // Modal ini hanya pengantar; formulirnya ada di review.html supaya
+        // halaman utama tidak ikut membawa seluruh daftar pertanyaan.
+        const reviewModal = document.getElementById('reviewModal');
+
+        function openReviewModal(opener) {
+            openModal(reviewModal, opener);
+        }
+
+        function closeReviewModal() {
+            closeModal(reviewModal);
         }
 
         // ==========================================

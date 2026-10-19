@@ -42,6 +42,9 @@ const TAB_ANGKET = 'Angket';
 // Tab berisi pembagian kelompok yang disusun manual oleh panitia:
 // kolom A nama pendamping, kolom B dan seterusnya nama murid.
 const TAB_KELOMPOK = 'Kelompok';
+// Penanda siapa yang sudah mengisi review. Terpisah dari tab jawaban, dan
+// sengaja hanya menyimpan tanggal supaya keduanya tidak bisa dijodohkan.
+const TAB_REVIEW_TERKIRIM = 'ReviewTerkirim';
 
 /**
  * Nama kolom dikenali lewat daftar padanan di bawah, jadi judul kolom di
@@ -94,7 +97,15 @@ const PENGATURAN_BAWAAN = {
   antrean_sekarang: 0,
   antrean_mulai: '',
   fase: 'antrean',
-  pesan_belum_dibuka: 'Pemilihan kursi belum dibuka. Tunggu pengumuman dari panitia.'
+  pesan_belum_dibuka: 'Pemilihan kursi belum dibuka. Tunggu pengumuman dari panitia.',
+
+  // Review anonim setelah kegiatan selesai.
+  review_aktif: 'FALSE',
+  kode_guru: '1718',
+  kode_biro: '1819',
+  maks_review_guru: 20,
+  maks_review_biro: 5,
+  pesan_review_tutup: 'Pengisian review belum dibuka. Tunggu pengumuman dari panitia.'
 };
 
 /* ==========================================================================
@@ -118,6 +129,8 @@ function doPost(e) {
       case 'get_seat_state': return kirim(getSeatState(req));
       case 'claim_seat':     return kirim(claimSeat(req));
       case 'get_group_link': return kirim(getGroupLink(req));
+      case 'review_verify':  return kirim(reviewVerify(req));
+      case 'review_submit':  return kirim(reviewSubmit(req));
       // Form konfirmasi lama: halaman web mengirim tanpa field action,
       // tetapi 'submit_mission' ikut diterima demi kompatibilitas.
       case 'submit_mission':
@@ -1759,6 +1772,204 @@ function pemicuMajukanAntrean() {
     const t = bacaTabel(TAB_SISWA);
     terbitkanNomorAntrean(t);
     majukanAntrean(bacaTabel(TAB_SISWA));
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/* ==========================================================================
+ *  REVIEW ANONIM
+ * ========================================================================== */
+
+/**
+ * Tiga jenis pengisi, masing-masing punya tab jawabannya sendiri supaya
+ * mudah dibaca langsung di spreadsheet tanpa menyaring apa pun.
+ */
+function tabJawabanReview(tipe) {
+  if (tipe === 'murid') return 'ReviewMurid';
+  if (tipe === 'guru') return 'ReviewGuru';
+  if (tipe === 'biro') return 'ReviewBiro';
+  return '';
+}
+
+/**
+ * Peredam percobaan tebak kode. Kode guru dan biro hanya empat angka, jadi
+ * bisa dicoba satu per satu. Penghitung ini berlaku global — bukan per orang,
+ * karena pengisinya memang anonim — dan menutup verifikasi sementara begitu
+ * kegagalan menumpuk. Dipadu dengan batas jumlah pengisian di Pengaturan,
+ * ini membuat tebakan beruntun tidak berguna.
+ */
+const BATAS_GAGAL_REVIEW = 30;
+const JENDELA_GAGAL_DETIK = 600;
+
+function reviewSedangDikunci() {
+  try {
+    const n = Number(CacheService.getScriptCache().get('gagal_review') || 0);
+    return n >= BATAS_GAGAL_REVIEW;
+  } catch (err) {
+    return false;
+  }
+}
+
+function catatGagalReview() {
+  try {
+    const cache = CacheService.getScriptCache();
+    const n = Number(cache.get('gagal_review') || 0) + 1;
+    cache.put('gagal_review', String(n), JENDELA_GAGAL_DETIK);
+  } catch (err) {
+    // Cache tidak tersedia; abaikan saja, bukan alasan menolak pengisian.
+  }
+}
+
+/** Mengambil tab ReviewTerkirim, membuatnya bila belum ada. */
+function sheetTerkirim() {
+  const ss = bukaSpreadsheet();
+  let sh = ss.getSheetByName(TAB_REVIEW_TERKIRIM);
+  if (!sh) {
+    sh = ss.insertSheet(TAB_REVIEW_TERKIRIM);
+    sh.appendRow(['Tipe', 'Penanda', 'Waktu']);
+    sh.setFrozenRows(1);
+  }
+  return sh;
+}
+
+function daftarTerkirim() {
+  const nilai = sheetTerkirim().getDataRange().getValues();
+  const hasil = [];
+  for (let i = 1; i < nilai.length; i++) {
+    const tipe = String(nilai[i][0] || '').trim().toLowerCase();
+    if (!tipe) continue;
+    hasil.push({ tipe: tipe, penanda: String(nilai[i][1] || '').trim() });
+  }
+  return hasil;
+}
+
+/**
+ * Memeriksa apakah seseorang berhak mengisi review.
+ *
+ * Murid diverifikasi dengan NIS dan PIN seperti fitur lain, lalu dicek
+ * apakah sudah pernah mengisi. Guru dan biro memakai kode bersama, jadi
+ * yang dibatasi adalah jumlah pengisian, bukan identitas.
+ */
+function reviewVerify(req) {
+  if (!benar(pengaturan('review_aktif'))) {
+    return { status: 'error', kode: 'BELUM_DIBUKA', message: String(pengaturan('pesan_review_tutup')) };
+  }
+  if (reviewSedangDikunci()) {
+    return { status: 'error', kode: 'TERKUNCI',
+      message: 'Terlalu banyak percobaan gagal. Coba lagi beberapa menit lagi.' };
+  }
+
+  const tipe = String(req.tipe || '').trim().toLowerCase();
+  if (!tabJawabanReview(tipe)) {
+    return { status: 'error', message: 'Jenis pengisi tidak dikenali.' };
+  }
+
+  const terkirim = daftarTerkirim();
+
+  if (tipe === 'murid') {
+    const t = bacaTabel(TAB_SISWA);
+    const siswa = cariSiswa(t, req.nis, req.pin);
+    if (!siswa) {
+      catatGagalReview();
+      return { status: 'error', message: PESAN_TIDAK_COCOK };
+    }
+    const penanda = String(req.nis).trim();
+    const sudah = terkirim.some(x => x.tipe === 'murid' && samaNis(x.penanda, penanda));
+    if (sudah) {
+      return { status: 'error', kode: 'SUDAH_MENGISI',
+        message: 'Terima kasih, review Anda sudah tercatat sebelumnya.' };
+    }
+    return { status: 'success', tipe: tipe };
+  }
+
+  const kodeBenar = String(pengaturan(tipe === 'guru' ? 'kode_guru' : 'kode_biro') || '').trim();
+  const kodeMasuk = String(req.kode == null ? '' : req.kode).trim();
+  if (!kodeBenar || kodeMasuk !== kodeBenar) {
+    catatGagalReview();
+    return { status: 'error', message: 'Kode akses tidak sesuai. Tanyakan kembali ke panitia.' };
+  }
+
+  const maks = angka(pengaturan(tipe === 'guru' ? 'maks_review_guru' : 'maks_review_biro'));
+  const dipakai = terkirim.filter(x => x.tipe === tipe).length;
+  if (maks > 0 && dipakai >= maks) {
+    return { status: 'error', kode: 'KUOTA_HABIS',
+      message: 'Kuota pengisian untuk ' + tipe + ' sudah penuh. Hubungi panitia bila ini keliru.' };
+  }
+
+  return { status: 'success', tipe: tipe };
+}
+
+/**
+ * Menyimpan jawaban review.
+ *
+ * Jawaban masuk ke tab terpisah tanpa nama maupun NIS, dan hanya mencatat
+ * TANGGAL, bukan jam. Tab ReviewTerkirim menyimpan penanda pengisi semata-mata
+ * untuk mencegah pengisian ganda.
+ *
+ * Barisnya disisipkan di posisi acak, bukan ditambahkan di bawah. Tanpa itu
+ * urutan baris jawaban akan sama persis dengan urutan baris ReviewTerkirim,
+ * sehingga keduanya bisa dijodohkan dan anonimitasnya hilang.
+ */
+function reviewSubmit(req) {
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(20000)) {
+    return { status: 'error', message: 'Server sedang sibuk, silakan coba lagi sebentar.' };
+  }
+
+  try {
+    const cek = reviewVerify(req);
+    if (cek.status !== 'success') return cek;
+
+    const tipe = String(req.tipe).trim().toLowerCase();
+    const kolom = Array.isArray(req.kolom) ? req.kolom : [];
+    const jawaban = req.jawaban && typeof req.jawaban === 'object' ? req.jawaban : {};
+    if (!kolom.length) return { status: 'error', message: 'Daftar pertanyaan tidak terkirim.' };
+
+    const ss = bukaSpreadsheet();
+    const namaTab = tabJawabanReview(tipe);
+    let sh = ss.getSheetByName(namaTab);
+    if (!sh) sh = ss.insertSheet(namaTab);
+
+    // Baris judul dibuat dari daftar pertanyaan yang dikirim halaman review,
+    // jadi teks pertanyaannya cukup ditulis di satu tempat saja.
+    if (sh.getLastRow() === 0) {
+      sh.appendRow(['Tanggal'].concat(kolom.map(k => String(k.judul || k.id))));
+      sh.setFrozenRows(1);
+    }
+
+    const judul = sh.getRange(1, 1, 1, Math.max(1, sh.getLastColumn())).getValues()[0]
+      .map(x => String(x).trim());
+
+    const baris = new Array(judul.length).fill('');
+    baris[0] = Utilities.formatDate(new Date(),
+      Session.getScriptTimeZone() || 'Asia/Jakarta', 'yyyy-MM-dd');
+
+    const tambahan = [];
+    kolom.forEach(k => {
+      const teks = String(k.judul || k.id);
+      let idx = judul.indexOf(teks);
+      if (idx === -1) { tambahan.push(teks); idx = judul.length + tambahan.length - 1; }
+      const nilai = jawaban[k.id];
+      baris[idx] = nilai == null ? '' : String(nilai);
+    });
+
+    if (tambahan.length) {
+      sh.getRange(1, judul.length + 1, 1, tambahan.length).setValues([tambahan]);
+    }
+
+    // Sisipkan di posisi acak di antara baris yang sudah ada.
+    const jumlahData = Math.max(0, sh.getLastRow() - 1);
+    const sisip = 2 + Math.floor(Math.random() * (jumlahData + 1));
+    if (sisip <= sh.getLastRow()) sh.insertRowBefore(sisip);
+    sh.getRange(sisip, 1, 1, baris.length).setValues([baris]);
+
+    // Catat pengisi, tanpa jam supaya tidak bisa dijodohkan dengan jawaban.
+    const penanda = tipe === 'murid' ? String(req.nis).trim() : (tipe + '-' + Date.now());
+    sheetTerkirim().appendRow([tipe, penanda,
+      Utilities.formatDate(new Date(), Session.getScriptTimeZone() || 'Asia/Jakarta', 'yyyy-MM-dd')]);
+
+    return { status: 'success' };
   } finally {
     lock.releaseLock();
   }
